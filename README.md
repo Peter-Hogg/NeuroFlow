@@ -13,6 +13,18 @@ partition manifests, provenance, Zarr arrays, and Parquet tables. See
 
 ## Example
 
+For a self-contained, network-free workflow that creates a local NWB-Zarr
+source, processes it chunkwise, persists and verifies the result, exercises
+resume, and reopens it lazily, run:
+
+```bash
+uv run python -m examples.local_nwb_zarr
+```
+
+See [`examples/README.md`](examples/README.md) for what each stage demonstrates.
+
+The same API can be pointed at an existing NWB-Zarr dataset:
+
 ```python
 import numpy as np
 import neuroflow
