@@ -48,6 +48,8 @@ testpaths = ["tests"]
 
 [tool.basedpyright]
 pythonVersion = "3.10"
+venvPath = "."
+venv = ".venv"
 typeCheckingMode = "standard"
 include = ["neuroflow", "neuroflow_cellpose", "neuroflow_pynapple", "tests"]
 

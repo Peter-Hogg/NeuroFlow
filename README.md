@@ -1,40 +1,59 @@
 # NeuroFlow
 
-NeuroFlow is a lazy execution and interoperability layer for applying existing
-Python tools to archive-scale NWB data. It separates data access, partition
-planning, execution, and durable output persistence; scientific algorithms stay
-in external libraries.
+**Run ordinary Python analyses on NWB recordings that are too large—or too
+remote—to load all at once.**
 
-Version 0.1 implements local and DANDI NWB-Zarr plus bounded NWB-HDF5 access,
-semantic selection, temporal and spatial partitions, explicit Dask execution,
-resumable partition manifests, provenance, Zarr arrays, and Parquet tables. See
-[`docs/NeuroFlow_API_Specification.md`](docs/NeuroFlow_API_Specification.md) and
-[`docs/NeuroFlow_Architecture_Decisions.md`](docs/NeuroFlow_Architecture_Decisions.md).
+NeuroFlow opens an NWB object lazily, divides it into scientifically meaningful
+pieces, sends one bounded NumPy array at a time to your function, and saves each
+result durably. Your analysis code stays small; NeuroFlow handles remote access,
+Dask execution, provenance, resume, and integrity checks.
 
-## Example
+```text
+DANDI or local NWB → choose a series → plan bounded work → your function
+                                                            ↓
+                                      verified Zarr / Parquet result
+```
 
-For a self-contained, network-free workflow that creates a local NWB-Zarr
-source, processes it chunkwise, persists and verifies the result, exercises
-resume, and reopens it lazily, run:
+- Inspect and select data before reading its numerical payload.
+- Give your function a normal NumPy array, not a framework-specific object.
+- Resume interrupted jobs from verified partitions instead of starting over.
+- Read local or DANDI-hosted NWB-Zarr and NWB-HDF5 data.
+
+NeuroFlow is an early `0.1` project. Its strongest path is chunked NWB-Zarr;
+remote HDF5 support is intentionally conservative and described below.
+
+## Try it in two minutes
+
+Install the development environment with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv sync --dev
+```
+
+Start with the fully local example. It creates a tiny NWB-Zarr recording, runs
+four chunks through a custom function, verifies the output, and tests resume:
 
 ```bash
 uv run python -m examples.local_nwb_zarr
 ```
 
-See [`examples/README.md`](examples/README.md) for what each stage demonstrates.
-
-For a real network-backed NWB-HDF5 example pinned to one small recording in
-DANDI:000049, run:
+For a real recording, run the DANDI example:
 
 ```bash
 uv run python -m examples.dandi_hdf5
 ```
 
-The default selects the single `max_project` dataset (shape `1 x 512 x 512`,
-about 1 MiB uncompressed) from a 27.8 MB remote asset, processes it as one
-bounded task, writes Zarr output, verifies it, and reopens it lazily. It requires
-internet access and an HTTP server that supports byte ranges. Use `--help` to
-see the deliberately limited scaling parameters.
+It uses Dask to request one `128 × 128` image block and writes a viewable
+`examples/_output/dandi-hdf5-preview.png`. It then processes the selected
+`1 × 512 × 512` max projection as one bounded task, writes a Zarr result,
+verifies it, and reopens it lazily. The complete remote NWB file is never saved
+locally or loaded into memory.
+
+The recording is pinned for reproducibility and the default numerical workload
+is about 1 MiB. Internet access is required. See [the examples guide](examples/README.md)
+for the exact asset, generated files, and options.
+
+## Bring your own function
 
 The same API can be pointed at an existing NWB-Zarr dataset:
 
@@ -68,7 +87,7 @@ result.execute()
 Creating the source, selection, plan, or result handle does not execute numerical
 work. Execution begins only at `result.execute()` or with `execute=True`.
 
-## Source guarantees
+## What “lazy” means here
 
 - **NWB-Zarr:** numerical arrays remain object-store-backed Zarr arrays. Native
   chunks are preserved and Dask can fetch independent chunks lazily.
@@ -77,12 +96,11 @@ work. Execution begins only at `result.execute()` or with `execute=True`.
   complete-file download or eager array conversion is performed. Metadata
   discovery itself may require many range requests because HDF5 metadata is not
   object-store-native.
-- HDF5 datasets may be contiguous (`native_chunks=None`). Dask then chooses
-  logical `auto` chunks, but those are not physical HDF5 chunks and NeuroFlow
-  does not claim equivalent request efficiency. The threaded scheduler is the
-  supported execution mode for an open remote HDF5 handle; process and
-  distributed schedulers are not guaranteed because h5py/file handles are not
-  generally serializable.
+- HDF5 datasets may be contiguous (`native_chunks=None`). Dask can still divide
+  them into logical blocks, but those blocks are not physical HDF5 chunks and
+  may require more range requests. The threaded scheduler is supported;
+  process and distributed schedulers are rejected because open h5py/file
+  handles are not generally serializable.
 - The remote server must honor byte-range requests. Opening fails explicitly if
   a seekable range reader cannot be established. Users should choose bounded
   partition plans and inspect `result.plan` before execution.
@@ -224,4 +242,22 @@ recorded in provenance.
 uv sync --dev
 uv run pytest
 uv run ruff check .
+uv run basedpyright
 ```
+
+## Testing
+
+Every push and pull request runs the network-free test suite on GitHub Actions:
+linting, static type checking, and pytest with coverage. The suite covers local
+Zarr and HDF5 selection, mocked DANDI routing, partition planning, bounded
+execution, persistence, checksums, repair and resume, segmentation, optional
+adapter boundaries, and example configuration. The current suite has 35 tests,
+measures 84% statement coverage, and enforces an 80% coverage floor in CI.
+
+The live DANDI example is deliberately **not** part of CI. Archive availability
+and network conditions should not make ordinary builds flaky; run it separately
+with the command above when validating remote integration.
+
+Design rationale and the formal API live in [`docs/`](docs/). Those documents
+are useful when extending NeuroFlow; this README is the place to start when
+using it.

@@ -1,0 +1,30 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install Python
+        run: uv python install 3.10
+      - name: Install project
+        run: uv sync --locked --dev
+      - name: Lint
+        run: uv run ruff check .
+      - name: Type check
+        run: uv run basedpyright
+      - name: Test
+        run: >-
+          uv run pytest
+          --cov=neuroflow
+          --cov=neuroflow_cellpose
+          --cov=neuroflow_pynapple
+          --cov-report=term-missing
+          --cov-fail-under=80

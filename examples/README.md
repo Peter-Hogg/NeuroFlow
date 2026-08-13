@@ -28,9 +28,10 @@ This example requires public internet access. It pins DANDI:000049 version
 `0.230223.1424` and asset
 `sub-760940732/sub-760940732_ses-798500537_behavior+ophys.nwb` (27.8 MB). The
 asset was chosen because it is the smallest recording in that version. The
-example selects only `max_project`, a `1 x 512 x 512` float32 dataset, and runs
-one bounded task (~1 MiB of numerical input) before persisting and verifying a
-local Zarr result.
+example selects only `max_project`, a `1 x 512 x 512` float32 dataset. It first
+asks Dask for one logical `128 x 128` block and saves that block as
+`examples/_output/dandi-hdf5-preview.png`. It then runs one bounded task
+(~1 MiB of numerical input) before persisting and verifying a local Zarr result.
 
 The HDF5 file is opened with HTTP byte-range requests and a 256 KiB bounded
 readahead cache. NeuroFlow does not download it to local disk or convert the
@@ -38,3 +39,5 @@ whole file to an in-memory array. HDF5 metadata discovery can still make many
 small remote requests, and this asset's datasets are contiguous rather than
 physically chunked. `--block-size` tunes transport readahead; it does not make
 the HDF5 datasets physically chunked or increase the selected workload.
+`--preview-size` changes the logical Dask block used for the PNG and is capped at
+512 pixels. Run `uv run python -m examples.dandi_hdf5 --help` for all options.
