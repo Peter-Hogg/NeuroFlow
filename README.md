@@ -310,8 +310,8 @@ Every push and pull request runs the network-free test suite on GitHub Actions:
 linting, static type checking, and pytest with coverage. The suite covers local
 Zarr and HDF5 selection, mocked DANDI routing, partition planning, bounded
 execution, persistence, checksums, repair and resume, segmentation, optional
-adapter boundaries, and example configuration. The current suite has 38 tests,
-measures 84% statement coverage, and enforces an 80% coverage floor in CI.
+adapter boundaries, and example configuration. The suite enforces an 80%
+statement-coverage floor and reports current totals on every supported CI job.
 
 The live DANDI example is deliberately **not** part of CI. Archive availability
 and network conditions should not make ordinary builds flaky; run it separately

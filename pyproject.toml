@@ -3,7 +3,22 @@ name = "neuroflow"
 version = "0.1.0"
 description = "Lazy execution and interoperability for archive-scale NWB analysis"
 readme = "README.md"
+authors = [
+    { name = "Peter Hogg", email = "peterhogg2006@gmail.com" },
+]
 requires-python = ">=3.10"
+keywords = ["dandi", "dask", "neuroscience", "nwb", "reproducibility"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 dependencies = [
     "dask[distributed]>=2026.7.1",
     "fsspec>=2026.7.0",
@@ -27,6 +42,12 @@ pynapple = ["pynapple>=0.11"]
 
 [project.scripts]
 neuroflow = "neuroflow.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/Peter-Hogg/NeuroFlow"
+Documentation = "https://github.com/Peter-Hogg/NeuroFlow#readme"
+Issues = "https://github.com/Peter-Hogg/NeuroFlow/issues"
+Repository = "https://github.com/Peter-Hogg/NeuroFlow.git"
 
 [build-system]
 requires = ["hatchling"]

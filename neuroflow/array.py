@@ -47,6 +47,7 @@ class NeuroArray:
         output: str | Path,
         chunks: tuple[int, ...] | None = None,
         max_workers: int | None = None,
+        memory_limit: int | str | None = None,
     ) -> NeuroArray:
         """Compute a resumable temporal/spatial median by named axis."""
         if axis not in self.axes:
@@ -90,6 +91,7 @@ class NeuroArray:
             output=ZarrOutput(str(output)),
             execute=True,
             max_workers=max_workers,
+            memory_limit=memory_limit,
         )
         source, selection = open_array(output)
         return NeuroArray(source, selection, workflow)
@@ -103,8 +105,21 @@ class NeuroArray:
         axes: tuple[str, ...],
         halo: tuple[int, ...] | None = None,
         max_workers: int | None = None,
+        allow_unmerged: bool = False,
+        memory_limit: int | str | None = None,
     ) -> WorkflowResult:
         """Run a segmentation adapter over bounded named-axis tiles."""
+        split_spatial = tuple(
+            axis
+            for axis, tile in zip(axes, tile_shape, strict=True)
+            if axis in {"x", "y"} and tile < self.shape[self.axes.index(axis)]
+        )
+        if split_spatial and not allow_unmerged:
+            raise ValueError(
+                "segmentation would split cell-bearing spatial axes "
+                f"{split_spatial}; use complete planes, an adapter with internal "
+                "tiling, or allow_unmerged=True for explicitly unreconciled labels"
+            )
         return run(
             source=self.source,
             selection=self.selection,
@@ -115,6 +130,7 @@ class NeuroArray:
             output=SegmentationOutput(str(output)),
             execute=True,
             max_workers=max_workers,
+            memory_limit=memory_limit,
         )
 
     def compute(self) -> np.ndarray:
@@ -126,11 +142,18 @@ class NeuroArray:
         *,
         output: str | Path,
         time_chunk: int = 10,
+        memory_limit: int | str | None = None,
     ) -> NeuroArray:
         """Extract mean fluorescence per label with bounded movie reads."""
         from neuroflow.traces import extract_traces
 
-        return extract_traces(self, labels, output=output, time_chunk=time_chunk)
+        return extract_traces(
+            self,
+            labels,
+            output=output,
+            time_chunk=time_chunk,
+            memory_limit=memory_limit,
+        )
 
     def close(self) -> None:
         self.source.close()

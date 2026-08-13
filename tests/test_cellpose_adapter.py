@@ -139,7 +139,7 @@ def test_persisted_projection_chains_into_plane_segmentation(
     result = projection.segment(
         CellposeAdapter(pretrained_model="fake", memory="1 GiB"),
         output=tmp_path / "cells",
-        tile_shape=(2, 2),
+        tile_shape=projection.shape,
         axes=("y", "x"),
         max_workers=1,
     )
@@ -152,4 +152,18 @@ def test_persisted_projection_chains_into_plane_segmentation(
     assert labels.metadata.shape == projection.shape
     label_source.close()
     projection.close()
+    movie.close()
+
+
+def test_friendly_segmentation_rejects_unreconciled_spatial_tiles(
+    nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    movie = neuroflow.load(nwb_zarr[0], name="movie")
+    with pytest.raises(ValueError, match="allow_unmerged"):
+        movie.segment(
+            CellposeAdapter(pretrained_model="fake"),
+            output=tmp_path / "unsafe-cells",
+            tile_shape=(2, 2),
+            axes=("y", "x"),
+        )
     movie.close()

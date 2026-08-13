@@ -19,6 +19,7 @@ from neuroflow.adapters import ArrayOutput, FunctionAdapter
 from neuroflow.selection import NWBQuery
 
 DANDISET = "DANDI:000350@0.240822.1759"
+DANDI_DOI = "https://doi.org/10.48324/dandi.000350/0.240822.1759"
 ASSET_ID = "4f898ff7-6084-4e84-a449-f05811c1d951"
 ASSET_PATH = "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb"
 OBJECT_NAME = "NeuronOnePhotonSeries"
@@ -84,6 +85,7 @@ def run_example(config: FishProjectionConfig) -> dict[str, object]:
         save_reference_png(middle_z, config.preview)
         return {
             "source": DANDISET,
+            "source_doi": DANDI_DOI,
             "asset": ASSET_PATH,
             "input_axes": bounded.metadata.axes,
             "input_shape": bounded.metadata.shape,
@@ -95,6 +97,7 @@ def run_example(config: FishProjectionConfig) -> dict[str, object]:
             "output_shape": projection.shape,
             "output_chunks": projection.chunksize,
             "verified": verification.valid,
+            "remote_io": source.io_stats(),
             "output_uri": str(config.output),
             "preview_uri": str(config.preview),
         }

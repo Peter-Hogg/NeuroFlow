@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import threading
 from pathlib import Path
 from types import TracebackType
 from typing import Any, cast
@@ -84,6 +85,9 @@ class NWBHDF5Source:
         self.uri = str(uri)
         self.storage_options = dict(storage_options or {})
         self._remote_file: Any | None = None
+        self._metrics_lock = threading.Lock()
+        self._http_responses = 0
+        self._response_content_bytes = 0
         self.transport = "local"
         try:
             if "://" in self.uri:
@@ -91,6 +95,10 @@ class NWBHDF5Source:
                 self._remote_file, self.transport = _open_remote_file(
                     self.uri, options
                 )
+                session = getattr(self._remote_file, "session", None)
+                hooks = getattr(session, "hooks", None)
+                if isinstance(hooks, dict):
+                    hooks.setdefault("response", []).append(self._record_response)
                 h5_file = h5py.File(self._remote_file, mode="r")
                 self._io = NWBHDF5IO(file=h5_file, mode="r", load_namespaces=True)
             else:
@@ -178,6 +186,28 @@ class NWBHDF5Source:
                 is_zarr=False,
             ),
         )
+
+    def _record_response(
+        self, response: object, *args: object, **kwargs: object
+    ) -> None:
+        headers = getattr(response, "headers", {})
+        raw_length = headers.get("Content-Length", 0)
+        try:
+            length = int(raw_length)
+        except (TypeError, ValueError):
+            length = 0
+        with self._metrics_lock:
+            self._http_responses += 1
+            self._response_content_bytes += max(0, length)
+
+    def io_stats(self) -> dict[str, object]:
+        """Return observed HTTP response counts without consuming response bodies."""
+        with self._metrics_lock:
+            return {
+                "transport": self.transport,
+                "http_responses": self._http_responses,
+                "response_content_bytes": self._response_content_bytes,
+            }
 
     def select(self, query: NWBQuery) -> Selection:
         matches = [item for item in self._selections if _matches(item, query)]

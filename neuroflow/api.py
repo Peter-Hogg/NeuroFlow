@@ -6,6 +6,7 @@ or an explicit ``execute=True`` call.
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -24,6 +25,7 @@ from neuroflow.exceptions import (
     UnsupportedBackendError,
 )
 from neuroflow.execution.graph import build_plan
+from neuroflow.execution.resources import parse_bytes
 from neuroflow.results.workflow import PersistedResult, WorkflowResult
 from neuroflow.source.array import ArraySource
 from neuroflow.source.base import SourceSpec
@@ -107,6 +109,7 @@ def run(
     resume: bool = True,
     execute: bool = False,
     max_workers: int | None = None,
+    memory_limit: int | str | None = None,
 ) -> WorkflowResult:
     """Construct a lazy workflow; execution is always explicitly requested."""
     attributes = selection.metadata.attributes or {}
@@ -128,6 +131,30 @@ def run(
         partition=partition,
         output=output,
     )
+    if max_workers is not None and max_workers < 1:
+        raise ValueError("max_workers must be positive")
+    if memory_limit is not None:
+        budget = parse_bytes(memory_limit)
+        declared = execution_plan.resources.memory
+        per_worker = max(
+            execution_plan.memory_per_task,
+            parse_bytes(declared) if declared is not None else 0,
+        )
+        if per_worker > budget:
+            raise ValueError(
+                f"one task requires an estimated {per_worker} bytes, exceeding "
+                f"the {budget}-byte workflow memory limit"
+            )
+        safe_workers = max(1, budget // max(per_worker, 1))
+        if max_workers is not None and max_workers > safe_workers:
+            raise ValueError(
+                f"max_workers={max_workers} exceeds the memory-safe limit "
+                f"of {safe_workers}"
+            )
+        available_workers = max(1, os.cpu_count() or 1)
+        max_workers = int(
+            min(max_workers or available_workers, safe_workers, available_workers)
+        )
     result = WorkflowResult(
         source=source,
         selection=selection,
@@ -137,6 +164,7 @@ def run(
         scheduler=scheduler,
         resume_enabled=resume,
         max_workers=max_workers,
+        memory_limit=memory_limit,
     )
     return result.execute() if execute else result
 

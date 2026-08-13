@@ -1,0 +1,25 @@
+{
+  "name": "NeuroFlow",
+  "description": "Lazy, reproducible analysis of archive-scale NWB recordings with named-axis operations, bounded Dask execution, DANDI streaming, durable provenance, verification, and resume.",
+  "homepage": "https://github.com/Peter-Hogg/NeuroFlow",
+  "biotoolsID": "neuroflow",
+  "function": [
+    {
+      "operation": [
+        {"term": "Data processing"},
+        {"term": "Data analysis"}
+      ]
+    }
+  ],
+  "topic": [
+    {"term": "Neuroscience"},
+    {"term": "Data management"}
+  ],
+  "language": ["Python 3"],
+  "link": [
+    {
+      "url": "https://github.com/Peter-Hogg/NeuroFlow/issues",
+      "type": ["Issue tracker"]
+    }
+  ]
+}

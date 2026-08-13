@@ -1,0 +1,218 @@
+{
+  "all_verified": true,
+  "maximum_absolute_error": 0.0,
+  "median": {
+    "direct_dask_seconds": 0.24249096895800903,
+    "direct_numpy_seconds": 0.04521053400821984,
+    "neuroflow_seconds": 0.09234361205017194
+  },
+  "records": [
+    {
+      "command": {
+        "frames": 40,
+        "height": 256,
+        "seed": 20260813,
+        "width": 256
+      },
+      "direct_dask_maximum_absolute_error": 0.0,
+      "direct_dask_seconds": 0.24177384498761967,
+      "direct_numpy_seconds": 0.04521053400821984,
+      "environment": {
+        "machine": "x86_64",
+        "operating_system": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+        "python": "3.10.19",
+        "versions": {
+          "dask": "2026.7.1",
+          "hdmf-zarr": "0.13.0",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pynwb": "4.1.0"
+        }
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.0965490119997412,
+      "numerical_tolerance": {
+        "atol": 0.0,
+        "rtol": 0.0
+      },
+      "peak_rss_kib": 307676,
+      "recorded_at": "2026-08-13T22:33:49.576169+00:00",
+      "result_bytes": 249806,
+      "schema_version": "1",
+      "seed": 20260813,
+      "shape": [
+        40,
+        256,
+        256
+      ],
+      "source_bytes": 9970838,
+      "verified": true
+    },
+    {
+      "command": {
+        "frames": 40,
+        "height": 256,
+        "seed": 20260813,
+        "width": 256
+      },
+      "direct_dask_maximum_absolute_error": 0.0,
+      "direct_dask_seconds": 0.2515004620072432,
+      "direct_numpy_seconds": 0.045672698004636914,
+      "environment": {
+        "machine": "x86_64",
+        "operating_system": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+        "python": "3.10.19",
+        "versions": {
+          "dask": "2026.7.1",
+          "hdmf-zarr": "0.13.0",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pynwb": "4.1.0"
+        }
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.09046946401940659,
+      "numerical_tolerance": {
+        "atol": 0.0,
+        "rtol": 0.0
+      },
+      "peak_rss_kib": 307816,
+      "recorded_at": "2026-08-13T22:33:51.557115+00:00",
+      "result_bytes": 249807,
+      "schema_version": "1",
+      "seed": 20260813,
+      "shape": [
+        40,
+        256,
+        256
+      ],
+      "source_bytes": 9970838,
+      "verified": true
+    },
+    {
+      "command": {
+        "frames": 40,
+        "height": 256,
+        "seed": 20260813,
+        "width": 256
+      },
+      "direct_dask_maximum_absolute_error": 0.0,
+      "direct_dask_seconds": 0.24921570997685194,
+      "direct_numpy_seconds": 0.04532787803327665,
+      "environment": {
+        "machine": "x86_64",
+        "operating_system": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+        "python": "3.10.19",
+        "versions": {
+          "dask": "2026.7.1",
+          "hdmf-zarr": "0.13.0",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pynwb": "4.1.0"
+        }
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.08939977502450347,
+      "numerical_tolerance": {
+        "atol": 0.0,
+        "rtol": 0.0
+      },
+      "peak_rss_kib": 307160,
+      "recorded_at": "2026-08-13T22:33:53.457785+00:00",
+      "result_bytes": 249807,
+      "schema_version": "1",
+      "seed": 20260813,
+      "shape": [
+        40,
+        256,
+        256
+      ],
+      "source_bytes": 9970838,
+      "verified": true
+    },
+    {
+      "command": {
+        "frames": 40,
+        "height": 256,
+        "seed": 20260813,
+        "width": 256
+      },
+      "direct_dask_maximum_absolute_error": 0.0,
+      "direct_dask_seconds": 0.24249096895800903,
+      "direct_numpy_seconds": 0.0438027530326508,
+      "environment": {
+        "machine": "x86_64",
+        "operating_system": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+        "python": "3.10.19",
+        "versions": {
+          "dask": "2026.7.1",
+          "hdmf-zarr": "0.13.0",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pynwb": "4.1.0"
+        }
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.09234361205017194,
+      "numerical_tolerance": {
+        "atol": 0.0,
+        "rtol": 0.0
+      },
+      "peak_rss_kib": 307608,
+      "recorded_at": "2026-08-13T22:33:55.449714+00:00",
+      "result_bytes": 249807,
+      "schema_version": "1",
+      "seed": 20260813,
+      "shape": [
+        40,
+        256,
+        256
+      ],
+      "source_bytes": 9970838,
+      "verified": true
+    },
+    {
+      "command": {
+        "frames": 40,
+        "height": 256,
+        "seed": 20260813,
+        "width": 256
+      },
+      "direct_dask_maximum_absolute_error": 0.0,
+      "direct_dask_seconds": 0.23547354096081108,
+      "direct_numpy_seconds": 0.044941830972675234,
+      "environment": {
+        "machine": "x86_64",
+        "operating_system": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+        "python": "3.10.19",
+        "versions": {
+          "dask": "2026.7.1",
+          "hdmf-zarr": "0.13.0",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pynwb": "4.1.0"
+        }
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.0955472300411202,
+      "numerical_tolerance": {
+        "atol": 0.0,
+        "rtol": 0.0
+      },
+      "peak_rss_kib": 307092,
+      "recorded_at": "2026-08-13T22:33:57.371798+00:00",
+      "result_bytes": 249807,
+      "schema_version": "1",
+      "seed": 20260813,
+      "shape": [
+        40,
+        256,
+        256
+      ],
+      "source_bytes": 9970838,
+      "verified": true
+    }
+  ],
+  "repetitions": 5,
+  "schema_version": "1"
+}

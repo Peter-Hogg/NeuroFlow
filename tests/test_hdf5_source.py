@@ -1,4 +1,6 @@
+import threading
 from pathlib import Path
+from types import SimpleNamespace
 
 import h5py
 import numpy as np
@@ -93,3 +95,19 @@ def test_remote_hdf5_prefers_bounded_remfile(
             {"_min_chunk_size": 262_144, "_max_cache_size": 8_388_608},
         )
     ]
+
+
+def test_remote_response_metrics_count_headers_without_reading_bodies() -> None:
+    source = NWBHDF5Source.__new__(NWBHDF5Source)
+    source.transport = "remfile"
+    source._metrics_lock = threading.Lock()
+    source._http_responses = 0
+    source._response_content_bytes = 0
+
+    source._record_response(SimpleNamespace(headers={"Content-Length": "4096"}))
+
+    assert source.io_stats() == {
+        "transport": "remfile",
+        "http_responses": 1,
+        "response_content_bytes": 4096,
+    }

@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use NeuroFlow, please cite the archived release and its paper."
+title: "NeuroFlow: lazy, reproducible analysis of archive-scale NWB data"
+type: software
+authors:
+  - family-names: Hogg
+    given-names: Peter
+    email: peterhogg2006@gmail.com
+repository-code: "https://github.com/Peter-Hogg/NeuroFlow"
+url: "https://github.com/Peter-Hogg/NeuroFlow"
+version: 0.1.0
+date-released: 2026-08-13
+keywords:
+  - DANDI
+  - Dask
+  - neuroscience
+  - NWB
+  - reproducibility

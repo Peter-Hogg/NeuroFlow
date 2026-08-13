@@ -207,6 +207,28 @@ class DandiNWBSource:
             ("metadata", "bounded-array", "nwb-zarr", "nwb-hdf5", "dandi"),
         )
 
+    def io_stats(self) -> dict[str, object]:
+        """Aggregate observed HTTP data responses from opened child assets."""
+        responses = 0
+        response_bytes = 0
+        for child in self._children.values():
+            stats = getattr(child, "io_stats", None)
+            if not callable(stats):
+                continue
+            value = stats()
+            if not isinstance(value, dict):
+                continue
+            count = value.get("http_responses")
+            size = value.get("response_content_bytes")
+            if isinstance(count, int):
+                responses += count
+            if isinstance(size, int):
+                response_bytes += size
+        return {
+            "http_responses": responses,
+            "response_content_bytes": response_bytes,
+        }
+
     def close(self) -> None:
         for child in self._children.values():
             child.close()

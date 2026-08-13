@@ -1,0 +1,32 @@
+name: Release validation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cellpose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.10
+      - run: uv sync --locked --dev --extra cellpose
+      - name: Import the installed Cellpose implementation
+        run: uv run python -c "from cellpose.models import CellposeModel; print(CellposeModel)"
+      - name: Validate installed Cellpose adapter
+        run: uv run pytest -q tests/test_cellpose_adapter.py
+
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.10
+      - run: uv sync --locked --dev
+      - run: >-
+          uv run python -m benchmarks.benchmark_projection
+          --output benchmarks/results/ci-local-projection.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmarks/results/*.json

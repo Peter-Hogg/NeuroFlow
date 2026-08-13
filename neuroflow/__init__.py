@@ -15,6 +15,7 @@ from neuroflow.exceptions import (
     SourceResolutionError,
     UnsupportedBackendError,
 )
+from neuroflow.validation import SegmentationMetrics, compare_segmentations
 
 __all__ = [
     "AdapterCompatibilityError",
@@ -27,8 +28,10 @@ __all__ = [
     "PartitionValidationError",
     "ProvenanceMismatchError",
     "SourceResolutionError",
+    "SegmentationMetrics",
     "UnsupportedBackendError",
     "__version__",
+    "compare_segmentations",
     "open_result",
     "open_array",
     "open_source",

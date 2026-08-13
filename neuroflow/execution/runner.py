@@ -198,6 +198,8 @@ def initialize_output(
     execution_plan: ExecutionPlan,
     scheduler: str,
     resume: bool,
+    max_workers: int | None,
+    memory_limit: int | str | None,
 ) -> None:
     provenance_uri = join_uri(output.uri, ".neuroflow", "provenance.json")
     existing = read_json(provenance_uri)
@@ -382,6 +384,10 @@ def initialize_output(
             ],
         },
         "scheduler": scheduler,
+        "execution_policy": {
+            "max_workers": max_workers,
+            "memory_limit": memory_limit,
+        },
         "environment": {
             "python": platform.python_version(),
             "platform": platform.platform(),

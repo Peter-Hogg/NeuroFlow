@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from uuid import uuid4
 
@@ -139,6 +140,42 @@ def test_numpy_like_neuroarray_median(
     movie.close()
 
 
+def test_workflow_memory_limit_rejects_unsafe_concurrency(
+    nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    source = neuroflow.open_source(nwb_zarr[0])
+    movie = source.select(NWBQuery(name="movie"))
+    with pytest.raises(ValueError, match="memory-safe"):
+        neuroflow.run(
+            source=source,
+            selection=movie,
+            adapter=_adapter(lambda value: value),
+            partition=TimeWindowPlan(size=5),
+            output=ZarrOutput(str(tmp_path / "memory.zarr")),
+            max_workers=2,
+            memory_limit=300,
+        )
+    source.close()
+
+
+def test_workflow_memory_limit_derives_a_bounded_worker_count(
+    nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    source = neuroflow.open_source(nwb_zarr[0])
+    movie = source.select(NWBQuery(name="movie"))
+    result = neuroflow.run(
+        source=source,
+        selection=movie,
+        adapter=_adapter(lambda value: value),
+        partition=TimeWindowPlan(size=5),
+        output=ZarrOutput(str(tmp_path / "bounded-memory.zarr")),
+        memory_limit="1 GiB",
+    )
+    assert result.max_workers is not None
+    assert 1 <= result.max_workers <= (os.cpu_count() or 1)
+    source.close()
+
+
 def test_neuroarray_extracts_traces_in_bounded_time_windows(
     nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
 ) -> None:
@@ -162,6 +199,20 @@ def test_neuroarray_extracts_traces_in_bounded_time_windows(
         ]
     )
     np.testing.assert_array_equal(traces.compute(), expected)
+    persisted = neuroflow.open_result(tmp_path / "traces.zarr")
+    assert persisted.verify().valid
+    stored = zarr.open_group(str(tmp_path / "traces.zarr"), mode="r")
+    np.testing.assert_array_equal(stored["cell_ids"][:], [1, 2])
+    np.testing.assert_array_equal(stored["timestamps"][:], np.arange(10) / 2.0)
+    writable = zarr.open_group(str(tmp_path / "traces.zarr"), mode="a")
+    writable["traces"][0, 0] = np.float32(999)
+    assert not neuroflow.open_result(tmp_path / "traces.zarr").verify().valid
+    repaired = movie.extract_traces(
+        labels, output=tmp_path / "traces.zarr", time_chunk=3
+    )
+    np.testing.assert_array_equal(repaired.compute(), expected)
+    assert neuroflow.open_result(tmp_path / "traces.zarr").verify().valid
+    repaired.close()
     traces.close()
     labels.close()
     movie.close()

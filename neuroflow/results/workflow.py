@@ -45,6 +45,7 @@ class WorkflowResult:
     scheduler: Literal["threads", "processes", "distributed"] = "threads"
     resume_enabled: bool = True
     max_workers: int | None = None
+    memory_limit: int | str | None = None
     _tasks: tuple[Delayed, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
@@ -118,6 +119,8 @@ class WorkflowResult:
             execution_plan=self.plan,
             scheduler=self.scheduler,
             resume=self.resume_enabled,
+            max_workers=self.max_workers,
+            memory_limit=self.memory_limit,
         )
         try:
             execute_tasks(self._tasks, self.scheduler, max_workers=self.max_workers)

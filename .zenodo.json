@@ -1,0 +1,12 @@
+{
+  "title": "NeuroFlow: lazy, reproducible analysis of archive-scale NWB data",
+  "upload_type": "software",
+  "description": "Named-axis NumPy-like analysis over lazily streamed NWB and DANDI data with bounded Dask execution, durable results, provenance, verification, and resume.",
+  "creators": [
+    {
+      "name": "Hogg, Peter"
+    }
+  ],
+  "keywords": ["DANDI", "Dask", "neuroscience", "NWB", "reproducibility"],
+  "access_right": "open"
+}
