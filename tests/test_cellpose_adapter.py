@@ -124,3 +124,32 @@ def test_cellpose_adapter_runs_as_optional_spatial_integration(
     )
     assert changed_plan.workflow_id != result.plan.workflow_id
     source.close()
+
+
+def test_persisted_projection_chains_into_plane_segmentation(
+    nwb_zarr: tuple[Path, np.ndarray],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_fake_cellpose(monkeypatch)
+    movie = neuroflow.load(nwb_zarr[0], name="movie")
+    projection = movie.median(
+        "time", output=tmp_path / "projection.zarr", chunks=(2, 2)
+    )
+    result = projection.segment(
+        CellposeAdapter(pretrained_model="fake", memory="1 GiB"),
+        output=tmp_path / "cells",
+        tile_shape=(2, 2),
+        axes=("y", "x"),
+        max_workers=1,
+    )
+
+    assert result.verify().valid
+    label_source, labels = neuroflow.open_array(
+        result.output.uri, component="labels"
+    )
+    assert labels.metadata.axes == ("y", "x")
+    assert labels.metadata.shape == projection.shape
+    label_source.close()
+    projection.close()
+    movie.close()

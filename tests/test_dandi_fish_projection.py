@@ -1,51 +1,58 @@
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from examples.dandi_fish_projection import (
     FishProjectionConfig,
+    build_adapter,
     parse_args,
-    projection_slices,
+    temporal_median,
 )
+from neuroflow.adapters import ArrayOutput
 
 
-def test_fish_projection_defaults_touch_fifty_bounded_chunks() -> None:
+def test_fish_projection_defaults_cover_full_volume() -> None:
     config = parse_args([])
+    adapter = build_adapter(config)
+    assert isinstance(adapter.output, ArrayOutput)
 
     assert config.frames == 50
-    assert config.crop_size == 128
-    assert config.crop_y == 380
-    assert config.crop_x == 960
-    assert config.z_plane == 14
-    assert projection_slices(config) == (
-        slice(0, 50),
-        slice(380, 508),
-        slice(960, 1088),
-        14,
-    )
+    assert (config.tile_y, config.tile_x) == (256, 256)
+    assert adapter.output.reduced_axes == ("time",)
+    assert adapter.output.chunks == (256, 256, 1)
+    assert adapter.splittable_axes == ("z",)
+
+
+def test_temporal_median_has_numpy_semantics() -> None:
+    values = np.arange(2 * 3 * 4 * 2, dtype=np.uint16).reshape(2, 3, 4, 2)
+    actual = temporal_median(values)
+
+    assert actual.shape == (3, 4, 2)
+    assert actual.dtype == np.float32
+    np.testing.assert_array_equal(actual, np.median(values, axis=0))
 
 
 def test_fish_projection_arguments_remain_bounded(tmp_path: Path) -> None:
-    output = tmp_path / "fish.png"
+    output = tmp_path / "fish.zarr"
+    preview = tmp_path / "fish.png"
     config = parse_args(
         [
             "--frames",
             "5",
-            "--crop-size",
-            "96",
-            "--crop-y",
-            "100",
-            "--crop-x",
-            "200",
-            "--z-plane",
-            "4",
+            "--tile-y",
+            "128",
+            "--tile-x",
+            "512",
             "--output",
             str(output),
+            "--preview",
+            str(preview),
         ]
     )
 
     assert config == FishProjectionConfig(
-        frames=5, crop_size=96, crop_y=100, crop_x=200, z_plane=4, output=output
+        frames=5, tile_y=128, tile_x=512, output=output, preview=preview
     )
 
 
@@ -53,10 +60,12 @@ def test_fish_projection_arguments_remain_bounded(tmp_path: Path) -> None:
     "arguments",
     [
         ["--frames", "51"],
-        ["--crop-size", "129"],
-        ["--crop-y", "761"],
-        ["--crop-x", "1921"],
-        ["--z-plane", "29"],
+        ["--tile-y", "63"],
+        ["--tile-y", "889"],
+        ["--tile-x", "63"],
+        ["--tile-x", "2049"],
+        ["--block-size", "65535"],
+        ["--cache-size-mib", "513"],
     ],
 )
 def test_fish_projection_rejects_work_outside_caps(arguments: list[str]) -> None:

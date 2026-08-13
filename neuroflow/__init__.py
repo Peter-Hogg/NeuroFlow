@@ -1,7 +1,8 @@
 """Public API for NeuroFlow."""
 
 from neuroflow._version import __version__
-from neuroflow.api import open_result, open_source, plan, run
+from neuroflow.api import open_array, open_result, open_source, plan, run
+from neuroflow.array import NeuroArray, load
 from neuroflow.exceptions import (
     AdapterCompatibilityError,
     AmbiguousSelectionError,
@@ -20,6 +21,7 @@ __all__ = [
     "AmbiguousSelectionError",
     "IncompletePartitionError",
     "NeuroFlowError",
+    "NeuroArray",
     "ObjectNotFoundError",
     "OutputConflictError",
     "PartitionValidationError",
@@ -28,7 +30,9 @@ __all__ = [
     "UnsupportedBackendError",
     "__version__",
     "open_result",
+    "open_array",
     "open_source",
     "plan",
     "run",
+    "load",
 ]

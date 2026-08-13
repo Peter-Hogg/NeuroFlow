@@ -11,7 +11,7 @@ import neuroflow
 from neuroflow.adapters import ArrayOutput, FunctionAdapter, TableOutput
 from neuroflow.exceptions import OutputConflictError, ProvenanceMismatchError
 from neuroflow.execution.runner import partition_identity
-from neuroflow.partition import TimeWindowPlan
+from neuroflow.partition import SpatialTilePlan, TimeWindowPlan
 from neuroflow.selection import NWBQuery
 from neuroflow.storage import ParquetOutput, ZarrOutput
 
@@ -67,6 +67,104 @@ def test_end_to_end_execution_resume_and_lazy_reopen(
         reopened.arrays["result"][:2].compute(), nwb_zarr[1][:2] * 2
     )
     source.close()
+
+
+def test_bounded_selection_and_tiled_axis_reduction(
+    nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    source = neuroflow.open_source(nwb_zarr[0])
+    movie = source.select(NWBQuery(name="movie")).isel(time=slice(0, 5))
+
+    def temporal_median(tile: np.ndarray) -> np.ndarray:
+        return np.median(tile, axis=0)
+
+    result = neuroflow.run(
+        source=source,
+        selection=movie,
+        adapter=FunctionAdapter(
+            function=temporal_median,
+            input_kind="array",
+            output=ArrayOutput(
+                "float32",
+                name="median_projection",
+                reduced_axes=("time",),
+                chunks=(2, 2),
+            ),
+            name="temporal-median",
+            version="1",
+            splittable_axes=("y", "x"),
+        ),
+        partition=SpatialTilePlan((2, 2), (0, 0), ("y", "x")),
+        output=ZarrOutput(str(tmp_path / "projection.zarr")),
+        execute=True,
+    )
+
+    assert movie.metadata.shape == (5, 3, 4)
+    assert result.plan.output_shape == (3, 4)
+    assert result.plan.output_axes == ("y", "x")
+    assert result.plan.task_count == 4
+    assert result.arrays["median_projection"].as_dask_array().chunks == (
+        (2, 1),
+        (2, 2),
+    )
+    np.testing.assert_array_equal(
+        result.arrays["median_projection"].as_dask_array().compute(),
+        np.median(nwb_zarr[1][:5], axis=0),
+    )
+    assert result.verify().valid
+    assert neuroflow.open_result(result.output.uri).verify().valid
+    chained_source, chained = neuroflow.open_array(result.output.uri)
+    assert chained.metadata.axes == ("y", "x")
+    np.testing.assert_array_equal(
+        chained.as_dask_array().compute(), np.median(nwb_zarr[1][:5], axis=0)
+    )
+    chained_source.close()
+    source.close()
+
+
+def test_numpy_like_neuroarray_median(
+    nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    movie = neuroflow.load(nwb_zarr[0], name="movie").isel(time=slice(0, 5))
+    projection = movie.median(
+        "time", output=tmp_path / "friendly.zarr", chunks=(2, 2), max_workers=1
+    )
+
+    assert projection.axes == ("y", "x")
+    assert projection.shape == (3, 4)
+    np.testing.assert_array_equal(
+        projection.compute(), np.median(nwb_zarr[1][:5], axis=0)
+    )
+    projection.close()
+    movie.close()
+
+
+def test_neuroarray_extracts_traces_in_bounded_time_windows(
+    nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    movie = neuroflow.load(nwb_zarr[0], name="movie")
+    labels_path = tmp_path / "labels.zarr"
+    group = zarr.open_group(str(labels_path), mode="w")
+    group.create_dataset(
+        "labels",
+        data=np.array([[1, 1, 0, 0], [1, 1, 2, 2], [0, 0, 2, 2]], dtype="uint64"),
+    )
+    from neuroflow.source.array import ArraySource
+
+    label_source = ArraySource(labels_path, component="labels", axes=("y", "x"))
+    labels = neuroflow.NeuroArray(label_source, label_source.select())
+    traces = movie.extract_traces(labels, output=tmp_path / "traces.zarr", time_chunk=3)
+
+    expected = np.column_stack(
+        [
+            nwb_zarr[1][:, :2, :2].mean(axis=(1, 2)),
+            nwb_zarr[1][:, 1:, 2:].mean(axis=(1, 2)),
+        ]
+    )
+    np.testing.assert_array_equal(traces.compute(), expected)
+    traces.close()
+    labels.close()
+    movie.close()
 
 
 def test_resume_rejects_changed_parameters(

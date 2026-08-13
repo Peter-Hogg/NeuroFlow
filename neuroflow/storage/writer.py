@@ -58,17 +58,29 @@ class ArrayPartitionWriter:
         partition: Partition,
         workflow_id: str,
         partition_id: str,
+        reduced_axis_indices: tuple[int, ...] = (),
     ) -> None:
         self.uri = uri
         self.array_name = array_name
         self.partition = partition
         self.workflow_id = workflow_id
         self.partition_id = partition_id
+        self.reduced_axis_indices = reduced_axis_indices
 
     def write_array(self, value: np.ndarray) -> PartitionManifest:
-        expected, read_shape = _partition_shapes(self.partition)
+        expected, full_read_shape = _partition_shapes(self.partition)
+        read_shape = tuple(
+            size
+            for index, size in enumerate(full_read_shape)
+            if index not in self.reduced_axis_indices
+        )
+        trim_slices = tuple(
+            item
+            for index, item in enumerate(self.partition.trim_slices)
+            if index not in self.reduced_axis_indices
+        )
         if value.shape == read_shape:
-            value = value[self.partition.trim_slices]
+            value = value[trim_slices]
         if value.shape != expected:
             raise ValueError(
                 f"adapter returned shape {value.shape}; expected {expected} "

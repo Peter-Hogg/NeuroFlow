@@ -21,6 +21,7 @@ from neuroflow import __version__
 from neuroflow.adapters.base import AnalysisAdapter, LoadedPartition, TaskContext
 from neuroflow.adapters.numpy import ArrayOutput, TableOutput
 from neuroflow.adapters.segmentation import SegmentationOutputSchema
+from neuroflow.diagnostics.estimates import slice_shape
 from neuroflow.diagnostics.plan import ExecutionPlan
 from neuroflow.exceptions import OutputConflictError, ProvenanceMismatchError
 from neuroflow.partition.base import Partition
@@ -65,6 +66,7 @@ def _execute_partition(
     output: ExecutionOutput,
     workflow_id: str,
     partition: Partition,
+    selection_axes: tuple[str, ...],
 ) -> dict[str, object]:
     partition_id = partition_identity(workflow_id, partition)
     existing = read_json(manifest_uri(output.uri, partition_id))
@@ -86,12 +88,16 @@ def _execute_partition(
     )
     schema = getattr(adapter, "output", None)
     if isinstance(schema, ArrayOutput):
+        reduced_axis_indices = tuple(
+            selection_axes.index(axis) for axis in schema.reduced_axes
+        )
         writer: object = ArrayPartitionWriter(
             uri=output.uri,
             array_name=schema.name,
             partition=partition,
             workflow_id=workflow_id,
             partition_id=partition_id,
+            reduced_axis_indices=reduced_axis_indices,
         )
     elif isinstance(schema, TableOutput):
         if not isinstance(output, ParquetOutput):
@@ -177,6 +183,7 @@ def build_tasks(
                     output,
                     execution_plan.workflow_id,
                     partition,
+                    selection.metadata.axes,
                 )
             )
     return tuple(tasks)
@@ -232,19 +239,21 @@ def initialize_output(
             if not isinstance(array, zarr.Array):
                 raise OutputConflictError("result component exists but is not an array")
             if (
-                tuple(array.shape) != selection.metadata.shape
+                tuple(array.shape) != execution_plan.output_shape
                 or np.dtype(array.dtype) != dtype
             ):
                 raise OutputConflictError(
                     "existing result array has an incompatible schema"
                 )
+            chunks = tuple(array.chunks)
         else:
+            requested_chunks = schema.chunks or slice_shape(
+                execution_plan.partitions[0].output_slices
+            )
             chunks = tuple(
                 min(full, chunk)
                 for full, chunk in zip(
-                    selection.metadata.shape,
-                    execution_plan.processing_partition_shape,
-                    strict=True,
+                    execution_plan.output_shape, requested_chunks, strict=True
                 )
             )
             create_options: dict[str, object] = {}
@@ -252,7 +261,7 @@ def initialize_output(
                 create_options["compressor"] = None
             group.create_dataset(
                 name,
-                shape=selection.metadata.shape,
+                shape=execution_plan.output_shape,
                 chunks=chunks,
                 dtype=dtype,
                 overwrite=False,
@@ -263,6 +272,9 @@ def initialize_output(
             "uri": output.uri,
             "name": name,
             "dtype": str(dtype),
+            "shape": execution_plan.output_shape,
+            "axes": execution_plan.output_axes,
+            "chunks": chunks,
         }
     elif isinstance(output, ParquetOutput) and isinstance(schema, TableOutput):
         output_metadata = {"kind": "table", "uri": output.uri, "name": name}
@@ -309,6 +321,8 @@ def initialize_output(
         output_metadata = {
             "kind": "segmentation",
             "uri": output.uri,
+            "shape": selection.metadata.shape,
+            "axes": selection.metadata.axes,
             "arrays": {
                 schema.labels_name: {
                     "name": schema.labels_name,
@@ -405,8 +419,13 @@ def _external_library_versions(adapter: AnalysisAdapter) -> dict[str, str]:
 def execute_tasks(
     tasks: tuple[Delayed, ...],
     scheduler: Literal["threads", "processes", "distributed"],
+    *,
+    max_workers: int | None = None,
 ) -> tuple[dict[str, object], ...]:
-    values = compute(*tasks, scheduler=scheduler)
+    if max_workers is not None and max_workers < 1:
+        raise ValueError("max_workers must be positive")
+    options = {"num_workers": max_workers} if max_workers is not None else {}
+    values = compute(*tasks, scheduler=scheduler, **options)  # pyright: ignore[reportArgumentType]
     return tuple(values)
 
 

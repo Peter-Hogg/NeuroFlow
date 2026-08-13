@@ -14,7 +14,7 @@ from neuroflow.adapters.segmentation import SegmentationOutputSchema
 from neuroflow.diagnostics.estimates import element_count, slice_shape
 from neuroflow.diagnostics.plan import ExecutionPlan
 from neuroflow.exceptions import AdapterCompatibilityError, PartitionValidationError
-from neuroflow.partition.base import PartitionPlan
+from neuroflow.partition.base import Partition, PartitionPlan
 from neuroflow.provenance.hashing import stable_hash
 from neuroflow.selection.query import Selection
 from neuroflow.source.base import NWBSource
@@ -57,6 +57,44 @@ def build_plan(
         raise AdapterCompatibilityError(
             "segmentation outputs require SegmentationOutput"
         )
+    reduced_indices: tuple[int, ...] = ()
+    output_axes = selection.metadata.axes
+    output_shape = selection.metadata.shape
+    if isinstance(schema, ArrayOutput) and schema.reduced_axes:
+        reduced_indices = _validate_reduced_axes(
+            schema.reduced_axes, selection, partitions
+        )
+        output_axes = tuple(
+            axis
+            for index, axis in enumerate(selection.metadata.axes)
+            if index not in reduced_indices
+        )
+        output_shape = tuple(
+            size
+            for index, size in enumerate(selection.metadata.shape)
+            if index not in reduced_indices
+        )
+        partitions = tuple(
+            Partition(
+                key=item.key,
+                read_slices=item.read_slices,
+                output_slices=tuple(
+                    value
+                    for index, value in enumerate(item.output_slices)
+                    if index not in reduced_indices
+                ),
+                trim_slices=item.trim_slices,
+                coordinates=item.coordinates,
+            )
+            for item in partitions
+        )
+    if isinstance(schema, ArrayOutput) and schema.chunks is not None:
+        if len(schema.chunks) != len(output_shape) or any(
+            size <= 0 for size in schema.chunks
+        ):
+            raise AdapterCompatibilityError(
+                "array output chunks must contain one positive size per output axis"
+            )
     _validate_required_overlap(partition, requirements.requires_overlap)
     processing_axes = _processing_axes(partitions, selection.metadata.axes)
     unsupported = sorted(set(processing_axes) - set(requirements.splittable_axes))
@@ -94,9 +132,12 @@ def build_plan(
     read_elements = [
         element_count(slice_shape(item.read_slices)) for item in partitions
     ]
-    output_elements = element_count(selection.metadata.shape)
+    output_elements = element_count(output_shape)
     memory_per_task = max(read_elements) * itemsize
-    first_shape = slice_shape(partitions[0].output_slices)
+    first_shape = tuple(
+        (item.stop or 0) - (item.start or 0)
+        for item in partitions[0].trim_slices
+    )
     source_size = next((item.size for item in source.assets() if item.size), None)
     warnings = list(validation.warnings)
     if sum(read_elements) / output_elements > 1.5:
@@ -116,6 +157,8 @@ def build_plan(
         workflow_id=workflow_id,
         source_size=source_size,
         selected_shape=selection.metadata.shape,
+        output_shape=output_shape,
+        output_axes=output_axes,
         dtype=selection.metadata.dtype,
         native_chunks=selection.metadata.native_chunks,
         processing_partition_shape=first_shape,
@@ -152,10 +195,32 @@ def _processing_axes(
         axis
         for index, axis in enumerate(axes)
         if len(
-            {(getattr(item, "output_slices")[index].start or 0) for item in partitions}
+            {(getattr(item, "read_slices")[index].start or 0) for item in partitions}
         )
         > 1
     )
+
+
+def _validate_reduced_axes(
+    reduced_axes: tuple[str, ...],
+    selection: Selection,
+    partitions: tuple[Partition, ...],
+) -> tuple[int, ...]:
+    if len(set(reduced_axes)) != len(reduced_axes):
+        raise AdapterCompatibilityError("reduced axes must be unique")
+    missing = set(reduced_axes) - set(selection.metadata.axes)
+    if missing:
+        raise AdapterCompatibilityError(
+            "selection has no reduced axes: " + ", ".join(sorted(missing))
+        )
+    indices = tuple(selection.metadata.axes.index(axis) for axis in reduced_axes)
+    for axis, index in zip(reduced_axes, indices, strict=True):
+        full = slice(0, selection.metadata.shape[index])
+        if any(item.read_slices[index] != full for item in partitions):
+            raise AdapterCompatibilityError(
+                f"reduced axis {axis!r} must not be split by the partition plan"
+            )
+    return indices
 
 
 def _validate_required_overlap(

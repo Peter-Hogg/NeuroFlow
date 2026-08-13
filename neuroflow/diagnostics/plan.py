@@ -11,6 +11,8 @@ class ExecutionPlan:
     workflow_id: str
     source_size: int | None
     selected_shape: tuple[int, ...]
+    output_shape: tuple[int, ...]
+    output_axes: tuple[str, ...]
     dtype: str
     native_chunks: tuple[int, ...] | None
     processing_partition_shape: tuple[int, ...]
@@ -37,6 +39,7 @@ class ExecutionPlan:
             f"workflow: {self.workflow_id}",
             f"source size: {self.source_size or 'unknown'} bytes",
             f"selection: shape={self.selected_shape}, dtype={self.dtype}",
+            f"output: shape={self.output_shape}, axes={self.output_axes}",
             "chunks: "
             f"native={self.native_chunks}, "
             f"processing={self.processing_partition_shape}",

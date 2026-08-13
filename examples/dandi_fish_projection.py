@@ -1,8 +1,8 @@
-"""Median-project a centered crop from Misha Ahrens' whole-brain fish movie.
+"""Build a full, tiled temporal projection of a whole-brain fish movie.
 
-The default selects 50 time frames and the middle z-plane, touching 50 native
-HDF5 chunks from a 150 GB remote NWB file. It never downloads the file and
-writes one 128 x 128 PNG under examples/_output. Internet access is required.
+The NumPy function in this example reduces 50 time frames for each of 29
+z-planes. NeuroFlow handles bounded remote reads, task planning, tiled Zarr
+storage, provenance, resume, and verification. Internet access is required.
 """
 
 from __future__ import annotations
@@ -11,10 +11,11 @@ import argparse
 from dataclasses import dataclass
 from pathlib import Path
 
-import dask.array as da
+import numpy as np
 
 import neuroflow
 from examples.dandi_hdf5 import save_reference_png
+from neuroflow.adapters import ArrayOutput, FunctionAdapter
 from neuroflow.selection import NWBQuery
 
 DANDISET = "DANDI:000350@0.240822.1759"
@@ -27,22 +28,33 @@ MOVIE_SHAPE = (3065, 888, 2048, 29)  # axes: time, y, x, z
 @dataclass(frozen=True)
 class FishProjectionConfig:
     frames: int = 50
-    crop_size: int = 128
-    crop_y: int = 380
-    crop_x: int = 960
-    z_plane: int = 14
+    tile_y: int = 256
+    tile_x: int = 256
     block_size: int = 262_144
     cache_size: int = 67_108_864
-    output: Path = Path(__file__).parent / "_output" / "fish-median-projection.png"
+    output: Path = Path(__file__).parent / "_output" / "fish-projection.zarr"
+    preview: Path = Path(__file__).parent / "_output" / "fish-projection-z14.png"
 
 
-def projection_slices(config: FishProjectionConfig) -> tuple[object, ...]:
-    """Return the bounded time, y, x, z selection without reading data."""
-    return (
-        slice(0, config.frames),
-        slice(config.crop_y, config.crop_y + config.crop_size),
-        slice(config.crop_x, config.crop_x + config.crop_size),
-        config.z_plane,
+def temporal_median(tile: np.ndarray) -> np.ndarray:
+    """Reduce a bounded ``(time, y, x, z)`` tile to ``(y, x, z)``."""
+    return np.asarray(np.median(tile, axis=0), dtype=np.float32)
+
+
+def build_adapter(config: FishProjectionConfig) -> FunctionAdapter:
+    """Declare the NumPy operation and its axis/storage contract."""
+    return FunctionAdapter(
+        function=temporal_median,
+        input_kind="array",
+        output=ArrayOutput(
+            "float32",
+            name="median_projection",
+            reduced_axes=("time",),
+            chunks=(config.tile_y, config.tile_x, 1),
+        ),
+        name="temporal-median-projection",
+        version="1",
+        splittable_axes=("z",),
     )
 
 
@@ -56,22 +68,35 @@ def run_example(config: FishProjectionConfig) -> dict[str, object]:
         },
     )
     try:
-        selection = source.select(NWBQuery(asset=ASSET_ID, name=OBJECT_NAME))
-        movie = selection.as_dask_array(chunks="native")
-        crop = movie[projection_slices(config)]
-        projection = da.median(crop, axis=0)
-        image = projection.compute(scheduler="threads")
-        save_reference_png(image, config.output)
+        selected = source.select(NWBQuery(asset=ASSET_ID, name=OBJECT_NAME))
+        bounded = selected.isel(time=slice(0, config.frames))
+        movie = neuroflow.NeuroArray(source, bounded)
+        projection_array = movie.median(
+            "time",
+            output=config.output,
+            chunks=(config.tile_y, config.tile_x, 1),
+        )
+        result = projection_array.workflow
+        assert result is not None
+        verification = result.verify()
+        projection = projection_array.selection.as_dask_array()
+        middle_z = projection[:, :, MOVIE_SHAPE[3] // 2].compute()
+        save_reference_png(middle_z, config.preview)
         return {
             "source": DANDISET,
             "asset": ASSET_PATH,
-            "movie_shape": selection.metadata.shape,
-            "native_chunks": selection.metadata.native_chunks,
-            "transport": selection.metadata.attributes["transport"],
-            "crop_shape": crop.shape,
-            "native_chunks_touched": config.frames,
-            "projection_shape": image.shape,
+            "input_axes": bounded.metadata.axes,
+            "input_shape": bounded.metadata.shape,
+            "native_chunks": bounded.metadata.native_chunks,
+            "transport": bounded.metadata.attributes["transport"],
+            "task_count": result.plan.task_count,
+            "native_chunks_touched": config.frames * MOVIE_SHAPE[3],
+            "output_axes": result.plan.output_axes,
+            "output_shape": projection.shape,
+            "output_chunks": projection.chunksize,
+            "verified": verification.valid,
             "output_uri": str(config.output),
+            "preview_uri": str(config.preview),
         }
     finally:
         source.close()
@@ -79,34 +104,40 @@ def run_example(config: FishProjectionConfig) -> dict[str, object]:
 
 def parse_args(argv: list[str] | None = None) -> FishProjectionConfig:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--frames", type=int, default=50, help="time-axis frames")
-    parser.add_argument("--crop-size", type=int, default=128, help="square y/x size")
-    parser.add_argument("--crop-y", type=int, default=380, help="y-axis crop start")
-    parser.add_argument("--crop-x", type=int, default=960, help="x-axis crop start")
-    parser.add_argument("--z-plane", type=int, default=14, help="z-axis plane index")
+    parser.add_argument("--frames", type=int, default=50)
+    parser.add_argument("--tile-y", type=int, default=256)
+    parser.add_argument("--tile-x", type=int, default=256)
+    parser.add_argument("--block-size", type=int, default=262_144)
+    parser.add_argument("--cache-size-mib", type=int, default=64)
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(__file__).parent / "_output" / "fish-median-projection.png",
+        default=Path(__file__).parent / "_output" / "fish-projection.zarr",
+    )
+    parser.add_argument(
+        "--preview",
+        type=Path,
+        default=Path(__file__).parent / "_output" / "fish-projection-z14.png",
     )
     args = parser.parse_args(argv)
     if not 1 <= args.frames <= 50:
         parser.error("--frames must be between 1 and 50")
-    if not 16 <= args.crop_size <= 128:
-        parser.error("--crop-size must be between 16 and 128")
-    if not 0 <= args.crop_y <= MOVIE_SHAPE[1] - args.crop_size:
-        parser.error("--crop-y and --crop-size must fit within y-axis size 888")
-    if not 0 <= args.crop_x <= MOVIE_SHAPE[2] - args.crop_size:
-        parser.error("--crop-x and --crop-size must fit within x-axis size 2048")
-    if not 0 <= args.z_plane < MOVIE_SHAPE[3]:
-        parser.error("--z-plane must be between 0 and 28")
+    if not 64 <= args.tile_y <= MOVIE_SHAPE[1]:
+        parser.error("--tile-y must be between 64 and 888")
+    if not 64 <= args.tile_x <= MOVIE_SHAPE[2]:
+        parser.error("--tile-x must be between 64 and 2048")
+    if args.block_size < 65_536:
+        parser.error("--block-size must be at least 65536 bytes")
+    if not 8 <= args.cache_size_mib <= 512:
+        parser.error("--cache-size-mib must be between 8 and 512")
     return FishProjectionConfig(
         frames=args.frames,
-        crop_size=args.crop_size,
-        crop_y=args.crop_y,
-        crop_x=args.crop_x,
-        z_plane=args.z_plane,
+        tile_y=args.tile_y,
+        tile_x=args.tile_x,
+        block_size=args.block_size,
+        cache_size=args.cache_size_mib * 1024 * 1024,
         output=args.output,
+        preview=args.preview,
     )
 
 

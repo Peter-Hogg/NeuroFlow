@@ -53,18 +53,44 @@ The recording is pinned for reproducibility and the default numerical workload
 is about 1 MiB. Internet access is required. See [the examples guide](examples/README.md)
 for the exact asset, generated files, and options.
 
-For a real calcium movie, the bounded fish example streams 50 native chunks
-from Misha Ahrens' 150 GB whole-brain zebrafish recording and computes a
-centered `128 × 128` median projection:
+For a real calcium movie, the fish example uses a plain NumPy temporal median
+through NeuroFlow to project 50 frames across all 29 z-planes of Misha Ahrens'
+150 GB whole-brain zebrafish recording:
 
 ```bash
 uv run python -m examples.dandi_fish_projection
 ```
 
-Only 50 time frames, the middle z-plane (index 14 of 29), and the centered crop
-participate in the Dask graph. The HDF5 chunk geometry means each frame still
-fetches one complete compressed image-plane chunk; the example reports this
-honestly and never downloads the complete recording.
+NeuroFlow partitions the physical reads by z-plane, writes the full
+`888 × 2048 × 29` result as a y/x-tiled Zarr array, records provenance, supports
+resume, and verifies every partition. It also saves z-plane 14 as a PNG preview.
+The complete remote recording is never downloaded.
+
+For the common path, NeuroFlow also exposes a named-axis, NumPy-like API. The
+same durable engine handles partitioning, Dask execution, Zarr output, resume,
+and verification:
+
+```python
+movie = neuroflow.load("DANDI:000350@0.240822.1759", name="NeuronOnePhotonSeries")
+projection = movie.isel(time=slice(0, 50)).median(
+    "time",
+    output="projection.zarr",
+    chunks=(256, 256, 1),
+    max_workers=2,
+)
+cells = projection.segment(
+    cellpose_adapter,
+    output="cells",
+    tile_shape=(1,),
+    axes=("z",),
+    max_workers=1,
+)
+```
+
+Persisted arrays are composable inputs through `neuroflow.open_array()`. Dense
+labels can be passed to `movie.extract_traces(...)`, which reads bounded time
+windows and z-planes rather than materializing the movie or a cell-by-voxel
+matrix.
 
 ## Bring your own function
 

@@ -54,16 +54,22 @@ the smallest recording in that Dandiset, a 150 GB NWB-HDF5 asset, and selects
 the real `NeuronOnePhotonSeries` calcium movie with shape
 `3065 x 888 x 2048 x 29` (`time, y, x, z`).
 
-The movie axes are `(time, y, x, z)`. The default Dask graph selects the first
-50 time frames, a centered `128 x 128` crop (`y=380:508`, `x=960:1088`), and
-the middle of the 29 z-planes (index 14), then computes a median over time and
-saves `examples/_output/fish-median-projection.png`. The source's physical chunks are
-`1 x 888 x 2048 x 1`, so this touches exactly 50 native chunks—about 174 MiB
-uncompressed in total before gzip—not 50 tiny 128-pixel tiles. This is still
-bounded and tiny relative to the recording, but the distinction matters.
+The movie axes are `(time, y, x, z)`. The example bounds the selection to the
+first 50 time frames and passes each z-plane to a normal NumPy function that
+returns `np.median(tile, axis=0)`. NeuroFlow declares `time` as the reduced axis,
+plans 29 resumable tasks, and assembles the resulting `(y, x, z)` array in
+`examples/_output/fish-projection.zarr`. The output is chunked into
+`256 x 256 x 1` y/x/z tiles. Z-plane 14 is also saved as
+`examples/_output/fish-projection-z14.png` for a quick visual check.
+
+The source's physical HDF5 chunks are `1 x 888 x 2048 x 1`. Subdividing source
+reads over y/x would repeatedly fetch and decode the same complete image-plane
+chunks, so NeuroFlow partitions computation over z and tiles y/x in the output
+store instead. The default touches exactly 1,450 native chunks—about 5 GiB
+uncompressed before gzip—without downloading the 150 GB file.
 
 The example uses PyNWB's recommended `remfile` transport with a bounded 64 MiB
-memory cache. `--frames` is capped at 50, `--crop-size` at 128, and `--z-plane`
-at 28. The configurable `--crop-y` and `--crop-x` starts are validated together
-with the crop size against the 888 x 2048 y/x bounds, so a casual run cannot
-silently become a larger archive workload.
+memory cache. `--frames` is capped at 50. `--tile-y` and `--tile-x` configure
+bounded output chunks, while `--block-size` and `--cache-size-mib` retain safe
+transport limits. Run `uv run python -m examples.dandi_fish_projection --help`
+for all options.

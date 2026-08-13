@@ -19,6 +19,8 @@ from neuroflow.execution.resources import ResourceSpec
 class ArrayOutput:
     dtype: str
     name: str = "result"
+    reduced_axes: tuple[str, ...] = ()
+    chunks: tuple[int, ...] | None = None
 
 
 @dataclass(frozen=True)

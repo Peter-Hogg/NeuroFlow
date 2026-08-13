@@ -25,6 +25,7 @@ from neuroflow.exceptions import (
 )
 from neuroflow.execution.graph import build_plan
 from neuroflow.results.workflow import PersistedResult, WorkflowResult
+from neuroflow.source.array import ArraySource
 from neuroflow.source.base import SourceSpec
 from neuroflow.source.dandi import DandiNWBSource
 from neuroflow.source.hdf5 import NWBHDF5Source
@@ -105,6 +106,7 @@ def run(
     scheduler: Literal["threads", "processes", "distributed"] = "threads",
     resume: bool = True,
     execute: bool = False,
+    max_workers: int | None = None,
 ) -> WorkflowResult:
     """Construct a lazy workflow; execution is always explicitly requested."""
     attributes = selection.metadata.attributes or {}
@@ -134,6 +136,7 @@ def run(
         plan=execution_plan,
         scheduler=scheduler,
         resume_enabled=resume,
+        max_workers=max_workers,
     )
     return result.execute() if execute else result
 
@@ -155,3 +158,34 @@ def open_result(uri: str | Path) -> PersistedResult:
             "status": provenance.get("status", "partial"),
         }
     return PersistedResult(value, metadata, provenance)
+
+
+def open_array(
+    uri: str | Path,
+    *,
+    component: str | None = None,
+    axes: tuple[str, ...] | None = None,
+) -> tuple[ArraySource, Selection]:
+    """Open a persisted NeuroFlow array as a composable workflow input."""
+    result = open_result(uri)
+    output = result.provenance.get("output", {})
+    if not isinstance(output, dict) or output.get("kind") not in {
+        "array",
+        "segmentation",
+    }:
+        raise TypeError("result does not contain a composable array")
+    if component is None:
+        if output.get("kind") == "array":
+            component = str(output["name"])
+        else:
+            arrays = output.get("arrays", {})
+            if not isinstance(arrays, dict) or len(arrays) != 1:
+                raise ValueError("component is required for this result")
+            component = str(next(iter(arrays)))
+    if axes is None:
+        raw_axes = output.get("axes")
+        if not isinstance(raw_axes, list):
+            raise ValueError("result has no axis metadata; pass axes explicitly")
+        axes = tuple(str(axis) for axis in raw_axes)
+    source = ArraySource(uri, component=component, axes=axes)
+    return source, source.select()
