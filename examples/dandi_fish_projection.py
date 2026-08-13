@@ -44,9 +44,9 @@ class FishProjectionConfig:
     preview: Path = DEFAULT_PREVIEW
 
 
-def temporal_median(tile: np.ndarray) -> np.ndarray:
-    """Reduce a bounded ``(time, y, x, z)`` tile to ``(y, x, z)``."""
-    return np.asarray(np.median(tile, axis=0), dtype=np.float32)
+def temporal_median(plane_stack: np.ndarray) -> np.ndarray:
+    """Reduce one bounded ``(time, y, x, z=1)`` stack to ``(y, x, z=1)``."""
+    return np.asarray(np.median(plane_stack, axis=0), dtype=np.float32)
 
 
 def build_adapter(config: FishProjectionConfig) -> FunctionAdapter:

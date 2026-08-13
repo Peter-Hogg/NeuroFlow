@@ -13,6 +13,7 @@ from neuroflow.adapters.base import (
     TaskContext,
 )
 from neuroflow.execution.resources import ResourceSpec
+from neuroflow.storage.base import validate_component_name
 
 
 @dataclass(frozen=True)
@@ -22,10 +23,16 @@ class ArrayOutput:
     reduced_axes: tuple[str, ...] = ()
     chunks: tuple[int, ...] | None = None
 
+    def __post_init__(self) -> None:
+        validate_component_name(self.name)
+
 
 @dataclass(frozen=True)
 class TableOutput:
     name: str = "result"
+
+    def __post_init__(self) -> None:
+        validate_component_name(self.name)
 
 
 @dataclass(frozen=True)

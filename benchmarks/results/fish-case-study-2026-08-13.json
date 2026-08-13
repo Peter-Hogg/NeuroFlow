@@ -1,0 +1,49 @@
+{
+  "schema_version": "1",
+  "recorded_at": "2026-08-13",
+  "command": "time uv run python -m examples.dandi_fish_projection",
+  "source": {
+    "dandiset": "DANDI:000350",
+    "version": "0.240822.1759",
+    "doi": "https://doi.org/10.48324/dandi.000350/0.240822.1759",
+    "asset_path": "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb",
+    "object": "NeuronOnePhotonSeries",
+    "transport": "remfile"
+  },
+  "selection": {
+    "axes": ["time", "y", "x", "z"],
+    "shape": [50, 888, 2048, 29],
+    "native_chunks": [1, 888, 2048, 1],
+    "native_chunks_touched": 1450
+  },
+  "result": {
+    "axes": ["y", "x", "z"],
+    "shape": [888, 2048, 29],
+    "chunks": [256, 256, 1],
+    "task_count": 29,
+    "verified": true,
+    "output_bytes": 54753704,
+    "preview_bytes": 1176848,
+    "workflow_id": "291a8482f04fbf3ca92645f745e2657aa42d8f5b076361886d800c4a9bca19d1"
+  },
+  "network": {
+    "context": "User-run public DANDI HTTPS stream; location and link speed not recorded",
+    "http_responses": 1494,
+    "response_content_bytes": 2596179295
+  },
+  "timing": {
+    "elapsed_seconds": 328.656
+  },
+  "environment": {
+    "host": "hippocampus",
+    "operating_system": "Linux 7.0.0-28-generic x86_64",
+    "logical_cpus": 6,
+    "python": "3.10.19",
+    "neuroflow": "0.1.0"
+  },
+  "notes": [
+    "Timing and HTTP statistics were copied from the example's terminal output.",
+    "Output sizes and workflow identity were independently read from the completed local result.",
+    "Peak RSS, detailed CPU model, RAM capacity, link speed, and geographic network location were not captured and must not be inferred."
+  ]
+}

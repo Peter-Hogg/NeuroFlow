@@ -70,6 +70,9 @@ class SelectionMetadata:
     starting_time: float | None = None
     timestamps_path: str | None = None
     attributes: Mapping[str, object] | None = None
+    # Absolute half-open bounds in the original dataset. Shape alone cannot
+    # distinguish scientifically different slices with equal extents.
+    selection_bounds: tuple[tuple[int, int], ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -142,11 +145,28 @@ class Selection:
             slices.append(slice(start, stop))
         bounded = tuple(slices)
         shape = tuple(item.stop - item.start for item in bounded)  # type: ignore[operator]
+        parent_bounds = self.metadata.selection_bounds or tuple(
+            (0, size) for size in self.metadata.shape
+        )
+        absolute_bounds = tuple(
+            (parent_start + (item.start or 0), parent_start + (item.stop or 0))
+            for (parent_start, _), item in zip(parent_bounds, bounded, strict=True)
+        )
         native = self.metadata.native_chunks
+        starting_time = self.metadata.starting_time
+        if (
+            starting_time is not None
+            and self.metadata.rate is not None
+            and "time" in self.metadata.axes
+        ):
+            relative_time_start = bounded[self.metadata.axes.index("time")].start or 0
+            starting_time += relative_time_start / self.metadata.rate
         metadata = SelectionMetadata(
             **{
                 **self.metadata.__dict__,
                 "shape": shape,
+                "selection_bounds": absolute_bounds,
+                "starting_time": starting_time,
                 "native_chunks": (
                     tuple(
                         min(size, chunk)

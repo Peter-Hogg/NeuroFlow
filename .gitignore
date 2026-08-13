@@ -12,6 +12,7 @@ wheels/
 .coverage
 coverage.xml
 htmlcov/
+docs/_build/
 
 # Virtual environments
 .venv/

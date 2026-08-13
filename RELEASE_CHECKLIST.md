@@ -21,11 +21,12 @@
 - [x] Deterministic reference data and backend-equivalence tests are included.
 - [x] Repeated local benchmark harness compares NumPy, direct Dask, and NeuroFlow.
 - [x] Run and retain five deterministic local benchmark repetitions.
-- [ ] Run one fresh archive-scale DANDI case study and retain resource logs.
+- [x] Run and retain one fresh archive-scale DANDI case-study record.
 - [ ] Validate real Cellpose output against manual or expert-reviewed annotations.
 - [x] Validate extracted traces against an independent direct NumPy reference.
 - [x] Local benchmark records machine, versions, command, seed, and tolerances.
-- [ ] Archive-scale record includes the network context and transfer statistics.
+- [x] Archive-scale record includes available network context and transfer statistics;
+  unavailable peak RSS and detailed network fields are explicitly identified.
 
 ## Archival and manuscript actions
 

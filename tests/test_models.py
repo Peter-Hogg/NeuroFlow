@@ -3,6 +3,7 @@ from dataclasses import asdict
 import pytest
 
 import neuroflow
+from neuroflow.adapters import ArrayOutput, SegmentationOutputSchema, TableOutput
 from neuroflow.partition import SpatialTilePlan, TimeWindowPlan
 from neuroflow.provenance import stable_hash
 from neuroflow.source import SourceIdentity
@@ -13,6 +14,19 @@ def test_import_and_stable_hash() -> None:
     assert stable_hash({"b": 2, "a": 1}) == stable_hash({"a": 1, "b": 2})
     identity = SourceIdentity("DANDI:000123", "0.240101.1234", "asset-1")
     assert stable_hash(asdict(identity)) == stable_hash(asdict(identity))
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        lambda: ArrayOutput("float32", name="../escape"),
+        lambda: TableOutput(name="tables/result"),
+        lambda: SegmentationOutputSchema(objects_name="https://example.test/out"),
+    ],
+)
+def test_output_component_names_cannot_traverse_paths(schema: object) -> None:
+    with pytest.raises(ValueError, match="component names"):
+        schema()  # type: ignore[operator]
 
 
 @pytest.mark.parametrize(

@@ -7,6 +7,7 @@ import threading
 from pathlib import Path
 from types import TracebackType
 from typing import Any, cast
+from urllib.parse import urlsplit, urlunsplit
 
 import fsspec
 import h5py
@@ -66,6 +67,17 @@ def _open_remote_file(uri: str, options: dict[str, object]) -> tuple[Any, str]:
     return open_file.open(), "fsspec"
 
 
+def _redacted_uri(uri: str) -> str:
+    """Remove user information and query credentials from persisted URLs."""
+    parsed = urlsplit(uri)
+    if not parsed.scheme:
+        return uri
+    host = parsed.hostname or ""
+    if parsed.port is not None:
+        host = f"{host}:{parsed.port}"
+    return urlunsplit((parsed.scheme, host, parsed.path, "", ""))
+
+
 class NWBHDF5Source:
     """An NWB-HDF5 file whose datasets remain h5py-backed and sliceable.
 
@@ -113,12 +125,14 @@ class NWBHDF5Source:
         except Exception as exc:
             self.close()
             raise SourceResolutionError(
-                f"could not open NWB-HDF5 source {self.uri}; remote servers must "
+                f"could not open NWB-HDF5 source {_redacted_uri(self.uri)}; "
+                "remote servers must "
                 "support byte-range requests"
             ) from exc
-        checksum = hashlib.sha256(self.uri.encode()).hexdigest()
+        public_uri = _redacted_uri(self.uri)
+        checksum = hashlib.sha256(public_uri.encode()).hexdigest()
         self._identity = identity or SourceIdentity(
-            self.uri, version, checksum=checksum
+            public_uri, version, checksum=checksum
         )
         self._selections = self._discover_selections()
 

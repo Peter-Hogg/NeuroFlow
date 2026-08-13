@@ -40,6 +40,11 @@ class Partition:
                     raise ValueError(f"invalid slice in partition {name}")
                 if any(part is not None and not isinstance(part, int) for part in item):
                     raise ValueError(f"invalid slice bound in partition {name}")
+                start, stop, step = item
+                if step not in (None, 1):
+                    raise ValueError(f"partition {name} only supports unit slices")
+                if start is None or stop is None or start < 0 or stop < start:
+                    raise ValueError(f"invalid slice bounds in partition {name}")
                 decoded.append(slice(item[0], item[1], item[2]))
             return tuple(decoded)
 

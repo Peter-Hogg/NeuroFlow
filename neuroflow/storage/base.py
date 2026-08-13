@@ -1,11 +1,14 @@
 """Backend-neutral durable output contracts and metadata I/O."""
 
 import json
+import re
 import uuid
 from collections.abc import Mapping
 from typing import Protocol
 
 import fsspec
+
+_COMPONENT_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
 class OutputSpec(Protocol):
@@ -15,6 +18,16 @@ class OutputSpec(Protocol):
 
 def join_uri(root: str, *parts: str) -> str:
     return "/".join((root.rstrip("/"), *(part.strip("/") for part in parts)))
+
+
+def validate_component_name(name: str) -> str:
+    """Require a storage component name to be one non-traversing path segment."""
+    if not _COMPONENT_NAME.fullmatch(name) or name in {".", ".."}:
+        raise ValueError(
+            "component names must use only letters, digits, '.', '_', and '-' "
+            "and may not contain path traversal"
+        )
+    return name
 
 
 def read_json(uri: str) -> dict[str, object] | None:

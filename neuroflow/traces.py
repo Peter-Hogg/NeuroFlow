@@ -33,6 +33,14 @@ def extract_traces(
     _validate_inputs(movie, labels, time_chunk)
     output_uri = str(output)
     label_data = labels.selection.as_dask_array()
+    label_discovery_bytes = int(np.prod(labels.shape)) * np.dtype(
+        labels.selection.metadata.dtype
+    ).itemsize
+    if memory_limit is not None and label_discovery_bytes > parse_bytes(memory_limit):
+        raise ValueError(
+            "label discovery requires a conservative estimated allocation of "
+            f"{label_discovery_bytes} bytes, exceeding memory_limit={memory_limit!r}"
+        )
     unique_result = cast(
         tuple[da.Array, da.Array], da.unique(label_data, return_counts=True)
     )
@@ -58,9 +66,11 @@ def extract_traces(
             "movie": asdict(movie.selection.metadata.source),
             "movie_path": movie.selection.metadata.path,
             "movie_shape": movie.shape,
+            "movie_bounds": movie.selection.metadata.selection_bounds,
             "labels": asdict(labels.selection.metadata.source),
             "labels_path": labels.selection.metadata.path,
             "labels_shape": labels.shape,
+            "label_bounds": labels.selection.metadata.selection_bounds,
             "cell_ids": hashlib.sha256(ids.tobytes()).hexdigest(),
             "time_chunk": time_chunk,
             "schema_version": "1",

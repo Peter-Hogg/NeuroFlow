@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 from neuroflow.exceptions import (
@@ -18,11 +18,28 @@ from neuroflow.source.hdf5 import NWBHDF5Source
 from neuroflow.source.local import LocalNWBZarrSource
 
 API_URL = "https://api.dandiarchive.org/api"
+_MAX_ASSET_PAGES = 1000
+
+
+def _validate_dandi_url(url: str, *, api_only: bool = False) -> str:
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or parsed.username or parsed.password:
+        raise SourceResolutionError("DANDI returned an unsupported URL")
+    host = (parsed.hostname or "").lower()
+    api_host = host == "api.dandiarchive.org"
+    storage_host = host in {
+        "dandiarchive.s3.amazonaws.com",
+        "dandiarchive.s3.us-west-2.amazonaws.com",
+    }
+    if not api_host if api_only else not (api_host or storage_host):
+        raise SourceResolutionError("DANDI returned a URL outside approved hosts")
+    return url
 
 
 def _get_json(
     url: str, headers: dict[str, str], timeout: float = 30.0
 ) -> dict[str, object]:
+    _validate_dandi_url(url, api_only=True)
     request = Request(url, headers={"Accept": "application/json", **headers})
     try:
         with urlopen(request, timeout=timeout) as response:  # noqa: S310
@@ -71,7 +88,13 @@ class DandiNWBSource:
             f"{self.version}/assets/?{query}"
         )
         assets: list[AssetMetadata] = []
+        visited: set[str] = set()
         while url:
+            if url in visited or len(visited) >= _MAX_ASSET_PAGES:
+                raise SourceResolutionError(
+                    "DANDI asset pagination is cyclic or too long"
+                )
+            visited.add(url)
             page = _get_json(url, self._headers)
             results = page.get("results")
             if not isinstance(results, list):
@@ -102,7 +125,11 @@ class DandiNWBSource:
                     )
                 )
             next_url = page.get("next")
-            url = next_url if isinstance(next_url, str) else None
+            url = (
+                _validate_dandi_url(next_url, api_only=True)
+                if isinstance(next_url, str)
+                else None
+            )
         return tuple(assets)
 
     @property
@@ -158,7 +185,7 @@ class DandiNWBSource:
                         and "api.dandiarchive.org" not in value
                     ]
                     if direct:
-                        content_url = direct[-1]
+                        content_url = _validate_dandi_url(direct[-1])
             digest = details.get("digest")
             checksum = None
             if isinstance(digest, dict):

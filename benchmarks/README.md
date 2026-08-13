@@ -26,3 +26,7 @@ uv run python -m benchmarks.run_repetitions
 Run the public DANDI case study once, capturing GNU Time resource statistics,
 with `bash benchmarks/run_fish_case_study.sh`. Reuse its output for later checks
 instead of repeatedly transferring archive data.
+
+The successful 2026-08-13 user-run case study is retained in
+`results/fish-case-study-2026-08-13.json`. Missing machine and network fields are
+identified explicitly rather than reconstructed after the run.

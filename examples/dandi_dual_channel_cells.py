@@ -48,6 +48,7 @@ class DualChannelConfig:
     output: Path = DEFAULT_OUTPUT
     max_workers: int = 1
     detect: bool = False
+    detection_memory_limit: int = 1024 * 1024 * 1024
 
 
 def detect_blob_candidates(
@@ -71,18 +72,27 @@ def detect_blob_candidates(
     if sigma < 0.0 or minimum_distance < 1:
         raise ValueError("sigma must be non-negative and minimum_distance positive")
 
-    values = np.asarray(volume, dtype=np.float32)
-    finite = np.isfinite(values)
+    image_volume = np.asarray(volume, dtype=np.float32)
+    finite = np.isfinite(image_volume)
     if not finite.any():
         return _empty_candidates(axes)
-    fill = float(np.nanmedian(values[finite]))
+    fill = float(np.nanmedian(image_volume[finite]))
     filtered = ndimage.gaussian_filter(
-        np.where(finite, values, fill), sigma=sigma, mode="nearest"
+        np.where(finite, image_volume, fill), sigma=sigma, mode="nearest"
     )
     threshold = float(np.percentile(filtered[finite], percentile))
     width = 2 * minimum_distance + 1
     maxima = filtered == ndimage.maximum_filter(filtered, size=width, mode="nearest")
-    coordinates = np.argwhere(maxima & finite & (filtered > threshold))
+    candidate_mask = maxima & finite & (filtered > threshold)
+    plateau_labels, plateau_count = ndimage.label(candidate_mask)
+    representatives: list[np.ndarray] = []
+    for plateau_id in range(1, plateau_count + 1):
+        plateau_coordinates = np.argwhere(plateau_labels == plateau_id)
+        plateau_values = filtered[tuple(plateau_coordinates.T)]
+        representatives.append(plateau_coordinates[int(np.argmax(plateau_values))])
+    coordinates = _separated_coordinates(
+        np.asarray(representatives, dtype=np.int64), filtered, minimum_distance
+    )
     if coordinates.size == 0:
         return _empty_candidates(axes)
 
@@ -93,6 +103,28 @@ def detect_blob_candidates(
     frame["intensity"] = filtered[tuple(coordinates.T)].astype(np.float32)
     frame["threshold"] = np.float32(threshold)
     return frame
+
+
+def _separated_coordinates(
+    coordinates: np.ndarray, filtered_volume: np.ndarray, minimum_distance: int
+) -> np.ndarray:
+    """Keep strongest candidates with deterministic Chebyshev separation."""
+    if not len(coordinates):
+        return np.empty((0, filtered_volume.ndim), dtype=np.int64)
+    strengths = filtered_volume[tuple(coordinates.T)]
+    order = sorted(
+        range(len(coordinates)),
+        key=lambda index: (-float(strengths[index]), *coordinates[index].tolist()),
+    )
+    selected: list[np.ndarray] = []
+    for index in order:
+        candidate = coordinates[index]
+        if all(
+            np.max(np.abs(candidate - existing)) >= minimum_distance
+            for existing in selected
+        ):
+            selected.append(candidate)
+    return np.asarray(selected, dtype=np.int64)
 
 
 def _empty_candidates(axes: tuple[str, ...]) -> pd.DataFrame:
@@ -163,6 +195,17 @@ def run_example(config: DualChannelConfig) -> dict[str, object]:
             summary[f"{prefix}_shape"] = reference.shape
             summary[f"{prefix}_axes"] = reference.axes
             if config.detect:
+                volume_bytes = int(np.prod(reference.shape)) * np.dtype(
+                    reference.selection.metadata.dtype
+                ).itemsize
+                # Gaussian filtering, finite masks, and maxima require several
+                # simultaneous arrays; reserve a conservative six-volume budget.
+                required_bytes = 6 * volume_bytes
+                if required_bytes > config.detection_memory_limit:
+                    raise MemoryError(
+                        f"candidate detection requires about {required_bytes} bytes; "
+                        "raise --detection-memory-mib explicitly or omit --detect"
+                    )
                 candidates = detect_blob_candidates(
                     reference.compute(),
                     axes=reference.axes,
@@ -191,6 +234,7 @@ def parse_args(argv: list[str] | None = None) -> DualChannelConfig:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--max-workers", type=int, default=1)
     parser.add_argument("--detect", action="store_true")
+    parser.add_argument("--detection-memory-mib", type=int, default=1024)
     parser.add_argument("--neuron-percentile", type=float, default=99.5)
     parser.add_argument("--glia-percentile", type=float, default=99.5)
     args = parser.parse_args(argv)
@@ -198,6 +242,8 @@ def parse_args(argv: list[str] | None = None) -> DualChannelConfig:
         parser.error("--frames must be between 1 and 500")
     if args.max_workers < 1:
         parser.error("--max-workers must be positive")
+    if not 64 <= args.detection_memory_mib <= 16384:
+        parser.error("--detection-memory-mib must be between 64 and 16384")
     for option in (args.neuron_percentile, args.glia_percentile):
         if not 0.0 < option < 100.0:
             parser.error("detection percentiles must be between 0 and 100")
@@ -219,6 +265,7 @@ def parse_args(argv: list[str] | None = None) -> DualChannelConfig:
         output=args.output,
         max_workers=args.max_workers,
         detect=args.detect,
+        detection_memory_limit=args.detection_memory_mib * 1024 * 1024,
     )
 
 

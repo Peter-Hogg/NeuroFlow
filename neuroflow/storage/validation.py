@@ -1,19 +1,36 @@
 """Bounded validation for durable partition outputs."""
 
 import hashlib
+import posixpath
 
 import fsspec
 import numpy as np
 import zarr
 
 from neuroflow.partition.base import Partition
+from neuroflow.storage.base import validate_component_name
 from neuroflow.storage.manifest import PartitionManifest
+
+
+def _is_expected_output(root_uri: str, name: str, output_uri: str) -> bool:
+    root_fs, root_path = fsspec.core.url_to_fs(root_uri)
+    output_fs, output_path = fsspec.core.url_to_fs(output_uri)
+    if type(root_fs) is not type(output_fs):
+        return False
+    normalized_root = posixpath.normpath(root_path)
+    normalized_output = posixpath.normpath(output_path)
+    if normalized_output == normalized_root:
+        return True
+    table_name = name.split(":", 1)[0]
+    table_root = posixpath.join(normalized_root, "tables", table_name)
+    return normalized_output.startswith(table_root + "/")
 
 
 def validate_partition_manifest(
     manifest: PartitionManifest,
     partition: Partition,
     *,
+    output_root: str,
     checksums: bool = True,
 ) -> tuple[str, ...]:
     """Validate only the outputs owned by one processing partition."""
@@ -21,6 +38,14 @@ def validate_partition_manifest(
     if manifest.status != "complete":
         return (f"partition {manifest.partition_id} is not complete",)
     for name, uri in manifest.outputs.items():
+        try:
+            validate_component_name(name.split(":", 1)[0])
+        except ValueError:
+            errors.append(f"manifest contains unsafe component name {name!r}")
+            continue
+        if not _is_expected_output(output_root, name, uri):
+            errors.append(f"output {name!r} escapes the declared result root")
+            continue
         try:
             if uri.endswith(".parquet"):
                 fs, path = fsspec.core.url_to_fs(uri)

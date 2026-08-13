@@ -116,6 +116,7 @@ def build_plan(
             "type": selection.metadata.neurodata_type,
             "shape": selection.metadata.shape,
             "dtype": selection.metadata.dtype,
+            "bounds": selection.metadata.selection_bounds,
         },
         "adapter": {
             "name": adapter.name,

@@ -241,6 +241,18 @@ class PersistedResult:
         raw = partition_plan.get("partitions", [])
         if not isinstance(raw, list):
             return VerificationReport(False, (), ("invalid partition descriptors",))
+        selection_record = self.provenance_record.get("selection", {})
+        output_record = self.provenance_record.get("output", {})
+        selection_shape = (
+            tuple(selection_record.get("shape", ()))
+            if isinstance(selection_record, dict)
+            else ()
+        )
+        output_shape = (
+            tuple(output_record.get("shape", ()))
+            if isinstance(output_record, dict)
+            else ()
+        )
         entries: list[tuple[str, Partition]] = []
         errors: list[str] = []
         for value in raw:
@@ -249,6 +261,12 @@ class PersistedResult:
                 continue
             try:
                 partition = Partition.from_dict(value)
+                if not _partition_within_shape(
+                    partition.read_slices, selection_shape
+                ) or not _partition_within_shape(
+                    partition.output_slices, output_shape
+                ):
+                    raise ValueError("partition slices exceed declared result bounds")
                 entries.append((str(value["partition_id"]), partition))
             except (KeyError, ValueError) as exc:
                 errors.append(f"invalid partition descriptor: {exc}")
@@ -265,6 +283,18 @@ class PersistedResult:
         )
 
 
+def _partition_within_shape(
+    slices: tuple[slice, ...], shape: tuple[object, ...]
+) -> bool:
+    if len(slices) != len(shape) or not all(isinstance(size, int) for size in shape):
+        return False
+    return all(
+        (item.start or 0) >= 0
+        and item.stop is not None
+        and item.stop <= size
+        and item.stop >= (item.start or 0)
+        for item, size in zip(slices, shape, strict=True)
+    )
 def _verify_partitions(
     uri: str,
     workflow_id: str,
@@ -289,8 +319,11 @@ def _verify_partitions(
         if manifest.workflow_id != workflow_id:
             errors.append(f"workflow mismatch for {partition_id}")
             continue
+        if manifest.partition_id != partition_id:
+            errors.append(f"partition identity mismatch for {partition_id}")
+            continue
         partition_errors = validate_partition_manifest(
-            manifest, partition, checksums=checksums
+            manifest, partition, output_root=uri, checksums=checksums
         )
         if partition_errors:
             errors.extend(f"{partition_id}: {error}" for error in partition_errors)

@@ -22,6 +22,11 @@ DANDI or local NWB → choose a series → plan bounded work → your function
 NeuroFlow is an early `0.1` project. Its strongest path is chunked NWB-Zarr;
 remote HDF5 support is intentionally conservative and described below.
 
+The [complete user guide and API reference](https://peter-hogg.github.io/NeuroFlow/)
+build from `docs/` with Sphinx. After
+GitHub Pages is enabled with **GitHub Actions** as its source, the documentation
+workflow publishes every successful `master` build.
+
 ## Try it in two minutes
 
 Install the development environment with [uv](https://docs.astral.sh/uv/):

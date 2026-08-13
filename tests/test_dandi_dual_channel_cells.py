@@ -34,6 +34,22 @@ def test_candidate_detector_preserves_named_native_coordinates() -> None:
     assert set(result.cell_class) == {"neuron"}
 
 
+def test_candidate_detector_collapses_flat_maxima_and_enforces_distance() -> None:
+    volume = np.zeros((7, 7, 3), dtype=np.float32)
+    volume[2:4, 2:4, 1] = 10
+    volume[2, 4, 1] = 10
+    result = detect_blob_candidates(
+        volume,
+        axes=("y", "x", "z"),
+        cell_class="candidate",
+        sigma=0,
+        percentile=90,
+        minimum_distance=2,
+    )
+    assert len(result) == 1
+    assert tuple(result.loc[0, ["y_voxel", "x_voxel", "z_voxel"]]) == (2, 2, 1)
+
+
 def test_dual_channel_arguments_keep_identity_and_assets_separate(
     tmp_path: Path,
 ) -> None:

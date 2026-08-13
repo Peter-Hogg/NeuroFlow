@@ -5,6 +5,7 @@ uv sync --locked --dev
 uv run ruff check .
 uv run basedpyright
 uv run python scripts/check_docs.py
+uv run sphinx-build -W --keep-going -b html docs docs/_build/html
 uv run pytest \
   --cov=neuroflow \
   --cov=neuroflow_cellpose \

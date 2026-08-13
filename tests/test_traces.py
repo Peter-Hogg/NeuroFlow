@@ -67,3 +67,25 @@ def test_trace_memory_limit_is_enforced_before_output(tmp_path: Path) -> None:
     assert not (tmp_path / "traces.zarr").exists()
     labels.close()
     movie.close()
+
+
+def test_trace_memory_limit_rejects_label_discovery_before_compute(
+    tmp_path: Path,
+) -> None:
+    movie = _array(
+        tmp_path / "movie.zarr",
+        "movie",
+        np.ones((1, 16, 16), dtype=np.float32),
+        ("time", "y", "x"),
+    )
+    labels = _array(
+        tmp_path / "labels.zarr",
+        "labels",
+        np.ones((16, 16), dtype=np.uint64),
+        ("y", "x"),
+    )
+    with pytest.raises(ValueError, match="label discovery"):
+        movie.extract_traces(labels, output=tmp_path / "traces.zarr", memory_limit=1)
+    assert not (tmp_path / "traces.zarr").exists()
+    labels.close()
+    movie.close()

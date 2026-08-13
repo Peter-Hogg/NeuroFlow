@@ -9,6 +9,7 @@ import pandas as pd
 
 from neuroflow.adapters.base import AdapterRequirements, LoadedPartition, TaskContext
 from neuroflow.execution.resources import ResourceSpec
+from neuroflow.storage.base import validate_component_name
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,10 @@ class SegmentationOutputSchema:
     objects_name: str = "objects"
 
     def __post_init__(self) -> None:
+        validate_component_name(self.labels_name)
+        validate_component_name(self.objects_name)
+        if self.labels_name == self.objects_name:
+            raise ValueError("label and object component names must differ")
         dtype = np.dtype(self.label_dtype)
         if dtype.kind != "u" or dtype.itemsize < 8:
             raise ValueError("segmentation labels require an unsigned 64-bit dtype")

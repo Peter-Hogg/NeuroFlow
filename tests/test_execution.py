@@ -123,6 +123,33 @@ def test_bounded_selection_and_tiled_axis_reduction(
     source.close()
 
 
+def test_equal_shaped_slices_have_distinct_workflow_identities(
+    nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    source = neuroflow.open_source(nwb_zarr[0])
+    movie = source.select(NWBQuery(name="movie"))
+    first = neuroflow.run(
+        source=source,
+        selection=movie.isel(time=slice(0, 5)),
+        adapter=_adapter(lambda value: value),
+        partition=TimeWindowPlan(size=5),
+        output=ZarrOutput(str(tmp_path / "first.zarr")),
+    )
+    second = neuroflow.run(
+        source=source,
+        selection=movie.isel(time=slice(5, 10)),
+        adapter=_adapter(lambda value: value),
+        partition=TimeWindowPlan(size=5),
+        output=ZarrOutput(str(tmp_path / "second.zarr")),
+    )
+    assert first.plan.workflow_id != second.plan.workflow_id
+    assert first.selection.metadata.selection_bounds == ((0, 5), (0, 3), (0, 4))
+    assert second.selection.metadata.selection_bounds == ((5, 10), (0, 3), (0, 4))
+    assert first.selection.metadata.starting_time == 0
+    assert second.selection.metadata.starting_time == 2.5
+    source.close()
+
+
 def test_numpy_like_neuroarray_median(
     nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
 ) -> None:

@@ -9,7 +9,9 @@ from collections.abc import Mapping
 from contextlib import nullcontext
 from dataclasses import asdict
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 import fsspec
 import numpy as np
@@ -28,7 +30,12 @@ from neuroflow.partition.base import Partition
 from neuroflow.provenance.hashing import stable_hash
 from neuroflow.selection.query import Selection
 from neuroflow.source.base import NWBSource
-from neuroflow.storage.base import join_uri, read_json, write_json_atomic
+from neuroflow.storage.base import (
+    join_uri,
+    read_json,
+    validate_component_name,
+    write_json_atomic,
+)
 from neuroflow.storage.manifest import PartitionManifest
 from neuroflow.storage.parquet import ParquetOutput
 from neuroflow.storage.segmentation import SegmentationOutput
@@ -43,6 +50,30 @@ from neuroflow.storage.zarr import ZarrOutput
 ExecutionOutput = ZarrOutput | ParquetOutput | SegmentationOutput
 
 
+def _validate_recursive_delete_target(
+    fs: object, path: str, target_uri: str | None = None
+) -> None:
+    """Reject recursive deletion of roots and dangerously broad local paths."""
+    stripped = path.rstrip("/")
+    if not stripped or stripped == "/":
+        raise OutputConflictError("refusing to recursively overwrite a storage root")
+    if target_uri is not None:
+        parsed = urlsplit(target_uri)
+        if parsed.scheme and not parsed.path.rstrip("/"):
+            raise OutputConflictError(
+                "refusing to recursively overwrite an object-store root"
+            )
+    protocol = getattr(fs, "protocol", "file")
+    protocols = (protocol,) if isinstance(protocol, str) else tuple(protocol)
+    if "file" in protocols or "local" in protocols:
+        resolved = Path(stripped).expanduser().resolve()
+        protected = {Path("/").resolve(), Path.home().resolve(), Path.cwd().resolve()}
+        if resolved in protected:
+            raise OutputConflictError(
+                f"refusing to recursively overwrite protected path {resolved}"
+            )
+
+
 def partition_identity(workflow_id: str, partition: Partition) -> str:
     return stable_hash(
         {
@@ -54,6 +85,7 @@ def partition_identity(workflow_id: str, partition: Partition) -> str:
 
 
 def manifest_uri(uri: str, partition_id: str) -> str:
+    validate_component_name(partition_id)
     return join_uri(uri, ".neuroflow", "manifests", f"{partition_id}.json")
 
 
@@ -77,7 +109,7 @@ def _execute_partition(
                 "partition manifest belongs to another workflow"
             )
         if manifest.status == "complete" and not validate_partition_manifest(
-            manifest, partition, checksums=True
+            manifest, partition, output_root=output.uri, checksums=True
         ):
             return manifest.to_dict()
     seed = getattr(adapter, "random_seed", None)
@@ -122,12 +154,15 @@ def _execute_partition(
         raise TypeError("adapter has no supported output schema")
     try:
         data = np.asarray(source_array[partition.read_slices])  # type: ignore[index]
-        time_slice = partition.read_slices[0]
-        if source_timestamps is not None:
+        time_axis = selection_axes.index("time") if "time" in selection_axes else None
+        time_slice = (
+            partition.read_slices[time_axis] if time_axis is not None else None
+        )
+        if source_timestamps is not None and time_slice is not None:
             timestamps = np.asarray(source_timestamps[time_slice])  # type: ignore[index]
-        elif sampling_rate is not None:
+        elif sampling_rate is not None and time_slice is not None:
             start = time_slice.start or 0
-            stop = time_slice.stop or data.shape[0]
+            stop = time_slice.stop or data.shape[time_axis]  # type: ignore[index]
             timestamps = (starting_time or 0.0) + np.arange(start, stop) / sampling_rate
         else:
             timestamps = None
@@ -207,12 +242,14 @@ def initialize_output(
     root_exists = fs.exists(root_path)
     mode = output.mode
     if root_exists and mode == "overwrite" and not resume:
+        _validate_recursive_delete_target(fs, root_path, output.uri)
         fs.rm(root_path, recursive=True)
         existing = None
         root_exists = False
     if existing is not None:
         if existing.get("workflow_id") != execution_plan.workflow_id:
             if mode == "overwrite":
+                _validate_recursive_delete_target(fs, root_path, output.uri)
                 fs.rm(root_path, recursive=True)
                 existing = None
                 root_exists = False
@@ -224,6 +261,7 @@ def initialize_output(
             raise OutputConflictError("output exists and resume=False")
     elif root_exists:
         if mode == "overwrite":
+            _validate_recursive_delete_target(fs, root_path, output.uri)
             fs.rm(root_path, recursive=True)
         else:
             raise OutputConflictError(
@@ -325,6 +363,7 @@ def initialize_output(
             "uri": output.uri,
             "shape": selection.metadata.shape,
             "axes": selection.metadata.axes,
+            "bounds": selection.metadata.selection_bounds,
             "arrays": {
                 schema.labels_name: {
                     "name": schema.labels_name,
