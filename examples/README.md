@@ -98,3 +98,25 @@ TIFF stack when `tifffile` is installed. Use `--no-view` for batch/headless
 runs; napari is imported only after outputs are saved, and a missing package or
 display produces a friendly message. `--frames` is capped at 50 and all crop,
 transport, and cache arguments are validated. See `--help` for every option.
+
+## Dual-channel neuronal and glial reference volumes
+
+`dandi_dual_channel_cells.py` starts an atlas-mapping case study for fish with
+separately identified neuronal and radial-astrocyte channels. Channel object names
+and asset IDs are explicit because these identities must come from experimental
+metadata, not image morphology:
+
+```bash
+uv run python -m examples.dandi_dual_channel_cells \
+  --neuron-name NEURON_NWB_OBJECT \
+  --glia-name GLIA_NWB_OBJECT \
+  --neuron-asset ASSET_ID \
+  --glia-asset ASSET_ID
+```
+
+The script computes resumable temporal-median reference volumes for both channels.
+Passing `--detect` also runs a deliberately simple 3-D local-maximum detector and
+writes native-coordinate candidate tables for manual annotation and detector
+validation. These tables are not validated cell counts. Atlas registration,
+region assignment, and brainrender visualization are intentionally deferred until
+the correct channel metadata, voxel geometry, and registration target are known.
