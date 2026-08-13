@@ -53,6 +53,19 @@ The recording is pinned for reproducibility and the default numerical workload
 is about 1 MiB. Internet access is required. See [the examples guide](examples/README.md)
 for the exact asset, generated files, and options.
 
+For a real calcium movie, the bounded fish example streams three native chunks
+from Misha Ahrens' 150 GB whole-brain zebrafish recording and computes a
+`64 × 64` median projection:
+
+```bash
+uv run python -m examples.dandi_fish_projection
+```
+
+Only three time frames, one z-plane, and the upper-left crop participate in the
+Dask graph. The HDF5 chunk geometry means each frame still fetches one complete
+compressed image-plane chunk; the example reports this honestly and never
+downloads the complete recording.
+
 ## Bring your own function
 
 The same API can be pointed at an existing NWB-Zarr dataset:
@@ -92,10 +105,12 @@ work. Execution begins only at `result.execute()` or with `execute=True`.
 - **NWB-Zarr:** numerical arrays remain object-store-backed Zarr arrays. Native
   chunks are preserved and Dask can fetch independent chunks lazily.
 - **NWB-HDF5:** local files remain h5py datasets. Remote files are opened through
-  a seekable fsspec HTTP reader with a bounded in-memory readahead cache; no
+  PyNWB's recommended `remfile` transport with a bounded 64 MiB in-memory cache;
+  fsspec remains available with `storage_options={"transport": "fsspec"}`. No
   complete-file download or eager array conversion is performed. Metadata
-  discovery itself may require many range requests because HDF5 metadata is not
-  object-store-native.
+  discovery may still require many range requests because HDF5 metadata is not
+  object-store-native. See PyNWB's official
+  [streaming guide](https://pynwb.readthedocs.io/en/stable/tutorials/advanced_io/streaming.html).
 - HDF5 datasets may be contiguous (`native_chunks=None`). Dask can still divide
   them into logical blocks, but those blocks are not physical HDF5 chunks and
   may require more range requests. The threaded scheduler is supported;
@@ -104,6 +119,10 @@ work. Execution begins only at `result.execute()` or with `execute=True`.
 - The remote server must honor byte-range requests. Opening fails explicitly if
   a seekable range reader cannot be established. Users should choose bounded
   partition plans and inspect `result.plan` before execution.
+- PyNWB datasets stay lazy only while their underlying IO handle is open.
+  NeuroFlow therefore owns the PyNWB, h5py, and transport handles together and
+  closes them in order when the source context ends. Compute all lazy reads
+  before calling `source.close()`.
 
 Regularly sampled series support sample- or duration-based temporal windows.
 Irregular timestamps are exposed with `selection.as_dask_timestamps()` and remain
@@ -251,7 +270,7 @@ Every push and pull request runs the network-free test suite on GitHub Actions:
 linting, static type checking, and pytest with coverage. The suite covers local
 Zarr and HDF5 selection, mocked DANDI routing, partition planning, bounded
 execution, persistence, checksums, repair and resume, segmentation, optional
-adapter boundaries, and example configuration. The current suite has 35 tests,
+adapter boundaries, and example configuration. The current suite has 38 tests,
 measures 84% statement coverage, and enforces an 80% coverage floor in CI.
 
 The live DANDI example is deliberately **not** part of CI. Archive availability

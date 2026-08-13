@@ -34,6 +34,7 @@ class ExampleConfig:
     object_name: str = OBJECT_NAME
     factor: float = 0.5
     block_size: int = 262_144
+    cache_size: int = 67_108_864
     preview_size: int = 128
     output: Path = Path(__file__).parent / "_output" / "dandi-hdf5-scaled.zarr"
     preview: Path = Path(__file__).parent / "_output" / "dandi-hdf5-preview.png"
@@ -86,7 +87,11 @@ def run_example(config: ExampleConfig) -> dict[str, object]:
     config.output.parent.mkdir(parents=True, exist_ok=True)
     source = neuroflow.open_source(
         config.source,
-        storage_options={"block_size": config.block_size, "cache_type": "readahead"},
+        storage_options={
+            "transport": "remfile",
+            "block_size": config.block_size,
+            "cache_size": config.cache_size,
+        },
     )
     try:
         selected = source.select(build_query(config))
@@ -124,6 +129,7 @@ def run_example(config: ExampleConfig) -> dict[str, object]:
         "source": config.source,
         "asset": ASSET_PATH,
         "selection_shape": shape,
+        "transport": selected.metadata.attributes["transport"],
         "dask_chunks": lazy.chunks,
         "preview_chunk_shape": preview_block.shape,
         "preview_uri": str(config.preview),
@@ -138,6 +144,7 @@ def parse_args(argv: list[str] | None = None) -> ExampleConfig:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--factor", type=float, default=0.5)
     parser.add_argument("--block-size", type=int, default=262_144)
+    parser.add_argument("--cache-size-mib", type=int, default=64)
     parser.add_argument("--preview-size", type=int, default=128)
     parser.add_argument(
         "--output",
@@ -152,11 +159,14 @@ def parse_args(argv: list[str] | None = None) -> ExampleConfig:
     args = parser.parse_args(argv)
     if args.block_size < 65_536:
         parser.error("--block-size must be at least 65536 bytes")
+    if not 8 <= args.cache_size_mib <= 512:
+        parser.error("--cache-size-mib must be between 8 and 512")
     if not 16 <= args.preview_size <= 512:
         parser.error("--preview-size must be between 16 and 512 pixels")
     return ExampleConfig(
         factor=args.factor,
         block_size=args.block_size,
+        cache_size=args.cache_size_mib * 1024 * 1024,
         preview_size=args.preview_size,
         output=args.output,
         preview=args.preview,

@@ -9,6 +9,7 @@ from typing import Any, cast
 
 import fsspec
 import h5py
+import remfile
 from pynwb import NWBHDF5IO
 
 from neuroflow.exceptions import (
@@ -24,6 +25,44 @@ from neuroflow.source.base import (
     SourceSummary,
 )
 from neuroflow.source.local import _infer_axes, _matches, _type_names
+
+
+def _open_remote_file(uri: str, options: dict[str, object]) -> tuple[Any, str]:
+    """Open a bounded remote reader using a PyNWB-documented transport."""
+    transport_value = options.pop("transport", "auto")
+    if transport_value not in ("auto", "remfile", "fsspec"):
+        raise ValueError("transport must be 'auto', 'remfile', or 'fsspec'")
+    transport = str(transport_value)
+    block_size_value = options.pop("block_size", 1_048_576)
+    cache_size_value = options.pop("cache_size", 67_108_864)
+    if not isinstance(block_size_value, int) or block_size_value <= 0:
+        raise TypeError("block_size must be a positive integer")
+    if not isinstance(cache_size_value, int) or cache_size_value <= 0:
+        raise TypeError("cache_size must be a positive integer")
+    cache_type = str(options.pop("cache_type", "readahead"))
+
+    use_remfile = transport == "remfile" or (
+        transport == "auto" and uri.startswith(("http://", "https://"))
+    )
+    if use_remfile:
+        if options:
+            names = ", ".join(sorted(options))
+            raise ValueError(f"unsupported remfile storage options: {names}")
+        remote = remfile.File(
+            uri,
+            _min_chunk_size=block_size_value,
+            _max_cache_size=cache_size_value,
+        )
+        return remote, "remfile"
+
+    open_file = cast(Any, fsspec.open)(
+        uri,
+        mode="rb",
+        block_size=block_size_value,
+        cache_type=cache_type,
+        **options,
+    )
+    return open_file.open(), "fsspec"
 
 
 class NWBHDF5Source:
@@ -45,22 +84,13 @@ class NWBHDF5Source:
         self.uri = str(uri)
         self.storage_options = dict(storage_options or {})
         self._remote_file: Any | None = None
+        self.transport = "local"
         try:
             if "://" in self.uri:
                 options = dict(self.storage_options)
-                raw_block_size = options.pop("block_size", 1_048_576)
-                if not isinstance(raw_block_size, int):
-                    raise TypeError("block_size must be an integer")
-                block_size = raw_block_size
-                cache_type = str(options.pop("cache_type", "readahead"))
-                open_file = cast(Any, fsspec.open)(
-                    self.uri,
-                    mode="rb",
-                    block_size=block_size,
-                    cache_type=cache_type,
-                    **options,
+                self._remote_file, self.transport = _open_remote_file(
+                    self.uri, options
                 )
-                self._remote_file = open_file.open()
                 h5_file = h5py.File(self._remote_file, mode="r")
                 self._io = NWBHDF5IO(file=h5_file, mode="r", load_namespaces=True)
             else:
@@ -120,6 +150,7 @@ class NWBHDF5Source:
                 ),
                 attributes={
                     "backend": "nwb-hdf5",
+                    "transport": self.transport,
                     "type_hierarchy": tuple(sorted(_type_names(obj))),
                     "subject_id": getattr(
                         getattr(self._nwbfile, "subject", None), "subject_id", None

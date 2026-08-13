@@ -12,6 +12,7 @@ dependencies = [
     "pandas>=2.3.3",
     "pyarrow>=25.0.0",
     "pynwb>=4.1.0",
+    "remfile>=0.1.13",
     "rich>=15.0.0",
     "s3fs>=2026.7.0",
     "scipy>=1.15.3",

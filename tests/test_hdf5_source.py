@@ -9,7 +9,7 @@ from neuroflow.adapters import ArrayOutput, FunctionAdapter
 from neuroflow.exceptions import UnsupportedBackendError
 from neuroflow.partition import TimeWindowPlan
 from neuroflow.selection import NWBQuery
-from neuroflow.source.hdf5 import NWBHDF5Source
+from neuroflow.source.hdf5 import NWBHDF5Source, _open_remote_file
 from neuroflow.storage import ZarrOutput
 
 
@@ -67,3 +67,29 @@ def test_hdf5_rejects_process_scheduler(
             )
     finally:
         source.close()
+
+
+def test_remote_hdf5_prefers_bounded_remfile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, dict[str, object]]] = []
+    sentinel = object()
+
+    def fake_file(uri: str, **kwargs: object) -> object:
+        calls.append((uri, kwargs))
+        return sentinel
+
+    monkeypatch.setattr("neuroflow.source.hdf5.remfile.File", fake_file)
+    remote, transport = _open_remote_file(
+        "https://example.test/session.nwb",
+        {"block_size": 262_144, "cache_size": 8_388_608},
+    )
+
+    assert remote is sentinel
+    assert transport == "remfile"
+    assert calls == [
+        (
+            "https://example.test/session.nwb",
+            {"_min_chunk_size": 262_144, "_max_cache_size": 8_388_608},
+        )
+    ]

@@ -213,6 +213,8 @@ def _matches(selection: Selection, query: NWBQuery) -> bool:
 def _infer_axes(obj: Any, ndim: int) -> tuple[str, ...]:
     """Infer conservative axis labels without inventing NWB semantics."""
     first = "time" if hasattr(obj, "timestamps") or hasattr(obj, "rate") else "axis_0"
+    if ndim == 4 and "ImageSeries" in _type_names(obj):
+        return (first, "y", "x", "z")
     if ndim == 1:
         return (first,)
     suffix = {

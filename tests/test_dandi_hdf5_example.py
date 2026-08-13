@@ -21,6 +21,7 @@ def test_remote_example_defaults_are_pinned_and_bounded() -> None:
     assert query.asset == ASSET_ID
     assert query.name == OBJECT_NAME
     assert config.block_size == 262_144
+    assert config.cache_size == 67_108_864
     assert config.preview_size == 128
 
 
@@ -34,6 +35,8 @@ def test_remote_example_accepts_safe_scaling_parameters(tmp_path: Path) -> None:
             "524288",
             "--preview-size",
             "64",
+            "--cache-size-mib",
+            "32",
             "--output",
             str(output),
         ]
@@ -42,6 +45,7 @@ def test_remote_example_accepts_safe_scaling_parameters(tmp_path: Path) -> None:
     assert config.factor == 2.0
     assert config.block_size == 524_288
     assert config.preview_size == 64
+    assert config.cache_size == 33_554_432
     assert config.output == output
 
 
