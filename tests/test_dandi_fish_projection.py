@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 
 from examples.dandi_fish_projection import (
+    DEFAULT_OUTPUT,
+    DEFAULT_PREVIEW,
     FishProjectionConfig,
     build_adapter,
     parse_args,
@@ -18,6 +20,10 @@ def test_fish_projection_defaults_cover_full_volume() -> None:
     assert isinstance(adapter.output, ArrayOutput)
 
     assert config.frames == 50
+    assert config.output == DEFAULT_OUTPUT
+    assert config.preview == DEFAULT_PREVIEW
+    assert config.output.name == "fish-projection-t50-full-volume.zarr"
+    assert config.preview.name == "fish-projection-t50-full-volume-z14.png"
     assert (config.tile_y, config.tile_x) == (256, 256)
     assert adapter.output.reduced_axes == ("time",)
     assert adapter.output.chunks == (256, 256, 1)

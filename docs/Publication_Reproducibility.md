@@ -20,6 +20,10 @@ time uv run python -m examples.dandi_fish_projection \
   --preview examples/_output/paper-fish-projection-z14.png
 ```
 
+NeuroFlow intentionally refuses to reuse an output whose provenance describes
+a different workflow. Preserve that result and pass new `--output` and
+`--preview` paths; do not delete or overwrite a result used in an analysis.
+
 Record execution date, machine, CPU, RAM, operating system, network location,
 DANDI identifier/version, asset ID, command, elapsed time, peak RSS, result size,
 and verification status. Do not repeatedly benchmark the public archive; retain

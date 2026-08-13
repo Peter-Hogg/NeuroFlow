@@ -16,6 +16,7 @@ import numpy as np
 import neuroflow
 from examples.dandi_hdf5 import save_reference_png
 from neuroflow.adapters import ArrayOutput, FunctionAdapter
+from neuroflow.exceptions import ProvenanceMismatchError
 from neuroflow.selection import NWBQuery
 
 DANDISET = "DANDI:000350@0.240822.1759"
@@ -24,6 +25,12 @@ ASSET_ID = "4f898ff7-6084-4e84-a449-f05811c1d951"
 ASSET_PATH = "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb"
 OBJECT_NAME = "NeuronOnePhotonSeries"
 MOVIE_SHAPE = (3065, 888, 2048, 29)  # axes: time, y, x, z
+DEFAULT_OUTPUT = (
+    Path(__file__).parent / "_output" / "fish-projection-t50-full-volume.zarr"
+)
+DEFAULT_PREVIEW = (
+    Path(__file__).parent / "_output" / "fish-projection-t50-full-volume-z14.png"
+)
 
 
 @dataclass(frozen=True)
@@ -33,8 +40,8 @@ class FishProjectionConfig:
     tile_x: int = 256
     block_size: int = 262_144
     cache_size: int = 67_108_864
-    output: Path = Path(__file__).parent / "_output" / "fish-projection.zarr"
-    preview: Path = Path(__file__).parent / "_output" / "fish-projection-z14.png"
+    output: Path = DEFAULT_OUTPUT
+    preview: Path = DEFAULT_PREVIEW
 
 
 def temporal_median(tile: np.ndarray) -> np.ndarray:
@@ -72,11 +79,19 @@ def run_example(config: FishProjectionConfig) -> dict[str, object]:
         selected = source.select(NWBQuery(asset=ASSET_ID, name=OBJECT_NAME))
         bounded = selected.isel(time=slice(0, config.frames))
         movie = neuroflow.NeuroArray(source, bounded)
-        projection_array = movie.median(
-            "time",
-            output=config.output,
-            chunks=(config.tile_y, config.tile_x, 1),
-        )
+        try:
+            projection_array = movie.median(
+                "time",
+                output=config.output,
+                chunks=(config.tile_y, config.tile_x, 1),
+            )
+        except ProvenanceMismatchError as exc:
+            raise RuntimeError(
+                f"{config.output} contains a different NeuroFlow workflow. "
+                "Keep it for reproducibility and rerun with a fresh path, for "
+                "example: --output examples/_output/fish-projection-new.zarr "
+                "--preview examples/_output/fish-projection-new-z14.png"
+            ) from exc
         result = projection_array.workflow
         assert result is not None
         verification = result.verify()
@@ -106,21 +121,29 @@ def run_example(config: FishProjectionConfig) -> dict[str, object]:
 
 
 def parse_args(argv: list[str] | None = None) -> FishProjectionConfig:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--frames", type=int, default=50)
-    parser.add_argument("--tile-y", type=int, default=256)
-    parser.add_argument("--tile-x", type=int, default=256)
-    parser.add_argument("--block-size", type=int, default=262_144)
-    parser.add_argument("--cache-size-mib", type=int, default=64)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("--frames", type=int, default=50, help="leading time frames")
+    parser.add_argument("--tile-y", type=int, default=256, help="output y chunk")
+    parser.add_argument("--tile-x", type=int, default=256, help="output x chunk")
+    parser.add_argument(
+        "--block-size", type=int, default=262_144, help="remote read block bytes"
+    )
+    parser.add_argument(
+        "--cache-size-mib", type=int, default=64, help="bounded remote cache"
+    )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(__file__).parent / "_output" / "fish-projection.zarr",
+        default=DEFAULT_OUTPUT,
+        help="durable projection Zarr path",
     )
     parser.add_argument(
         "--preview",
         type=Path,
-        default=Path(__file__).parent / "_output" / "fish-projection-z14.png",
+        default=DEFAULT_PREVIEW,
+        help="middle-plane PNG path",
     )
     args = parser.parse_args(argv)
     if not 1 <= args.frames <= 50:
