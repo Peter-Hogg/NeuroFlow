@@ -73,3 +73,28 @@ memory cache. `--frames` is capped at 50. `--tile-y` and `--tile-x` configure
 bounded output chunks, while `--block-size` and `--cache-size-mib` retain safe
 transport limits. Run `uv run python -m examples.dandi_fish_projection --help`
 for all options.
+
+### NumPy reference volume and napari
+
+To save a compact reference volume for all 29 z-planes and open it in napari:
+
+```bash
+uv run python -m examples.dandi_fish_reference_volume
+```
+
+The default takes the temporal median of 9 frames over a centered `512 x 512`
+crop, writing a guaranteed `float32` `(z, y, x)` NumPy file at
+`examples/_output/fish-reference.npy`. It computes one z-plane at a time, so
+working data are bounded to one plane's 9 input frames plus Dask's median
+workspace and the 64 MiB remfile cache (roughly 84 MiB for uint16 source data,
+excluding Python/HDF5 overhead). The output is about 29 MiB.
+
+The physical chunks are still `1 x 888 x 2048 x 1`: the spatial crop reduces
+the retained array and median workspace, but HDF5 must transfer and decompress
+the complete native image-plane chunk for every selected `(time, z)` pair. The
+default therefore touches 261 native chunks (about 0.88 GiB uncompressed at
+uint16), exactly once each. Use `--tiff path/to/reference.tif` for an optional
+TIFF stack when `tifffile` is installed. Use `--no-view` for batch/headless
+runs; napari is imported only after outputs are saved, and a missing package or
+display produces a friendly message. `--frames` is capped at 50 and all crop,
+transport, and cache arguments are validated. See `--help` for every option.

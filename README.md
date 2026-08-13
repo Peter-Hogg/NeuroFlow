@@ -66,6 +66,20 @@ NeuroFlow partitions the physical reads by z-plane, writes the full
 resume, and verifies every partition. It also saves z-plane 14 as a PNG preview.
 The complete remote recording is never downloaded.
 
+For an immediately viewable 29-plane reference stack, the companion example
+saves a bounded temporal median as a `(z, y, x)` NumPy array and optionally
+opens it in napari:
+
+```bash
+uv run python -m examples.dandi_fish_reference_volume --no-view
+```
+
+Its default uses 9 frames and a `512 x 512` crop. The crop bounds output and
+median memory, but—because the HDF5 chunks contain complete image planes—it
+does not avoid transferring the full native chunk for each selected time/z
+pair. See the [examples guide](examples/README.md) for resource details and
+optional TIFF/napari usage.
+
 For the common path, NeuroFlow also exposes a named-axis, NumPy-like API. The
 same durable engine handles partitioning, Dask execution, Zarr output, resume,
 and verification:
