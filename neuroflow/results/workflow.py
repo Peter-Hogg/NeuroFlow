@@ -263,8 +263,11 @@ class PersistedResult:
                 partition = Partition.from_dict(value)
                 if not _partition_within_shape(
                     partition.read_slices, selection_shape
-                ) or not _partition_within_shape(
-                    partition.output_slices, output_shape
+                ) or (
+                    output_shape
+                    and not _partition_within_shape(
+                        partition.output_slices, output_shape
+                    )
                 ):
                     raise ValueError("partition slices exceed declared result bounds")
                 entries.append((str(value["partition_id"]), partition))

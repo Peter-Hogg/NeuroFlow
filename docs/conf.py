@@ -32,4 +32,3 @@ exclude_patterns = [
 ]
 html_theme = "furo"
 html_title = "NeuroFlow documentation"
-html_static_path = ["_static"]
