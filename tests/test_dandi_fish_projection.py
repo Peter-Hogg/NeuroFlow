@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from examples.dandi_fish_projection import (
     FishProjectionConfig,
     parse_args,
@@ -7,17 +9,19 @@ from examples.dandi_fish_projection import (
 )
 
 
-def test_fish_projection_defaults_touch_three_bounded_chunks() -> None:
+def test_fish_projection_defaults_touch_fifty_bounded_chunks() -> None:
     config = parse_args([])
 
-    assert config.frames == 3
-    assert config.crop_size == 64
-    assert config.z_plane == 0
+    assert config.frames == 50
+    assert config.crop_size == 128
+    assert config.crop_y == 380
+    assert config.crop_x == 960
+    assert config.z_plane == 14
     assert projection_slices(config) == (
-        slice(0, 3),
-        slice(0, 64),
-        slice(0, 64),
-        0,
+        slice(0, 50),
+        slice(380, 508),
+        slice(960, 1088),
+        14,
     )
 
 
@@ -29,6 +33,10 @@ def test_fish_projection_arguments_remain_bounded(tmp_path: Path) -> None:
             "5",
             "--crop-size",
             "96",
+            "--crop-y",
+            "100",
+            "--crop-x",
+            "200",
             "--z-plane",
             "4",
             "--output",
@@ -37,5 +45,20 @@ def test_fish_projection_arguments_remain_bounded(tmp_path: Path) -> None:
     )
 
     assert config == FishProjectionConfig(
-        frames=5, crop_size=96, z_plane=4, output=output
+        frames=5, crop_size=96, crop_y=100, crop_x=200, z_plane=4, output=output
     )
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["--frames", "51"],
+        ["--crop-size", "129"],
+        ["--crop-y", "761"],
+        ["--crop-x", "1921"],
+        ["--z-plane", "29"],
+    ],
+)
+def test_fish_projection_rejects_work_outside_caps(arguments: list[str]) -> None:
+    with pytest.raises(SystemExit):
+        parse_args(arguments)

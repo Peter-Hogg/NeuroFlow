@@ -53,18 +53,18 @@ The recording is pinned for reproducibility and the default numerical workload
 is about 1 MiB. Internet access is required. See [the examples guide](examples/README.md)
 for the exact asset, generated files, and options.
 
-For a real calcium movie, the bounded fish example streams three native chunks
+For a real calcium movie, the bounded fish example streams 50 native chunks
 from Misha Ahrens' 150 GB whole-brain zebrafish recording and computes a
-`64 × 64` median projection:
+centered `128 × 128` median projection:
 
 ```bash
 uv run python -m examples.dandi_fish_projection
 ```
 
-Only three time frames, one z-plane, and the upper-left crop participate in the
-Dask graph. The HDF5 chunk geometry means each frame still fetches one complete
-compressed image-plane chunk; the example reports this honestly and never
-downloads the complete recording.
+Only 50 time frames, the middle z-plane (index 14 of 29), and the centered crop
+participate in the Dask graph. The HDF5 chunk geometry means each frame still
+fetches one complete compressed image-plane chunk; the example reports this
+honestly and never downloads the complete recording.
 
 ## Bring your own function
 

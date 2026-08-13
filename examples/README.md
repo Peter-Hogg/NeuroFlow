@@ -54,13 +54,16 @@ the smallest recording in that Dandiset, a 150 GB NWB-HDF5 asset, and selects
 the real `NeuronOnePhotonSeries` calcium movie with shape
 `3065 x 888 x 2048 x 29` (`time, y, x, z`).
 
-The default Dask graph selects the first three frames, upper-left `64 x 64`
-pixels, and z-plane 0, then computes a median over time and saves
-`examples/_output/fish-median-projection.png`. The source's physical chunks are
-`1 x 888 x 2048 x 1`, so this touches exactly three native chunks—about 10.4 MiB
-uncompressed in total before gzip—not three tiny 64-pixel tiles. This is still
+The movie axes are `(time, y, x, z)`. The default Dask graph selects the first
+50 time frames, a centered `128 x 128` crop (`y=380:508`, `x=960:1088`), and
+the middle of the 29 z-planes (index 14), then computes a median over time and
+saves `examples/_output/fish-median-projection.png`. The source's physical chunks are
+`1 x 888 x 2048 x 1`, so this touches exactly 50 native chunks—about 174 MiB
+uncompressed in total before gzip—not 50 tiny 128-pixel tiles. This is still
 bounded and tiny relative to the recording, but the distinction matters.
 
 The example uses PyNWB's recommended `remfile` transport with a bounded 64 MiB
-memory cache. `--frames` is capped at 9, `--crop-size` at 128, and `--z-plane`
-at 28 so a casual run cannot silently become a large archive workload.
+memory cache. `--frames` is capped at 50, `--crop-size` at 128, and `--z-plane`
+at 28. The configurable `--crop-y` and `--crop-x` starts are validated together
+with the crop size against the 888 x 2048 y/x bounds, so a casual run cannot
+silently become a larger archive workload.
