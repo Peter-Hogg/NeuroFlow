@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from hdmf_zarr import NWBZarrIO, ZarrDataIO
-from pynwb import NWBFile, TimeSeries
+from pynwb import NWBHDF5IO, NWBFile, TimeSeries
 
 
 @pytest.fixture()
@@ -46,5 +46,28 @@ def nwb_zarr(tmp_path: Path) -> tuple[Path, np.ndarray]:
         )
     )
     with NWBZarrIO(path, mode="w") as io:
+        io.write(nwb)
+    return path, data
+
+
+@pytest.fixture()
+def nwb_hdf5(tmp_path: Path) -> tuple[Path, np.ndarray]:
+    path = tmp_path / "session.nwb"
+    data = np.arange(120, dtype=np.float32).reshape(10, 3, 4)
+    nwb = NWBFile(
+        session_description="HDF5 test session",
+        identifier="hdf5-session-1",
+        session_start_time=datetime.now(timezone.utc),
+        session_id="hdf5-session-1",
+    )
+    nwb.add_acquisition(
+        TimeSeries(
+            name="movie",
+            data=data,
+            unit="a.u.",
+            rate=2.0,
+        )
+    )
+    with NWBHDF5IO(path, mode="w") as io:
         io.write(nwb)
     return path, data

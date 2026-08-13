@@ -2,11 +2,10 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import dask.array as da
 import numpy as np
-import zarr
 
 from neuroflow.source.base import SourceIdentity
 
@@ -43,8 +42,11 @@ class Selection:
     """A semantic NWB selection backed by an unopened numerical Dask graph."""
 
     metadata: SelectionMetadata
-    _array: zarr.Array
-    _timestamps: zarr.Array | None = None
+    # Zarr arrays and h5py datasets both provide shape/dtype/chunks and bounded
+    # NumPy-style slicing. Keeping the concrete handle here prevents conversion
+    # (and therefore prevents accidental full materialization).
+    _array: Any
+    _timestamps: Any | None = None
 
     def as_dask_array(
         self,
@@ -52,9 +54,10 @@ class Selection:
         chunks: tuple[int, ...] | Literal["native", "auto"] = "auto",
     ) -> da.Array:
         """Expose numerical data lazily without reading array chunks."""
+        native = self._array.chunks
         requested = cast(
-            tuple[int, ...],
-            self._array.chunks if chunks in ("native", "auto") else chunks,
+            tuple[int, ...] | Literal["auto"],
+            (native or "auto") if chunks in ("native", "auto") else chunks,
         )
         return da.from_array(
             self._array,
@@ -76,7 +79,9 @@ class Selection:
         """Return irregular timestamps lazily, or ``None`` for regular sampling."""
         if self._timestamps is None:
             return None
-        chunks = cast(tuple[int, ...], self._timestamps.chunks)
+        chunks = cast(
+            tuple[int, ...] | Literal["auto"], self._timestamps.chunks or "auto"
+        )
         return da.from_array(
             self._timestamps,
             chunks=chunks,  # pyright: ignore[reportArgumentType] - Dask stub is narrow

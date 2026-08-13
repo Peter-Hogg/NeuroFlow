@@ -5,9 +5,9 @@ Python tools to archive-scale NWB data. It separates data access, partition
 planning, execution, and durable output persistence; scientific algorithms stay
 in external libraries.
 
-Version 0.1 implements lazy local and DANDI NWB-Zarr discovery, semantic
-selection, temporal and spatial partitions, explicit Dask execution, resumable
-partition manifests, provenance, Zarr arrays, and Parquet tables. See
+Version 0.1 implements local and DANDI NWB-Zarr plus bounded NWB-HDF5 access,
+semantic selection, temporal and spatial partitions, explicit Dask execution,
+resumable partition manifests, provenance, Zarr arrays, and Parquet tables. See
 [`docs/NeuroFlow_API_Specification.md`](docs/NeuroFlow_API_Specification.md) and
 [`docs/NeuroFlow_Architecture_Decisions.md`](docs/NeuroFlow_Architecture_Decisions.md).
 
@@ -22,6 +22,19 @@ uv run python -m examples.local_nwb_zarr
 ```
 
 See [`examples/README.md`](examples/README.md) for what each stage demonstrates.
+
+For a real network-backed NWB-HDF5 example pinned to one small recording in
+DANDI:000049, run:
+
+```bash
+uv run python -m examples.dandi_hdf5
+```
+
+The default selects the single `max_project` dataset (shape `1 x 512 x 512`,
+about 1 MiB uncompressed) from a 27.8 MB remote asset, processes it as one
+bounded task, writes Zarr output, verifies it, and reopens it lazily. It requires
+internet access and an HTTP server that supports byte ranges. Use `--help` to
+see the deliberately limited scaling parameters.
 
 The same API can be pointed at an existing NWB-Zarr dataset:
 
@@ -54,6 +67,25 @@ result.execute()
 
 Creating the source, selection, plan, or result handle does not execute numerical
 work. Execution begins only at `result.execute()` or with `execute=True`.
+
+## Source guarantees
+
+- **NWB-Zarr:** numerical arrays remain object-store-backed Zarr arrays. Native
+  chunks are preserved and Dask can fetch independent chunks lazily.
+- **NWB-HDF5:** local files remain h5py datasets. Remote files are opened through
+  a seekable fsspec HTTP reader with a bounded in-memory readahead cache; no
+  complete-file download or eager array conversion is performed. Metadata
+  discovery itself may require many range requests because HDF5 metadata is not
+  object-store-native.
+- HDF5 datasets may be contiguous (`native_chunks=None`). Dask then chooses
+  logical `auto` chunks, but those are not physical HDF5 chunks and NeuroFlow
+  does not claim equivalent request efficiency. The threaded scheduler is the
+  supported execution mode for an open remote HDF5 handle; process and
+  distributed schedulers are not guaranteed because h5py/file handles are not
+  generally serializable.
+- The remote server must honor byte-range requests. Opening fails explicitly if
+  a seekable range reader cannot be established. Users should choose bounded
+  partition plans and inspect `result.plan` before execution.
 
 Regularly sampled series support sample- or duration-based temporal windows.
 Irregular timestamps are exposed with `selection.as_dask_timestamps()` and remain

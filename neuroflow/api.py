@@ -18,11 +18,16 @@ if TYPE_CHECKING:
     from neuroflow.source.base import NWBSource, SourceSpec
     from neuroflow.storage.base import OutputSpec
 
-from neuroflow.exceptions import IncompletePartitionError, OutputConflictError
+from neuroflow.exceptions import (
+    IncompletePartitionError,
+    OutputConflictError,
+    UnsupportedBackendError,
+)
 from neuroflow.execution.graph import build_plan
 from neuroflow.results.workflow import PersistedResult, WorkflowResult
 from neuroflow.source.base import SourceSpec
 from neuroflow.source.dandi import DandiNWBSource
+from neuroflow.source.hdf5 import NWBHDF5Source
 from neuroflow.source.local import LocalNWBZarrSource
 from neuroflow.storage.base import join_uri, read_json
 from neuroflow.storage.parquet import ParquetOutput
@@ -60,7 +65,12 @@ def open_source(
             version=version or embedded_version,
             storage_options=storage_options,
         )
-    return LocalNWBZarrSource(
+    source_class = (
+        NWBHDF5Source
+        if value.lower().split("?", 1)[0].endswith(".nwb")
+        else LocalNWBZarrSource
+    )
+    return source_class(
         value,
         version=version,
         storage_options=storage_options,
@@ -97,6 +107,12 @@ def run(
     execute: bool = False,
 ) -> WorkflowResult:
     """Construct a lazy workflow; execution is always explicitly requested."""
+    attributes = selection.metadata.attributes or {}
+    if attributes.get("backend") == "nwb-hdf5" and scheduler != "threads":
+        raise UnsupportedBackendError(
+            "NWB-HDF5 selections currently require scheduler='threads'; open "
+            "h5py and remote file handles are not safely serializable"
+        )
     if not isinstance(output, (ZarrOutput, ParquetOutput, SegmentationOutput)):
         raise TypeError(
             "output must be ZarrOutput, ParquetOutput, or SegmentationOutput"

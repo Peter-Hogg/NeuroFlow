@@ -14,6 +14,7 @@ from neuroflow.exceptions import (
 )
 from neuroflow.selection.query import NWBQuery, Selection
 from neuroflow.source.base import AssetMetadata, SourceIdentity, SourceSummary
+from neuroflow.source.hdf5 import NWBHDF5Source
 from neuroflow.source.local import LocalNWBZarrSource
 
 API_URL = "https://api.dandiarchive.org/api"
@@ -34,7 +35,7 @@ def _get_json(
 
 
 class DandiNWBSource:
-    """A Dandiset whose numerical access is delegated to one selected Zarr asset."""
+    """A Dandiset delegating numerical access to a selected NWB asset."""
 
     def __init__(
         self,
@@ -50,7 +51,7 @@ class DandiNWBSource:
         self._storage_options = options
         self.version = version or self._resolve_version()
         self._assets = self._load_assets()
-        self._children: dict[str, LocalNWBZarrSource] = {}
+        self._children: dict[str, LocalNWBZarrSource | NWBHDF5Source] = {}
         self._identity = SourceIdentity(
             uri=f"DANDI:{self.dandiset_id}",
             version=self.version,
@@ -86,7 +87,7 @@ class DandiNWBSource:
                 content_url = (
                     f"s3://dandiarchive/zarr/{zarr_id}"
                     if isinstance(zarr_id, str)
-                    else None
+                    else f"{API_URL}/assets/{asset_id}/download/"
                 )
                 assets.append(
                     AssetMetadata(
@@ -112,7 +113,11 @@ class DandiNWBSource:
         return self._assets
 
     def _resolve_asset(self, requested: str | None) -> AssetMetadata:
-        candidates = [asset for asset in self._assets if asset.is_zarr]
+        candidates = [
+            asset
+            for asset in self._assets
+            if asset.is_zarr or asset.path.lower().endswith(".nwb")
+        ]
         if requested is not None:
             candidates = [
                 asset
@@ -121,11 +126,13 @@ class DandiNWBSource:
             ]
         if not candidates:
             if requested is None:
-                raise ObjectNotFoundError("the Dandiset contains no NWB-Zarr assets")
-            raise ObjectNotFoundError(f"no NWB-Zarr asset matched {requested!r}")
+                raise ObjectNotFoundError(
+                    "the Dandiset contains no supported NWB assets"
+                )
+            raise ObjectNotFoundError(f"no supported NWB asset matched {requested!r}")
         if len(candidates) > 1:
             raise AmbiguousSelectionError(
-                "multiple NWB-Zarr assets are available; set NWBQuery(asset=...)"
+                "multiple NWB assets are available; set NWBQuery(asset=...)"
             )
         return candidates[0]
 
@@ -134,12 +141,24 @@ class DandiNWBSource:
         child = self._children.get(asset.asset_id)
         if child is None:
             if asset.content_url is None:
-                raise UnsupportedBackendError(f"asset {asset.path} is not Zarr-backed")
+                raise UnsupportedBackendError(f"asset {asset.path} has no content URL")
             details = _get_json(
                 f"{API_URL}/dandisets/{self.dandiset_id}/versions/{self.version}/"
                 f"assets/{asset.asset_id}/",
                 self._headers,
             )
+            content_url = asset.content_url
+            if not asset.is_zarr:
+                urls = details.get("contentUrl")
+                if isinstance(urls, list):
+                    direct = [
+                        value
+                        for value in urls
+                        if isinstance(value, str)
+                        and "api.dandiarchive.org" not in value
+                    ]
+                    if direct:
+                        content_url = direct[-1]
             digest = details.get("digest")
             checksum = None
             if isinstance(digest, dict):
@@ -158,9 +177,14 @@ class DandiNWBSource:
                 asset_id=asset.asset_id,
                 checksum=checksum,
             )
-            options = {"anon": True, **self._storage_options}
-            child = LocalNWBZarrSource(
-                asset.content_url,
+            source_class = LocalNWBZarrSource if asset.is_zarr else NWBHDF5Source
+            options = (
+                {"anon": True, **self._storage_options}
+                if asset.is_zarr
+                else self._storage_options
+            )
+            child = source_class(
+                content_url,
                 version=self.version,
                 storage_options=options,
                 identity=identity,
@@ -180,7 +204,7 @@ class DandiNWBSource:
         return SourceSummary(
             self.identity,
             self.assets(),
-            ("metadata", "lazy-array", "nwb-zarr", "dandi"),
+            ("metadata", "bounded-array", "nwb-zarr", "nwb-hdf5", "dandi"),
         )
 
     def close(self) -> None:

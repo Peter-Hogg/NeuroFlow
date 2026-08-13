@@ -1,7 +1,10 @@
+from typing import cast
+
 import pytest
 
 from neuroflow.exceptions import AmbiguousSelectionError
 from neuroflow.selection import NWBQuery
+from neuroflow.source.base import SourceIdentity
 from neuroflow.source.dandi import DandiNWBSource
 
 
@@ -39,3 +42,45 @@ def test_dandi_open_lists_metadata_without_opening_asset(
     assert len(calls) == 1
     with pytest.raises(AmbiguousSelectionError):
         source.select(NWBQuery(name="movie"))
+
+
+def test_dandi_routes_selected_blob_asset_to_hdf5(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, object]] = []
+
+    def response(
+        url: str, headers: dict[str, str], timeout: float = 30.0
+    ) -> dict[str, object]:
+        if url.endswith("assets/?page_size=100"):
+            return {
+                "results": [
+                    {
+                        "asset_id": "blob-1",
+                        "path": "subject/session.nwb",
+                        "size": 123,
+                        "zarr": None,
+                    }
+                ],
+                "next": None,
+            }
+        return {"digest": {"dandi:sha2-256": "abc"}}
+
+    class FakeHDF5Source:
+        def __init__(self, uri: str, **kwargs: object) -> None:
+            calls.append((uri, kwargs))
+
+        def select(self, query: NWBQuery) -> str:
+            return query.name or ""
+
+        def close(self) -> None:
+            pass
+
+    monkeypatch.setattr("neuroflow.source.dandi._get_json", response)
+    monkeypatch.setattr("neuroflow.source.dandi.NWBHDF5Source", FakeHDF5Source)
+    source = DandiNWBSource("49", version="0.230223.1424")
+
+    assert source.select(NWBQuery(asset="blob-1", name="speed")) == "speed"
+    assert calls[0][0] == "https://api.dandiarchive.org/api/assets/blob-1/download/"
+    kwargs = cast(dict[str, object], calls[0][1])
+    assert cast(SourceIdentity, kwargs["identity"]).asset_id == "blob-1"
