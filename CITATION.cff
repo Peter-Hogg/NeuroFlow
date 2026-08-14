@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use NeuroFlow, please cite the archived release and its paper."
+message: "If you use NeuroFlow, please cite the software release."
 title: "NeuroFlow: lazy, reproducible analysis of archive-scale NWB data"
 type: software
 authors:

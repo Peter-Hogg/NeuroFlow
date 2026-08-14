@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-output_root="${1:-examples/_output/paper-fish-projection}"
+output_root="${1:-examples/_output/case-study-fish-projection}"
 mkdir -p benchmarks/results
 
 /usr/bin/time -v -o benchmarks/results/fish-resource-usage.txt \

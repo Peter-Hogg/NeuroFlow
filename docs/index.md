@@ -1,8 +1,8 @@
 # NeuroFlow
 
-NeuroFlow lets neuroscience analyses look like ordinary NumPy while it manages
-lazy NWB access, bounded Dask execution, durable outputs, provenance, resume,
-and verification.
+NeuroFlow provides a small named-axis API for running NumPy functions on NWB
+data while managing lazy access, bounded Dask execution, durable outputs,
+provenance, resume, and verification.
 
 ```python
 import neuroflow
@@ -26,7 +26,7 @@ concepts
 High_Level_API
 examples
 limitations
-Publication_Reproducibility
+reproducibility
 ```
 
 ```{toctree}

@@ -1,4 +1,4 @@
-# Publication release checklist
+# Software release checklist
 
 ## Repository and software
 
@@ -16,7 +16,7 @@
 - [ ] GitHub matrix workflows pass on the public repository.
 - [ ] Docker image builds in CI or another environment with a working daemon.
 
-## Scientific evidence
+## Validation evidence
 
 - [x] Deterministic reference data and backend-equivalence tests are included.
 - [x] Repeated local benchmark harness compares NumPy, direct Dask, and NeuroFlow.
@@ -28,14 +28,11 @@
 - [x] Archive-scale record includes available network context and transfer statistics;
   unavailable peak RSS and detailed network fields are explicitly identified.
 
-## Archival and manuscript actions
+## Release and archival actions
 
 - [ ] Freeze the public API and create signed tag `v0.1.0`.
-- [ ] Create GitHub release and archive it in Zenodo, Software Heritage, or GigaDB.
-- [ ] Add the resulting DOI to citation and manuscript files.
-- [ ] Register bio.tools and RRID identifiers and add them to metadata.
-- [ ] Publish a Code Ocean capsule or equivalent reproducible environment.
-- [ ] Cite DANDI:000350 version `0.240822.1759`, its creators, asset, and relevant
-  primary publication in the manuscript reference list.
-- [ ] Complete author contributions, funding, competing interests, and journal
-  template sections.
+- [ ] Create a GitHub release and archive the tagged software in Zenodo or
+  Software Heritage.
+- [ ] Add any assigned software DOI to `CITATION.cff` and release metadata.
+- [x] Record the DANDI:000350 version, DOI, asset, object, and primary article in
+  the reproducibility guide.
