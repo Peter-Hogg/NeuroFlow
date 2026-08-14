@@ -17,6 +17,8 @@
     "native_chunks_touched": 1450
   },
   "result": {
+    "engine": "legacy-temporal-median-adapter",
+    "dtype": "float32",
     "axes": ["y", "x", "z"],
     "shape": [888, 2048, 29],
     "chunks": [256, 256, 1],
@@ -39,10 +41,13 @@
     "operating_system": "Linux 7.0.0-28-generic x86_64",
     "logical_cpus": 6,
     "python": "3.10.19",
-    "neuroflow": "0.1.0"
+    "neuroflow": "0.1.0",
+    "git_commit": null
   },
   "notes": [
     "Timing and HTTP statistics were copied from the example's terminal output.",
+    "This run predates the NumPy-expression engine and must not be presented as a timing measurement of that engine.",
+    "The exact Git commit was not captured and must not be inferred.",
     "Output sizes and workflow identity were independently read from the completed local result.",
     "Peak RSS, detailed CPU model, RAM capacity, link speed, and geographic network location were not captured and must not be inferred."
   ]

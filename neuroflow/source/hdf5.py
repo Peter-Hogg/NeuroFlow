@@ -104,9 +104,7 @@ class NWBHDF5Source:
         try:
             if "://" in self.uri:
                 options = dict(self.storage_options)
-                self._remote_file, self.transport = _open_remote_file(
-                    self.uri, options
-                )
+                self._remote_file, self.transport = _open_remote_file(self.uri, options)
                 session = getattr(self._remote_file, "session", None)
                 hooks = getattr(session, "hooks", None)
                 if isinstance(hooks, dict):
@@ -130,7 +128,11 @@ class NWBHDF5Source:
                 "support byte-range requests"
             ) from exc
         public_uri = _redacted_uri(self.uri)
-        checksum = hashlib.sha256(public_uri.encode()).hexdigest()
+        identity_value = public_uri
+        if "://" not in self.uri:
+            stat = Path(self.uri).stat()
+            identity_value = f"{public_uri}\0{stat.st_size}\0{stat.st_mtime_ns}"
+        checksum = hashlib.sha256(identity_value.encode()).hexdigest()
         self._identity = identity or SourceIdentity(
             public_uri, version, checksum=checksum
         )

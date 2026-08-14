@@ -19,7 +19,7 @@ from neuroflow.storage.base import join_uri, write_json_atomic
 from neuroflow.storage.manifest import PartitionManifest
 
 
-def _write_parquet_atomic(uri: str, table: pa.Table) -> str:
+def _write_parquet_atomic(uri: str, table: pa.Table) -> tuple[str, int]:
     sink = pa.BufferOutputStream()
     pq.write_table(table, sink)
     payload = sink.getvalue().to_pybytes()
@@ -36,7 +36,7 @@ def _write_parquet_atomic(uri: str, table: pa.Table) -> str:
     finally:
         if fs.exists(temporary):
             fs.rm(temporary)
-    return hashlib.sha256(payload).hexdigest()
+    return hashlib.sha256(payload).hexdigest(), len(payload)
 
 
 def _partition_shapes(partition: Partition) -> tuple[tuple[int, ...], tuple[int, ...]]:
@@ -59,6 +59,7 @@ class ArrayPartitionWriter:
         workflow_id: str,
         partition_id: str,
         reduced_axis_indices: tuple[int, ...] = (),
+        singleton_axis_indices: tuple[int, ...] = (),
     ) -> None:
         self.uri = uri
         self.array_name = array_name
@@ -66,16 +67,17 @@ class ArrayPartitionWriter:
         self.workflow_id = workflow_id
         self.partition_id = partition_id
         self.reduced_axis_indices = reduced_axis_indices
+        self.singleton_axis_indices = singleton_axis_indices
 
     def write_array(self, value: np.ndarray) -> PartitionManifest:
         expected, full_read_shape = _partition_shapes(self.partition)
         read_shape = tuple(
-            size
+            1 if index in self.singleton_axis_indices else size
             for index, size in enumerate(full_read_shape)
             if index not in self.reduced_axis_indices
         )
         trim_slices = tuple(
-            item
+            slice(0, 1) if index in self.singleton_axis_indices else item
             for index, item in enumerate(self.partition.trim_slices)
             if index not in self.reduced_axis_indices
         )
@@ -96,6 +98,7 @@ class ArrayPartitionWriter:
             status="complete",
             outputs={self.array_name: self.uri},
             checksums={self.array_name: checksum},
+            sizes={self.array_name: int(value.nbytes)},
         )
         write_json_atomic(
             join_uri(
@@ -176,6 +179,7 @@ class TablePartitionWriter:
             )
         outputs: dict[str, str] = {}
         checksums: dict[str, str] = {}
+        sizes: dict[str, int] = {}
         for index, (destination, partition_table) in enumerate(destinations):
             component = (
                 self.table_name
@@ -183,13 +187,16 @@ class TablePartitionWriter:
                 else f"{self.table_name}:{index}"
             )
             outputs[component] = destination
-            checksums[component] = _write_parquet_atomic(destination, partition_table)
+            checksum, size = _write_parquet_atomic(destination, partition_table)
+            checksums[component] = checksum
+            sizes[component] = size
         manifest = PartitionManifest(
             partition_id=self.partition_id,
             workflow_id=self.workflow_id,
             status="complete",
             outputs=outputs,
             checksums=checksums,
+            sizes=sizes,
         )
         write_json_atomic(
             join_uri(
@@ -292,7 +299,7 @@ class SegmentationPartitionWriter:
             self.objects_name,
             f"part-{self.partition_id}.parquet",
         )
-        table_checksum = _write_parquet_atomic(table_uri, table)
+        table_checksum, table_size = _write_parquet_atomic(table_uri, table)
         manifest = PartitionManifest(
             partition_id=self.partition_id,
             workflow_id=self.workflow_id,
@@ -303,6 +310,10 @@ class SegmentationPartitionWriter:
                     global_labels.tobytes(order="C")
                 ).hexdigest(),
                 self.objects_name: table_checksum,
+            },
+            sizes={
+                self.labels_name: int(global_labels.nbytes),
+                self.objects_name: table_size,
             },
         )
         write_json_atomic(

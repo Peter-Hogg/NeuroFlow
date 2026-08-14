@@ -10,7 +10,12 @@ from neuroflow.adapters.base import (
     MergeManifest,
     TaskContext,
 )
-from neuroflow.adapters.numpy import ArrayOutput, FunctionAdapter, TableOutput
+from neuroflow.adapters.numpy import (
+    ArrayOutput,
+    ExpressionAdapter,
+    FunctionAdapter,
+    TableOutput,
+)
 from neuroflow.adapters.segmentation import (
     SegmentationFunctionAdapter,
     SegmentationOutputSchema,
@@ -22,6 +27,7 @@ __all__ = [
     "AnalysisAdapter",
     "BoundarySummary",
     "ArrayOutput",
+    "ExpressionAdapter",
     "FunctionAdapter",
     "LoadedPartition",
     "MergeableAdapter",

@@ -21,8 +21,7 @@ class _SlicedArray:
         native = getattr(source, "chunks", None)
         self.chunks = (
             tuple(
-                min(size, chunk)
-                for size, chunk in zip(self.shape, native, strict=True)
+                min(size, chunk) for size, chunk in zip(self.shape, native, strict=True)
             )
             if native
             else None
@@ -73,6 +72,13 @@ class SelectionMetadata:
     # Absolute half-open bounds in the original dataset. Shape alone cannot
     # distinguish scientifically different slices with equal extents.
     selection_bounds: tuple[tuple[int, int], ...] | None = None
+
+
+def absolute_selection_bounds(
+    metadata: SelectionMetadata,
+) -> tuple[tuple[int, int], ...]:
+    """Return canonical half-open bounds in the original dataset."""
+    return metadata.selection_bounds or tuple((0, size) for size in metadata.shape)
 
 
 @dataclass(frozen=True)
@@ -145,9 +151,7 @@ class Selection:
             slices.append(slice(start, stop))
         bounded = tuple(slices)
         shape = tuple(item.stop - item.start for item in bounded)  # type: ignore[operator]
-        parent_bounds = self.metadata.selection_bounds or tuple(
-            (0, size) for size in self.metadata.shape
-        )
+        parent_bounds = absolute_selection_bounds(self.metadata)
         absolute_bounds = tuple(
             (parent_start + (item.start or 0), parent_start + (item.stop or 0))
             for (parent_start, _), item in zip(parent_bounds, bounded, strict=True)

@@ -1,14 +1,26 @@
 """Backend-neutral durable output contracts and metadata I/O."""
 
 import json
+import posixpath
 import re
 import uuid
 from collections.abc import Mapping
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
+from urllib.parse import unquote, urlsplit
 
 import fsspec
 
+from neuroflow.exceptions import OutputConflictError
+
 _COMPONENT_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+
+
+@dataclass(frozen=True)
+class _StorageLocation:
+    namespace: tuple[str, ...]
+    parts: tuple[str, ...]
 
 
 class OutputSpec(Protocol):
@@ -28,6 +40,46 @@ def validate_component_name(name: str) -> str:
             "and may not contain path traversal"
         )
     return name
+
+
+def _storage_location(uri: str) -> _StorageLocation:
+    """Normalize a local path or hierarchical URI for containment checks."""
+    parsed = urlsplit(uri)
+    if parsed.scheme.lower() in {"", "file"}:
+        raw_path = unquote(parsed.path) if parsed.scheme else uri
+        resolved = Path(raw_path).expanduser().resolve()
+        return _StorageLocation(("file",), tuple(str(part) for part in resolved.parts))
+
+    scheme = parsed.scheme.lower()
+    host = (parsed.hostname or "").lower()
+    port = str(parsed.port) if parsed.port is not None else ""
+    normalized_path = posixpath.normpath("/" + unquote(parsed.path)).lstrip("/")
+    parts = () if normalized_path in {"", "."} else tuple(normalized_path.split("/"))
+    return _StorageLocation((scheme, host, port), parts)
+
+
+def _contains_location(parent: _StorageLocation, child: _StorageLocation) -> bool:
+    return parent.namespace == child.namespace and child.parts[: len(parent.parts)] == (
+        parent.parts
+    )
+
+
+def validate_output_separation(
+    output_uri: str,
+    input_uris: Mapping[str, str],
+) -> None:
+    """Reject an output equal to, inside, or containing any active input.
+
+    The comparison is lexical for hierarchical remote URIs and uses resolved
+    paths locally. It performs no network or numerical reads.
+    """
+    output = _storage_location(output_uri)
+    for label, input_uri in input_uris.items():
+        source = _storage_location(input_uri)
+        if _contains_location(output, source) or _contains_location(source, output):
+            raise OutputConflictError(
+                f"output overlaps the active {label} input; choose a separate path"
+            )
 
 
 def read_json(uri: str) -> dict[str, object] | None:

@@ -647,3 +647,24 @@ Resume must reject stale outputs when source identity, adapter version, paramete
 8. Cellpose or a stand-in variable-output segmentation adapter writes directly to persistent storage.
 9. One laptop and one distributed-cluster execution use the same analysis definition.
 10. Optional integrations are absent without breaking core imports.
+
+---
+
+## 17. Supported NumPy expression layer
+
+`NeuroArray` implements a finite NumPy protocol surface rather than implicit
+conversion. Scalar arithmetic, comparisons, selected ufuncs, casts, contiguous
+rank-preserving slices, and the reductions `sum`, `mean`, `min`, `max`,
+`median`, scalar `percentile`, and scalar `quantile` build a canonical lazy
+expression.
+
+The expression is evaluated only by explicit `.compute()` or `.persist()`.
+Implicit `np.asarray`, iteration, truth testing, `out=`, raw ndarray operands,
+general broadcasting, fancy indexing, and unsupported NumPy functions must
+raise before numerical I/O.
+
+Durable lowering is restricted to expressions whose output partition can be
+computed from one bounded source partition. All reduced axes are read whole;
+retained axes may be tiled. Non-local broadcast branches such as
+`x / x.max()` require a future staged reduction and are rejected rather than
+being evaluated with tile-local or repeated-global semantics.

@@ -26,11 +26,15 @@ time uv run python -m examples.dandi_fish_projection
 ```
 
 The default processes 50 time frames for all 29 z-planes and saves a full
-`(y, x, z)` temporal median. It touches 1,450 native image-plane chunks. Preserve
-completed results and use new `--output` and `--preview` paths for changed runs.
+`(y, x, z)` temporal median. The analysis is expressed as
+`np.median(movie[:50], axis="time").astype(np.float32)`; NeuroFlow lowers it to
+29 bounded tasks. It touches 1,450 native image-plane chunks. Preserve completed
+results and use new `--output` and `--preview` paths for changed runs.
 
-The retained case-study measurement is in
-`benchmarks/results/fish-case-study-2026-08-13.json`.
+The retained case-study measurement in
+`benchmarks/results/fish-case-study-2026-08-13.json` used the legacy median
+adapter. It has the same source, selection, float32 output, and task geometry,
+but it is historical context—not a timing claim for the NumPy-expression engine.
 
 ## Dual-channel candidates
 

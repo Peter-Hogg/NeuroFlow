@@ -5,12 +5,13 @@ data while managing lazy access, bounded Dask execution, durable outputs,
 provenance, resume, and verification.
 
 ```python
+import numpy as np
 import neuroflow
 
 movie = neuroflow.load("session.nwb.zarr", name="calcium_movie")
-projection = movie.isel(time=slice(0, 50)).median(
-    "time",
-    output="projection.zarr",
+lazy_projection = np.sqrt(np.median(movie[:50], axis="time") + 1)
+projection = lazy_projection.persist(
+    "projection.zarr",
     chunks=(256, 256, 1),
     memory_limit="2 GiB",
 )

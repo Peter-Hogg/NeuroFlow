@@ -8,4 +8,8 @@ from typing import Literal
 class ParquetOutput:
     uri: str
     partition_on: tuple[str, ...] = ()
-    mode: Literal["create", "overwrite", "append"] = "create"
+    mode: Literal["create", "overwrite"] = "create"
+
+    def __post_init__(self) -> None:
+        if self.mode not in {"create", "overwrite"}:
+            raise ValueError("mode must be 'create' or 'overwrite'")

@@ -35,6 +35,20 @@ def _type_names(obj: object) -> set[str]:
     return {cls.__name__ for cls in type(obj).__mro__}
 
 
+def _local_zarr_identity(uri: str) -> str:
+    """Fingerprint stable store metadata without reading numerical chunks."""
+    digest = hashlib.sha256(uri.encode())
+    path = Path(uri)
+    stat = path.stat()
+    digest.update(f"{stat.st_size}:{stat.st_mtime_ns}".encode())
+    for name in (".zmetadata", ".zgroup", ".zattrs", "zarr.json"):
+        metadata = path / name
+        if metadata.is_file():
+            digest.update(name.encode())
+            digest.update(metadata.read_bytes())
+    return digest.hexdigest()
+
+
 class LocalNWBZarrSource:
     """Metadata facade over an NWB-Zarr hierarchy."""
 
@@ -69,7 +83,11 @@ class LocalNWBZarrSource:
             raise SourceResolutionError(
                 f"could not open NWB-Zarr source {self.uri}"
             ) from exc
-        checksum = hashlib.sha256(self.uri.encode()).hexdigest()
+        checksum = (
+            _local_zarr_identity(self.uri)
+            if "://" not in self.uri
+            else hashlib.sha256(self.uri.encode()).hexdigest()
+        )
         self._identity = identity or SourceIdentity(
             self.uri, version, checksum=checksum
         )

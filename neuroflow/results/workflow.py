@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -11,7 +12,9 @@ from neuroflow.adapters.base import AnalysisAdapter
 from neuroflow.adapters.numpy import ArrayOutput, TableOutput
 from neuroflow.adapters.segmentation import SegmentationOutputSchema
 from neuroflow.diagnostics.plan import ExecutionPlan
+from neuroflow.exceptions import IncompletePartitionError
 from neuroflow.execution.runner import (
+    _schema_output_kinds,
     build_tasks,
     execute_tasks,
     fail_output,
@@ -21,6 +24,7 @@ from neuroflow.execution.runner import (
     partition_identity,
 )
 from neuroflow.partition.base import Partition
+from neuroflow.provenance.hashing import stable_hash
 from neuroflow.results.array import ArrayResult
 from neuroflow.results.base import ResultStatus
 from neuroflow.results.table import TableResult
@@ -31,7 +35,11 @@ from neuroflow.storage.base import join_uri, read_json
 from neuroflow.storage.manifest import PartitionManifest
 from neuroflow.storage.parquet import ParquetOutput
 from neuroflow.storage.segmentation import SegmentationOutput
-from neuroflow.storage.validation import validate_partition_manifest
+from neuroflow.storage.validation import (
+    OutputStorageKind,
+    output_component_kinds,
+    validate_partition_manifest,
+)
 from neuroflow.storage.zarr import ZarrOutput
 
 
@@ -124,10 +132,14 @@ class WorkflowResult:
         )
         try:
             execute_tasks(self._tasks, self.scheduler, max_workers=self.max_workers)
+            finalize_output(
+                self.output,
+                self.plan.workflow_id,
+                self.plan.partitions,
+            )
         except Exception as exc:
             fail_output(self.output, self.plan.workflow_id, exc)
             raise
-        finalize_output(self.output, self.plan.workflow_id, self.plan.task_count)
         return self
 
     def resume(self) -> WorkflowResult:
@@ -146,6 +158,7 @@ class WorkflowResult:
             self.output.uri,
             self.plan.workflow_id,
             entries,
+            output_kinds=_schema_output_kinds(getattr(self.adapter, "output", None)),
             checksums=checksums,
         )
 
@@ -255,6 +268,13 @@ class PersistedResult:
         )
         entries: list[tuple[str, Partition]] = []
         errors: list[str] = []
+        try:
+            if not isinstance(output_record, dict):
+                raise ValueError("output schema is not a mapping")
+            output_kinds = output_component_kinds(output_record)
+        except ValueError as exc:
+            output_kinds = {}
+            errors.append(f"invalid output schema: {exc}")
         for value in raw:
             if not isinstance(value, dict):
                 errors.append("invalid partition descriptor")
@@ -277,12 +297,150 @@ class PersistedResult:
             self.uri,
             workflow_id,
             tuple(entries),
+            output_kinds=output_kinds,
             checksums=checksums,
         )
         return VerificationReport(
             report.valid and not errors,
             report.checked_partitions,
             (*errors, *report.errors),
+        )
+
+    def array_source_identity(self, *, verify_checksums: bool = True) -> str:
+        """Return a canonical identity for a complete, composable result.
+
+        The identity binds downstream workflows to the verified partition
+        descriptors and manifest checksums, rather than only to the upstream
+        workflow declaration.  ``verify_checksums=False`` is a trusted fast
+        path for a result that has just completed in this process; structural
+        and manifest checks still run, but output bytes are not reread.
+        """
+        workflow_id = self.provenance_record.get("workflow_id")
+        result_workflow_id = self.metadata.get("workflow_id")
+        plan = self.provenance_record.get("partition_plan")
+        output = self.provenance_record.get("output")
+        result_output = self.metadata.get("output")
+        errors: list[str] = []
+        if not isinstance(workflow_id, str) or not workflow_id:
+            errors.append("missing workflow identity")
+        if result_workflow_id != workflow_id:
+            errors.append("result and provenance identities do not match")
+        if self.metadata.get("status") != "complete":
+            errors.append("result metadata is not complete")
+        if self.provenance_record.get("status") != "complete":
+            errors.append("result provenance is not complete")
+        if not isinstance(output, dict) or result_output != output:
+            errors.append("result and provenance output schemas do not match")
+        if not isinstance(plan, dict):
+            errors.append("missing partition plan")
+            plan = {}
+
+        raw_ids = plan.get("partition_ids")
+        raw_partitions = plan.get("partitions")
+        task_count = plan.get("task_count")
+        result_task_count = self.metadata.get("task_count")
+        if not isinstance(raw_ids, list) or not raw_ids:
+            errors.append("partition plan has no partition identities")
+            raw_ids = []
+        if not isinstance(raw_partitions, list) or not raw_partitions:
+            errors.append("partition plan has no partition descriptors")
+            raw_partitions = []
+        if (
+            not isinstance(task_count, int)
+            or isinstance(task_count, bool)
+            or task_count < 1
+        ):
+            errors.append("partition plan has an invalid task count")
+        elif (
+            result_task_count != task_count
+            or task_count != len(raw_ids)
+            or task_count != len(raw_partitions)
+        ):
+            errors.append("partition counts do not match")
+
+        entries: list[tuple[str, Partition]] = []
+        descriptor_ids: list[str] = []
+        for value in raw_partitions:
+            if not isinstance(value, dict):
+                errors.append("invalid partition descriptor")
+                continue
+            try:
+                partition_id = str(value["partition_id"])
+                partition = Partition.from_dict(value)
+            except (KeyError, ValueError) as exc:
+                errors.append(f"invalid partition descriptor: {exc}")
+                continue
+            descriptor_ids.append(partition_id)
+            entries.append((partition_id, partition))
+        expected_ids = [str(value) for value in raw_ids]
+        if expected_ids != descriptor_ids or len(set(expected_ids)) != len(
+            expected_ids
+        ):
+            errors.append("partition identities and descriptors do not match")
+
+        if errors:
+            raise IncompletePartitionError("; ".join(errors))
+
+        report = self.verify(checksums=verify_checksums)
+        if not report.valid:
+            detail = "; ".join(report.errors[:3])
+            raise IncompletePartitionError(
+                "persisted array verification failed"
+                + (f": {detail}" if detail else "")
+            )
+
+        canonical_manifests: list[dict[str, object]] = []
+        for partition_id, partition in entries:
+            value = read_json(manifest_uri(self.uri, partition_id))
+            if value is None:
+                raise IncompletePartitionError(f"missing manifest for {partition_id}")
+            try:
+                manifest = PartitionManifest.from_dict(value)
+            except (KeyError, ValueError) as exc:
+                raise IncompletePartitionError(
+                    f"invalid manifest for {partition_id}: {exc}"
+                ) from exc
+            if (
+                manifest.status != "complete"
+                or manifest.workflow_id != workflow_id
+                or manifest.partition_id != partition_id
+            ):
+                raise IncompletePartitionError(
+                    f"manifest identity or status mismatch for {partition_id}"
+                )
+            if (
+                not manifest.outputs
+                or set(manifest.outputs) != set(manifest.checksums)
+                or not set(manifest.sizes).issubset(manifest.outputs)
+            ):
+                raise IncompletePartitionError(
+                    f"manifest outputs and checksums do not match for {partition_id}"
+                )
+            if any(
+                len(digest) != 64
+                or any(character not in "0123456789abcdef" for character in digest)
+                for digest in manifest.checksums.values()
+            ):
+                raise IncompletePartitionError(
+                    f"manifest has an invalid checksum for {partition_id}"
+                )
+            canonical_manifests.append(
+                {
+                    "partition_id": partition_id,
+                    "partition": partition.to_dict(),
+                    "schema_version": manifest.schema_version,
+                    "checksums": dict(sorted(manifest.checksums.items())),
+                    "sizes": dict(sorted(manifest.sizes.items())),
+                }
+            )
+        canonical_manifests.sort(key=lambda item: str(item["partition_id"]))
+        return stable_hash(
+            {
+                "schema_version": "1",
+                "workflow_id": workflow_id,
+                "output": output,
+                "manifests": canonical_manifests,
+            }
         )
 
 
@@ -298,11 +456,14 @@ def _partition_within_shape(
         and item.stop >= (item.start or 0)
         for item, size in zip(slices, shape, strict=True)
     )
+
+
 def _verify_partitions(
     uri: str,
     workflow_id: str,
     entries: tuple[tuple[str, Partition], ...],
     *,
+    output_kinds: Mapping[str, OutputStorageKind],
     checksums: bool,
 ) -> VerificationReport:
     checked: list[str] = []
@@ -326,7 +487,11 @@ def _verify_partitions(
             errors.append(f"partition identity mismatch for {partition_id}")
             continue
         partition_errors = validate_partition_manifest(
-            manifest, partition, output_root=uri, checksums=checksums
+            manifest,
+            partition,
+            output_root=uri,
+            output_kinds=output_kinds,
+            checksums=checksums,
         )
         if partition_errors:
             errors.extend(f"{partition_id}: {error}" for error in partition_errors)

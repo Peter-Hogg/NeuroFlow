@@ -55,12 +55,14 @@ the real `NeuronOnePhotonSeries` calcium movie with shape
 `3065 x 888 x 2048 x 29` (`time, y, x, z`).
 
 The movie axes are `(time, y, x, z)`. The example bounds the selection to the
-first 50 time frames and passes each z-plane to a normal NumPy function that
-returns `np.median(tile, axis=0)`. NeuroFlow declares `time` as the reduced axis,
-plans 29 resumable tasks, and assembles the resulting `(y, x, z)` array in
-`examples/_output/fish-projection.zarr`. The output is chunked into
-`256 x 256 x 1` y/x/z tiles. Z-plane 14 is also saved as
-`examples/_output/fish-projection-z14.png` for a quick visual check.
+first 50 time frames and describes the projection directly as
+`np.median(movie, axis="time")`. Constructing that expression performs no
+numerical read. At `.persist()`, NeuroFlow keeps `time` whole, plans 29 resumable
+z-plane tasks, and assembles the resulting `(y, x, z)` array in
+`examples/_output/fish-projection-numpy-t50-full-volume.zarr`. The output is
+chunked into `256 x 256 x 1` y/x/z tiles. Z-plane 14 is also saved as
+`examples/_output/fish-projection-numpy-t50-full-volume-z14.png` for a quick
+visual check.
 
 The source's physical HDF5 chunks are `1 x 888 x 2048 x 1`. Subdividing source
 reads over y/x would repeatedly fetch and decode the same complete image-plane
@@ -70,9 +72,10 @@ uncompressed before gzip—without downloading the 150 GB file.
 
 The example uses PyNWB's recommended `remfile` transport with a bounded 64 MiB
 memory cache. `--frames` is capped at 50. `--tile-y` and `--tile-x` configure
-bounded output chunks, while `--block-size` and `--cache-size-mib` retain safe
-transport limits. Run `uv run python -m examples.dandi_fish_projection --help`
-for all options.
+bounded output chunks. `--max-workers` defaults to one and is capped at four for
+archive-friendly concurrency, while `--block-size` and `--cache-size-mib`
+retain safe transport limits. Run
+`uv run python -m examples.dandi_fish_projection --help` for all options.
 
 ### NumPy reference volume and napari
 
@@ -115,6 +118,9 @@ uv run python -m examples.dandi_dual_channel_cells \
 ```
 
 The script computes resumable temporal-median reference volumes for both channels.
+The default output directory is `examples/_output/dual-channel-cells-numpy`,
+which is separate from results made by the earlier projection engine. Choose a
+fresh `--output` directory when changing channel identities or projection settings.
 Passing `--detect` also runs a deliberately simple 3-D local-maximum detector and
 writes native-coordinate candidate tables for manual annotation and detector
 validation. These tables are not validated cell counts. Atlas registration,

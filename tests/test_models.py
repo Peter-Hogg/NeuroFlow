@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from typing import Any, cast
 
 import pytest
 
@@ -7,6 +8,7 @@ from neuroflow.adapters import ArrayOutput, SegmentationOutputSchema, TableOutpu
 from neuroflow.partition import SpatialTilePlan, TimeWindowPlan
 from neuroflow.provenance import stable_hash
 from neuroflow.source import SourceIdentity
+from neuroflow.storage import ParquetOutput, SegmentationOutput, ZarrOutput
 
 
 def test_import_and_stable_hash() -> None:
@@ -39,4 +41,17 @@ def test_output_component_names_cannot_traverse_paths(schema: object) -> None:
 )
 def test_invalid_partition_declarations_are_rejected(factory: object) -> None:
     with pytest.raises(ValueError):
+        factory()  # type: ignore[operator]
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda: ZarrOutput("result.zarr", mode=cast(Any, "append")),
+        lambda: ParquetOutput("result", mode=cast(Any, "append")),
+        lambda: SegmentationOutput("result", mode=cast(Any, "append")),
+    ],
+)
+def test_unsupported_append_mode_is_rejected(factory: object) -> None:
+    with pytest.raises(ValueError, match="create.*overwrite"):
         factory()  # type: ignore[operator]

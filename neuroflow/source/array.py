@@ -20,6 +20,7 @@ class ArraySource:
         *,
         component: str,
         axes: tuple[str, ...],
+        content_identity: str | None = None,
     ) -> None:
         self.uri = str(uri)
         self.component = component
@@ -32,7 +33,12 @@ class ArraySource:
             raise ValueError("axes must be unique and match the array rank")
         self._array = value
         self.axes = axes
-        self.identity = SourceIdentity(self.uri, None, asset_id=component)
+        self.identity = SourceIdentity(
+            self.uri,
+            None,
+            asset_id=component,
+            checksum=content_identity,
+        )
 
     def assets(self) -> tuple[AssetMetadata, ...]:
         return (AssetMetadata(self.component, self.component, is_zarr=True),)

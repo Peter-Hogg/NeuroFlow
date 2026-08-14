@@ -22,9 +22,10 @@ import pandas as pd
 from scipy import ndimage
 
 import neuroflow
+from neuroflow.exceptions import ProvenanceMismatchError
 
 DEFAULT_SOURCE = "DANDI:000350@0.240822.1759"
-DEFAULT_OUTPUT = Path(__file__).parent / "_output" / "dual-channel-cells"
+DEFAULT_OUTPUT = Path(__file__).parent / "_output" / "dual-channel-cells-numpy"
 
 
 @dataclass(frozen=True)
@@ -162,12 +163,21 @@ def build_reference(
     bounded = movie.isel(time=slice(0, frame_count))
     output = config.output / f"{channel.cell_class}-reference.zarr"
     try:
-        return bounded.median(
-            "time",
-            output=output,
-            chunks=_reference_chunks(bounded.axes, bounded.shape),
-            max_workers=config.max_workers,
-        )
+        reference = np.median(  # type: ignore[call-overload]
+            bounded, axis="time"
+        ).astype(np.float32)
+        try:
+            return reference.persist(
+                output,
+                chunks=_reference_chunks(bounded.axes, bounded.shape),
+                max_workers=config.max_workers,
+                memory_limit="2 GiB",
+            )
+        except ProvenanceMismatchError as exc:
+            raise RuntimeError(
+                f"{output} contains a different NeuroFlow workflow. Keep it for "
+                "reproducibility and rerun with a fresh --output directory."
+            ) from exc
     finally:
         movie.close()
 
@@ -195,9 +205,10 @@ def run_example(config: DualChannelConfig) -> dict[str, object]:
             summary[f"{prefix}_shape"] = reference.shape
             summary[f"{prefix}_axes"] = reference.axes
             if config.detect:
-                volume_bytes = int(np.prod(reference.shape)) * np.dtype(
-                    reference.selection.metadata.dtype
-                ).itemsize
+                volume_bytes = (
+                    int(np.prod(reference.shape))
+                    * np.dtype(reference.selection.metadata.dtype).itemsize
+                )
                 # Gaussian filtering, finite masks, and maxima require several
                 # simultaneous arrays; reserve a conservative six-volume budget.
                 required_bytes = 6 * volume_bytes

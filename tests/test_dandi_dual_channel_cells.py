@@ -3,10 +3,18 @@ from pathlib import Path
 import numpy as np
 
 from examples.dandi_dual_channel_cells import (
+    DEFAULT_OUTPUT,
     _reference_chunks,
     detect_blob_candidates,
     parse_args,
 )
+
+
+def test_dual_channel_default_output_is_versioned_for_numpy_engine() -> None:
+    config = parse_args(["--neuron-name", "green", "--glia-name", "red"])
+
+    assert config.output == DEFAULT_OUTPUT
+    assert config.output.name == "dual-channel-cells-numpy"
 
 
 def test_candidate_detector_preserves_named_native_coordinates() -> None:

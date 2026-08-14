@@ -29,17 +29,27 @@ uv run python -m examples.local_nwb_zarr
 Before executing a large analysis, inspect its source and plan:
 
 ```python
+import numpy as np
 import neuroflow
 
 movie = neuroflow.load("session.nwb.zarr", name="movie")
 print(movie.axes, movie.shape)
+projection = np.median(movie[:50], axis="time")
+result = projection.persist(
+    "projection.zarr",
+    chunks=(256, 256),
+    memory_limit="2 GiB",
+)
+assert result.workflow.verify().valid
 ```
 
-Use named slicing and a declared memory limit. Numerical I/O starts only when
-an operation executes or a lazy result is explicitly computed.
+Use named or contiguous NumPy slicing and a declared memory limit. Arithmetic,
+supported NumPy calls, metadata inspection, and `repr()` remain lazy. Numerical
+I/O starts only at `.compute()` or `.persist()`.
 
 ## Result safety
 
 NeuroFlow refuses to resume an output whose workflow identity differs. Keep the
 old result as evidence and choose a fresh output path. Overwrite is explicit and
-refuses filesystem roots and other protected broad local targets.
+refuses filesystem roots and other protected broad local targets. An output
+also cannot equal, contain, or be nested within any active input path.

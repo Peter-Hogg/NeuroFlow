@@ -1,5 +1,7 @@
 import os
+from dataclasses import replace
 from pathlib import Path
+from typing import Literal
 from uuid import uuid4
 
 import numpy as np
@@ -9,12 +11,18 @@ import zarr
 from distributed import Client, LocalCluster
 
 import neuroflow
+import neuroflow.results.workflow as workflow_results
 from neuroflow.adapters import ArrayOutput, FunctionAdapter, TableOutput
-from neuroflow.exceptions import OutputConflictError, ProvenanceMismatchError
+from neuroflow.exceptions import (
+    IncompletePartitionError,
+    OutputConflictError,
+    ProvenanceMismatchError,
+)
 from neuroflow.execution.runner import partition_identity
 from neuroflow.partition import SpatialTilePlan, TimeWindowPlan
 from neuroflow.selection import NWBQuery
 from neuroflow.storage import ParquetOutput, ZarrOutput
+from neuroflow.storage.manifest import PartitionManifest
 
 
 def _adapter(function: object, **parameters: object) -> FunctionAdapter:
@@ -27,6 +35,42 @@ def _adapter(function: object, **parameters: object) -> FunctionAdapter:
         splittable_axes=("time",),
         parameters=parameters,
     )
+
+
+class _AdversarialManifestAdapter:
+    """Test adapter that violates one manifest commit contract at a time."""
+
+    name = "adversarial-manifest"
+    version = "1"
+    deterministic = True
+    random_seed = None
+
+    def __init__(
+        self,
+        behavior: Literal["failed-return", "wrong-identity", "mismatched-return"],
+    ) -> None:
+        self.behavior = behavior
+        self._delegate = _adapter(lambda value: value)
+        self.output = self._delegate.output
+
+    def requirements(self):  # type: ignore[no-untyped-def]
+        return self._delegate.requirements()
+
+    def prepare(self, partition, context):  # type: ignore[no-untyped-def]
+        return self._delegate.prepare(partition, context)
+
+    def run(self, prepared, context):  # type: ignore[no-untyped-def]
+        return self._delegate.run(prepared, context)
+
+    def persist(self, output, writer, context):  # type: ignore[no-untyped-def]
+        manifest = self._delegate.persist(output, writer, context)
+        if not isinstance(manifest, PartitionManifest):
+            raise TypeError("delegate did not return a partition manifest")
+        if self.behavior == "failed-return":
+            return replace(manifest, status="failed")
+        if self.behavior == "wrong-identity":
+            return replace(manifest, partition_id="wrong-partition")
+        return replace(manifest, checksums={"result": "0" * 64})
 
 
 def test_end_to_end_execution_resume_and_lazy_reopen(
@@ -67,6 +111,55 @@ def test_end_to_end_execution_resume_and_lazy_reopen(
     np.testing.assert_array_equal(
         reopened.arrays["result"][:2].compute(), nwb_zarr[1][:2] * 2
     )
+    source.close()
+
+
+def test_completed_resume_preserves_original_execution_metadata(
+    nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    source = neuroflow.open_source(nwb_zarr[0])
+    movie = source.select(NWBQuery(name="movie"))
+    result = neuroflow.run(
+        source=source,
+        selection=movie,
+        adapter=_adapter(lambda value: value),
+        partition=TimeWindowPlan(size=5),
+        output=ZarrOutput(str(tmp_path / "attempt-history.zarr")),
+        execute=True,
+        max_workers=1,
+        memory_limit="1 MiB",
+    )
+    original = result.provenance
+    assert original is not None
+
+    result.max_workers = 2
+    result.memory_limit = "2 MiB"
+    result.resume()
+    resumed = result.provenance
+    assert resumed is not None
+
+    for key in (
+        "execution_started",
+        "execution_finished",
+        "scheduler",
+        "execution_policy",
+        "environment",
+    ):
+        assert resumed[key] == original[key]
+    attempts = resumed["execution_attempts"]
+    assert isinstance(attempts, list)
+    assert len(attempts) == 2
+    assert [attempt["status"] for attempt in attempts] == ["complete", "complete"]
+    assert attempts[0]["execution_policy"] == {
+        "max_workers": 1,
+        "memory_limit": "1 MiB",
+    }
+    assert attempts[1]["execution_policy"] == {
+        "max_workers": 2,
+        "memory_limit": "2 MiB",
+    }
+    assert attempts[1]["resumed_from_status"] == "complete"
+    assert "execution_finished" in attempts[1]
     source.close()
 
 
@@ -358,6 +451,93 @@ def test_failed_workflow_resumes_without_repeating_completed_partitions(
     }
     assert all(markers[item] not in calls for item in completed_before)
     assert result.status.state == "complete"
+    source.close()
+
+
+@pytest.mark.parametrize("behavior", ["failed-return", "wrong-identity"])
+def test_adapter_returned_manifest_must_have_expected_identity_and_status(
+    nwb_zarr: tuple[Path, np.ndarray],
+    tmp_path: Path,
+    behavior: Literal["failed-return", "wrong-identity"],
+) -> None:
+    source = neuroflow.open_source(nwb_zarr[0])
+    movie = source.select(NWBQuery(name="movie"))
+    output = tmp_path / "invalid-returned-manifest.zarr"
+    result = neuroflow.run(
+        source=source,
+        selection=movie,
+        adapter=_AdversarialManifestAdapter(behavior),
+        partition=TimeWindowPlan(size=5),
+        output=ZarrOutput(str(output)),
+    )
+
+    with pytest.raises(ValueError, match="invalid identity or status"):
+        result.execute()
+
+    provenance = result.provenance
+    assert provenance is not None
+    assert provenance["status"] == "failed"
+    assert not (output / ".neuroflow" / "result.json").exists()
+    source.close()
+
+
+def test_adapter_returned_manifest_must_match_its_commit(
+    nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    source = neuroflow.open_source(nwb_zarr[0])
+    movie = source.select(NWBQuery(name="movie")).isel(time=slice(0, 5))
+    output = tmp_path / "missing-manifest.zarr"
+    result = neuroflow.run(
+        source=source,
+        selection=movie,
+        adapter=_AdversarialManifestAdapter("mismatched-return"),
+        partition=TimeWindowPlan(size=5),
+        output=ZarrOutput(str(output)),
+    )
+
+    with pytest.raises(ValueError, match="differs from its commit"):
+        result.execute()
+
+    provenance = result.provenance
+    assert provenance is not None
+    assert provenance["status"] == "failed"
+    assert not (output / ".neuroflow" / "result.json").exists()
+    source.close()
+
+
+def test_finalization_requires_every_expected_manifest_commit(
+    nwb_zarr: tuple[Path, np.ndarray],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = neuroflow.open_source(nwb_zarr[0])
+    movie = source.select(NWBQuery(name="movie")).isel(time=slice(0, 5))
+    output = tmp_path / "missing-final-manifest.zarr"
+    result = neuroflow.run(
+        source=source,
+        selection=movie,
+        adapter=_adapter(lambda value: value),
+        partition=TimeWindowPlan(size=5),
+        output=ZarrOutput(str(output)),
+    )
+    execute_tasks = workflow_results.execute_tasks
+
+    def execute_then_remove_manifest(*args: object, **kwargs: object):  # type: ignore[no-untyped-def]
+        values = execute_tasks(*args, **kwargs)  # type: ignore[arg-type]
+        manifests = list((output / ".neuroflow" / "manifests").glob("*.json"))
+        assert len(manifests) == 1
+        manifests[0].unlink()
+        return values
+
+    monkeypatch.setattr(workflow_results, "execute_tasks", execute_then_remove_manifest)
+
+    with pytest.raises(IncompletePartitionError, match="missing manifest"):
+        result.execute()
+
+    provenance = result.provenance
+    assert provenance is not None
+    assert provenance["status"] == "failed"
+    assert not (output / ".neuroflow" / "result.json").exists()
     source.close()
 
 

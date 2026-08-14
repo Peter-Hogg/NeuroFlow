@@ -237,7 +237,7 @@ Every persisted result includes machine-readable provenance.
 
 ### Rationale
 
-Remote archive reanalysis must be reproducible and traceable to immutable source assets and exact analysis conditions. This is central to both utility and publication value.
+Remote archive reanalysis must be reproducible and traceable to immutable source assets and exact analysis conditions. This is central to scientific utility and auditability.
 
 ### Required provenance
 

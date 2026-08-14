@@ -45,4 +45,4 @@ The fish example uses the following immutable public dataset:
 
 Do not infer experimental identity or biological interpretation from image
 appearance. Users are responsible for citing the dataset and relevant primary
-experimental publication in work derived from it.
+experimental study in work derived from it.

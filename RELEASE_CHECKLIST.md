@@ -9,7 +9,7 @@
 - [x] Network-free tests compare NumPy, NWB-Zarr, and NWB-HDF5 results.
 - [x] Trace outputs have provenance, coordinates, manifests, checksums, repair,
   resume, and `open_result()` support.
-- [x] Friendly segmentation prevents accidental publication of unreconciled y/x
+- [x] Friendly segmentation prevents accidental use of unreconciled y/x
   tiles.
 - [x] Workflow concurrency and estimated memory limits are enforced.
 - [x] Wheel and source distribution build and the wheel installs cleanly.

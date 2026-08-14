@@ -11,6 +11,8 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+import numpy as np
+
 if TYPE_CHECKING:
     from neuroflow.adapters.base import AnalysisAdapter
     from neuroflow.diagnostics.plan import ExecutionPlan
@@ -193,8 +195,17 @@ def open_array(
     *,
     component: str | None = None,
     axes: tuple[str, ...] | None = None,
+    verify: bool = True,
 ) -> tuple[ArraySource, Selection]:
-    """Open a persisted NeuroFlow array as a composable workflow input."""
+    """Open a complete persisted array as a composable workflow input.
+
+    Partition checksums are verified by default.  ``verify=False`` trusts the
+    recorded checksums and is intended only for an output that successfully
+    finished in the current process, such as the internal return path from
+    :meth:`NeuroArray.persist`.
+    """
+    if not isinstance(verify, bool):
+        raise TypeError("verify must be a boolean")
     result = open_result(uri)
     output = result.provenance.get("output", {})
     if not isinstance(output, dict) or output.get("kind") not in {
@@ -202,18 +213,105 @@ def open_array(
         "segmentation",
     }:
         raise TypeError("result does not contain a composable array")
+    content_identity = result.array_source_identity(verify_checksums=verify)
+    kind = output["kind"]
+    raw_shape = output.get("shape")
+    raw_axes = output.get("axes")
+    if (
+        not isinstance(raw_shape, list)
+        or any(
+            not isinstance(size, int) or isinstance(size, bool) or size < 0
+            for size in raw_shape
+        )
+        or not isinstance(raw_axes, list)
+        or not all(isinstance(axis, str) for axis in raw_axes)
+        or len(raw_axes) != len(raw_shape)
+        or len(set(raw_axes)) != len(raw_axes)
+    ):
+        raise IncompletePartitionError(
+            "persisted array has invalid shape or axis metadata"
+        )
+    declared_shape = tuple(raw_shape)
+    declared_axes = tuple(raw_axes)
     if component is None:
-        if output.get("kind") == "array":
-            component = str(output["name"])
+        if kind == "array":
+            name = output.get("name")
+            if not isinstance(name, str) or not name:
+                raise IncompletePartitionError(
+                    "persisted array has no declared component"
+                )
+            component = name
         else:
             arrays = output.get("arrays", {})
             if not isinstance(arrays, dict) or len(arrays) != 1:
                 raise ValueError("component is required for this result")
             component = str(next(iter(arrays)))
+    if kind == "array":
+        if component != output.get("name"):
+            raise ValueError(f"result has no declared array component {component!r}")
+        declared_dtype = output.get("dtype")
+        declared_chunks = output.get("chunks")
+    else:
+        arrays = output.get("arrays")
+        if not isinstance(arrays, dict) or component not in arrays:
+            raise ValueError(f"result has no declared array component {component!r}")
+        component_metadata = arrays[component]
+        if not isinstance(component_metadata, dict):
+            raise IncompletePartitionError(
+                f"persisted component {component!r} has invalid metadata"
+            )
+        declared_dtype = component_metadata.get("dtype")
+        declared_chunks = component_metadata.get("chunks")
+    if not isinstance(declared_dtype, str):
+        raise IncompletePartitionError(
+            f"persisted component {component!r} has invalid dtype metadata"
+        )
+    try:
+        expected_dtype = np.dtype(declared_dtype)
+    except TypeError as exc:
+        raise IncompletePartitionError(
+            f"persisted component {component!r} has invalid dtype metadata"
+        ) from exc
+    expected_chunks: tuple[int, ...] | None = None
+    if declared_chunks is not None:
+        if (
+            not isinstance(declared_chunks, list)
+            or len(declared_chunks) != len(declared_shape)
+            or any(
+                not isinstance(size, int) or isinstance(size, bool) or size < 1
+                for size in declared_chunks
+            )
+        ):
+            raise IncompletePartitionError(
+                f"persisted component {component!r} has invalid chunk metadata"
+            )
+        expected_chunks = tuple(declared_chunks)
     if axes is None:
-        raw_axes = output.get("axes")
-        if not isinstance(raw_axes, list):
-            raise ValueError("result has no axis metadata; pass axes explicitly")
-        axes = tuple(str(axis) for axis in raw_axes)
-    source = ArraySource(uri, component=component, axes=axes)
-    return source, source.select()
+        axes = declared_axes
+    elif tuple(axes) != declared_axes:
+        raise ValueError("axes do not match the persisted result metadata")
+    try:
+        source = ArraySource(
+            uri,
+            component=component,
+            axes=axes,
+            content_identity=content_identity,
+        )
+        selection = source.select()
+    except (KeyError, TypeError, ValueError) as exc:
+        raise IncompletePartitionError(
+            f"could not open persisted component {component!r}: {exc}"
+        ) from exc
+    if (
+        selection.metadata.shape != declared_shape
+        or np.dtype(selection.metadata.dtype) != expected_dtype
+        or (
+            expected_chunks is not None
+            and selection.metadata.native_chunks != expected_chunks
+        )
+    ):
+        source.close()
+        raise IncompletePartitionError(
+            f"persisted component {component!r} does not match its declared schema"
+        )
+    return source, selection

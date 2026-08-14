@@ -3,10 +3,11 @@
 **Run ordinary Python analyses on NWB recordings that are too large—or too
 remote—to load all at once.**
 
-NeuroFlow opens an NWB object lazily, divides it into scientifically meaningful
-pieces, sends one bounded NumPy array at a time to your function, and saves each
-result durably. Your analysis code stays small; NeuroFlow handles remote access,
-Dask execution, provenance, resume, and integrity checks.
+NeuroFlow opens an NWB object lazily and supports a documented subset of NumPy
+without reading the numerical payload. At an explicit persistence boundary it
+divides the expression into bounded tasks, sends one NumPy block at a time
+through the fused operation, and saves each result durably. NeuroFlow handles
+remote access, Dask execution, provenance, resume, and integrity checks.
 
 ```text
 DANDI or local NWB → choose a series → plan bounded work → your function
@@ -15,7 +16,8 @@ DANDI or local NWB → choose a series → plan bounded work → your function
 ```
 
 - Inspect and select data before reading its numerical payload.
-- Give your function a normal NumPy array, not a framework-specific object.
+- Write common arithmetic, ufuncs, casts, and reductions with NumPy syntax.
+- Give custom adapters a normal NumPy array, not a framework-specific object.
 - Resume interrupted jobs from verified partitions instead of starting over.
 - Read local or DANDI-hosted NWB-Zarr and NWB-HDF5 data.
 
@@ -85,18 +87,26 @@ does not avoid transferring the full native chunk for each selected time/z
 pair. See the [examples guide](examples/README.md) for resource details and
 optional TIFF/napari usage.
 
-For the common path, NeuroFlow also exposes a named-axis, NumPy-like API. The
-same durable engine handles partitioning, Dask execution, Zarr output, resume,
-and verification:
+For the common path, `NeuroArray` implements a deliberately supported NumPy
+subset. Building this expression performs no numerical reads; `.persist()` is
+the explicit bounded execution boundary:
 
 ```python
+import numpy as np
+import neuroflow
+from neuroflow_cellpose import CellposeAdapter
+
 movie = neuroflow.load("DANDI:000350@0.240822.1759", name="NeuronOnePhotonSeries")
-projection = movie.isel(time=slice(0, 50)).median(
-    "time",
-    output="projection.zarr",
+lazy_projection = np.sqrt(np.median(movie[:50], axis="time") + 1)
+projection = lazy_projection.persist(
+    "projection.zarr",
     chunks=(256, 256, 1),
     max_workers=2,
+    memory_limit="2 GiB",
 )
+
+# Specialized stage: supply a model you have validated for this dataset.
+cellpose_adapter = CellposeAdapter(pretrained_model="/path/to/validated/model")
 cells = projection.segment(
     cellpose_adapter,
     output="cells",
@@ -106,10 +116,14 @@ cells = projection.segment(
 )
 ```
 
-Persisted arrays are composable inputs through `neuroflow.open_array()`. Dense
+Persisted arrays are composable inputs through `neuroflow.open_array()`, which
+requires a complete result and verifies partition checksums by default. Dense
 labels can be passed to `movie.extract_traces(...)`, which reads bounded time
 windows and z-planes rather than materializing the movie or a cell-by-voxel
-matrix.
+matrix. `np.asarray(movie)`, iteration, truth testing, unsupported NumPy
+functions, and general array broadcasting fail explicitly instead of silently
+loading data. See the
+[supported operation table](https://peter-hogg.github.io/NeuroFlow/High_Level_API.html).
 
 ## Bring your own function
 
@@ -174,10 +188,10 @@ Irregular timestamps are exposed with `selection.as_dask_timestamps()` and remai
 lazy; timestamp-aligned planning is rejected until a future planner can do so
 without silently materializing the full coordinate vector.
 
-Outputs use `mode="create"`, `"overwrite"`, or `"append"`. Existing managed
-outputs are resumed only when their deterministic workflow provenance matches;
-unmanaged paths and stale provenance are rejected unless overwrite was explicitly
-requested.
+Outputs use `mode="create"` or `"overwrite"`. With the default `resume=True`,
+an existing managed output is resumed only when its deterministic workflow
+provenance matches. Unmanaged paths and stale provenance are rejected unless
+overwrite was explicitly requested. Append semantics are not supported.
 
 ```bash
 neuroflow inspect /data/session.nwb.zarr
