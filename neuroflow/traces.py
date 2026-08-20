@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import math
-from dataclasses import asdict
+import resource
+import sys
+import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -17,6 +20,7 @@ from neuroflow.array import NeuroArray
 from neuroflow.exceptions import OutputConflictError, ProvenanceMismatchError
 from neuroflow.execution.resources import parse_bytes
 from neuroflow.partition.base import Partition
+from neuroflow.provenance.environment import capture_environment
 from neuroflow.provenance.hashing import stable_hash
 from neuroflow.selection.query import absolute_selection_bounds
 from neuroflow.storage.base import (
@@ -27,16 +31,137 @@ from neuroflow.storage.base import (
 )
 from neuroflow.storage.manifest import PartitionManifest
 
+DEFAULT_TRACE_MEMORY_LIMIT = "2 GiB"
+
+
+@dataclass(frozen=True)
+class ROIChunk:
+    """One source-aligned spatial chunk containing at least one label."""
+
+    slices: tuple[slice, ...]
+    label_ids: tuple[int, ...]
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return tuple((item.stop or 0) - (item.start or 0) for item in self.slices)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "slices": [[item.start, item.stop] for item in self.slices],
+            "label_ids": list(self.label_ids),
+        }
+
+
+@dataclass(frozen=True)
+class TracePlan:
+    """Preflight report for bounded source-chunk-oriented trace extraction."""
+
+    source_shape: tuple[int, ...]
+    source_dtype: str
+    native_chunks: tuple[int, ...] | None
+    cell_count: int
+    active_spatial_chunks: int
+    skipped_empty_spatial_chunks: int
+    time_chunk: int
+    automatic_time_chunk: bool
+    task_count: int
+    memory_limit_bytes: int
+    estimated_memory_per_task: int
+    estimated_source_chunks_touched: int | None
+    estimated_total_bytes_read: int | None
+    expected_output_shape: tuple[int, int]
+    expected_output_bytes: int
+
+    def to_dict(self) -> dict[str, object]:
+        def estimate(value: object) -> dict[str, object]:
+            return {
+                "status": "unknown" if value is None else "estimated",
+                "value": value,
+            }
+
+        return {
+            "schema_version": "1",
+            "operation": "mean-fluorescence-traces",
+            "source": {
+                "shape": list(self.source_shape),
+                "dtype": self.source_dtype,
+                "physical_chunks": (
+                    list(self.native_chunks) if self.native_chunks else None
+                ),
+                "logical_bytes": estimate(
+                    math.prod(self.source_shape) * np.dtype(self.source_dtype).itemsize
+                ),
+            },
+            "roi_index": {
+                "cell_count": self.cell_count,
+                "active_spatial_chunks": self.active_spatial_chunks,
+                "skipped_empty_spatial_chunks": self.skipped_empty_spatial_chunks,
+            },
+            "partitioning": {
+                "time_chunk": self.time_chunk,
+                "automatic_time_chunk": self.automatic_time_chunk,
+                "task_count": estimate(self.task_count),
+                "estimated_source_chunks_touched": estimate(
+                    self.estimated_source_chunks_touched
+                ),
+                "estimated_total_bytes_read": estimate(self.estimated_total_bytes_read),
+            },
+            "resources": {
+                "memory_limit_bytes": self.memory_limit_bytes,
+                "estimated_memory_per_task": estimate(self.estimated_memory_per_task),
+            },
+            "output": {
+                "axes": ["time", "cell"],
+                "shape": list(self.expected_output_shape),
+                "estimated_size_bytes": estimate(self.expected_output_bytes),
+            },
+            "bounded": {
+                "status": "estimated",
+                "value": self.estimated_memory_per_task <= self.memory_limit_bytes,
+                "reasons": [
+                    "movie traversal is aligned to source spatial chunks",
+                    "each task covers one finite time window",
+                    "empty spatial chunks are omitted after bounded label indexing",
+                ],
+            },
+        }
+
+    def summary(self) -> str:
+        read = (
+            f"{self.estimated_total_bytes_read} uncompressed bytes"
+            if self.estimated_total_bytes_read is not None
+            else "unknown"
+        )
+        return "\n".join(
+            (
+                f"source: shape={self.source_shape}, dtype={self.source_dtype}",
+                f"cells: {self.cell_count}",
+                "spatial source chunks: "
+                f"{self.active_spatial_chunks} active, "
+                f"{self.skipped_empty_spatial_chunks} empty skipped",
+                f"tasks: {self.task_count}, time window={self.time_chunk}",
+                "memory: "
+                f"estimated {self.estimated_memory_per_task} / "
+                f"budget {self.memory_limit_bytes} bytes",
+                f"estimated source read: {read}",
+                f"output: shape={self.expected_output_shape}, "
+                f"{self.expected_output_bytes} bytes",
+                "bounded: yes",
+            )
+        )
+
 
 def extract_traces(
     movie: NeuroArray,
     labels: NeuroArray,
     *,
     output: str | Path,
-    time_chunk: int = 10,
-    memory_limit: int | str | None = None,
+    time_chunk: int | None = None,
+    memory_limit: int | str = DEFAULT_TRACE_MEMORY_LIMIT,
 ) -> NeuroArray:
-    """Average movie voxels per nonzero label in resumable time windows."""
+    """Average movie voxels per label with source-aligned resumable reads."""
+    started_clock = time.perf_counter()
+    started_at = datetime.now(timezone.utc).isoformat()
     _validate_inputs(movie, labels, time_chunk)
     output_uri = str(output)
     validate_output_separation(
@@ -50,17 +175,14 @@ def extract_traces(
             ),
         },
     )
-    label_data = labels.selection.as_dask_array()
-    budget = parse_bytes(memory_limit) if memory_limit is not None else None
-    ids, counts = _discover_label_counts(label_data, budget=budget)
-    if not len(ids):
-        raise ValueError("labels contain no cells")
-    estimated_memory = _estimated_trace_memory(movie, labels, len(ids), time_chunk)
-    if memory_limit is not None and estimated_memory > parse_bytes(memory_limit):
-        raise ValueError(
-            f"trace window requires an estimated {estimated_memory} bytes, "
-            f"exceeding memory_limit={memory_limit!r}"
-        )
+    io_before = _source_bytes_read(movie)
+    plan, ids, counts, roi_chunks = _build_trace_plan(
+        movie,
+        labels,
+        time_chunk=time_chunk,
+        memory_limit=memory_limit,
+    )
+    time_chunk = plan.time_chunk
 
     workflow_id = stable_hash(
         {
@@ -75,7 +197,9 @@ def extract_traces(
             "label_bounds": absolute_selection_bounds(labels.selection.metadata),
             "cell_ids": hashlib.sha256(ids.tobytes()).hexdigest(),
             "time_chunk": time_chunk,
-            "schema_version": "1",
+            "memory_limit": memory_limit,
+            "roi_chunks": [item.to_dict() for item in roi_chunks],
+            "schema_version": "2",
         }
     )
     partitions = _time_partitions(movie, len(ids), time_chunk)
@@ -87,14 +211,14 @@ def extract_traces(
         workflow_id,
         partitions,
         time_chunk,
-        estimated_memory,
+        plan,
         memory_limit,
     )
     movie_data = movie.selection.as_dask_array()
-    spatial_axes = labels.axes
-    z_axis = spatial_axes.index("z") if "z" in spatial_axes else None
-    z_values = range(labels.shape[z_axis]) if z_axis is not None else (None,)
+    label_data = labels.selection.as_dask_array()
     id_to_column = {int(value): index for index, value in enumerate(ids)}
+    computed_partitions = 0
+    resumed_partitions = 0
 
     try:
         for partition in partitions:
@@ -103,22 +227,23 @@ def extract_traces(
             if existing is not None and _valid_trace_manifest(
                 existing, traces, partition, workflow_id, output_uri
             ):
+                resumed_partitions += 1
                 continue
             start = partition.output_slices[0].start or 0
             stop = partition.output_slices[0].stop or traces.shape[0]
             sums = np.zeros((stop - start, len(ids)), dtype=np.float64)
-            for z_value in z_values:
-                label_key = [slice(None)] * len(spatial_axes)
+            for roi_chunk in roi_chunks:
                 movie_key = [slice(None)] * len(movie.axes)
                 movie_key[movie.axes.index("time")] = slice(start, stop)
-                if z_axis is not None:
-                    label_key[z_axis] = slice(z_value, z_value + 1)  # type: ignore[operator]
-                    movie_key[movie.axes.index("z")] = slice(z_value, z_value + 1)  # type: ignore[operator]
                 plane_labels = np.asarray(
-                    label_data[tuple(label_key)].compute(
+                    label_data[roi_chunk.slices].compute(
                         scheduler="threads", num_workers=1
                     )
                 )
+                for axis, spatial_slice in zip(
+                    labels.axes, roi_chunk.slices, strict=True
+                ):
+                    movie_key[movie.axes.index(axis)] = spatial_slice
                 block = np.asarray(
                     movie_data[tuple(movie_key)].compute(
                         scheduler="threads", num_workers=1
@@ -129,10 +254,8 @@ def extract_traces(
                     stop - start, -1
                 )
                 flat_labels = plane_labels.reshape(-1)
-                for label_id in np.unique(flat_labels):
-                    if label_id == 0:
-                        continue
-                    column = id_to_column[int(label_id)]
+                for label_id in roi_chunk.label_ids:
+                    column = id_to_column[label_id]
                     sums[:, column] += block[:, flat_labels == label_id].sum(axis=1)
             values = (sums / counts[None, :]).astype(np.float32)
             traces[partition.output_slices] = values
@@ -148,17 +271,47 @@ def extract_traces(
                     sizes={"traces": int(values.nbytes)},
                 ).to_dict(),
             )
+            computed_partitions += 1
     except Exception as exc:
         _fail_trace_output(output_uri, workflow_id, exc)
         raise
-    _finalize_trace_output(output_uri, workflow_id, partitions)
+    _finalize_trace_output(
+        output_uri,
+        workflow_id,
+        partitions,
+        started_at=started_at,
+        wall_time_seconds=time.perf_counter() - started_clock,
+        computed_partitions=computed_partitions,
+        resumed_partitions=resumed_partitions,
+        bytes_read=_bytes_delta(io_before, _source_bytes_read(movie)),
+    )
     from neuroflow.api import open_array
 
     source, selection = open_array(output_uri, verify=False)
     return NeuroArray(source, selection)
 
 
-def _validate_inputs(movie: NeuroArray, labels: NeuroArray, time_chunk: int) -> None:
+def plan_trace_extraction(
+    movie: NeuroArray,
+    labels: NeuroArray,
+    *,
+    time_chunk: int | None = None,
+    memory_limit: int | str = DEFAULT_TRACE_MEMORY_LIMIT,
+) -> TracePlan:
+    """Inspect labels and return a plan without reading movie values."""
+    _validate_inputs(movie, labels, time_chunk)
+    plan, _, _, _ = _build_trace_plan(
+        movie,
+        labels,
+        time_chunk=time_chunk,
+        memory_limit=memory_limit,
+    )
+    return plan
+
+
+def _validate_inputs(
+    movie: NeuroArray, labels: NeuroArray, time_chunk: int | None
+) -> None:
     if "time" not in movie.axes:
         raise ValueError("movie requires a time axis")
     spatial_axes = tuple(axis for axis in movie.axes if axis != "time")
@@ -169,27 +322,123 @@ def _validate_inputs(movie: NeuroArray, labels: NeuroArray, time_chunk: int) -> 
         raise ValueError("label and movie spatial shapes differ")
     if np.dtype(labels.selection.metadata.dtype).kind not in "ui":
         raise TypeError("labels must contain non-negative integers")
-    if time_chunk < 1:
+    if time_chunk is not None and time_chunk < 1:
         raise ValueError("time_chunk must be positive")
+
+
+def _build_trace_plan(
+    movie: NeuroArray,
+    labels: NeuroArray,
+    *,
+    time_chunk: int | None,
+    memory_limit: int | str,
+) -> tuple[TracePlan, np.ndarray, np.ndarray, tuple[ROIChunk, ...]]:
+    budget = parse_bytes(memory_limit)
+    movie_data = movie.selection.as_dask_array(chunks="native")
+    label_data = labels.selection.as_dask_array()
+    spatial_chunks = tuple(
+        tuple(int(value) for value in movie_data.chunks[movie.axes.index(axis)])
+        for axis in labels.axes
+    )
+    ids, counts, roi_chunks, total_spatial_chunks = _discover_label_counts(
+        label_data,
+        spatial_chunks=spatial_chunks,
+        budget=budget,
+    )
+    if not len(ids):
+        raise ValueError("labels contain no cells")
+    maximum_spatial_shape = tuple(
+        max(item.shape[axis] for item in roi_chunks) for axis in range(len(labels.axes))
+    )
+    time_size = movie.shape[movie.axes.index("time")]
+    native = movie.selection.metadata.native_chunks
+    native_time = native[movie.axes.index("time")] if native is not None else 1
+    automatic_time_chunk = time_chunk is None
+    if time_chunk is None:
+        time_chunk = _automatic_time_chunk(
+            movie,
+            labels,
+            len(ids),
+            maximum_spatial_shape,
+            budget,
+            native_time,
+        )
+    estimated_memory = _estimated_trace_memory(
+        movie,
+        labels,
+        len(ids),
+        time_chunk,
+        maximum_spatial_shape,
+        native_time,
+    )
+    if estimated_memory > budget:
+        raise ValueError(
+            f"trace window requires an estimated {estimated_memory} bytes, "
+            f"exceeding memory_limit={memory_limit!r}"
+        )
+    task_count = math.ceil(time_size / time_chunk)
+    if native is None:
+        chunks_touched = None
+        total_read = None
+    else:
+        time_chunk_touches = sum(
+            math.ceil(min(time_size, start + time_chunk) / native_time)
+            - start // native_time
+            for start in range(0, time_size, time_chunk)
+        )
+        chunks_touched = len(roi_chunks) * time_chunk_touches
+        total_read = (
+            chunks_touched
+            * math.prod(native)
+            * np.dtype(movie.selection.metadata.dtype).itemsize
+        )
+    output_shape = (time_size, len(ids))
+    output_bytes = (
+        math.prod(output_shape) * np.dtype("float32").itemsize
+        + len(ids) * np.dtype("uint64").itemsize
+        + time_size * np.dtype("float64").itemsize
+    )
+    plan = TracePlan(
+        source_shape=movie.shape,
+        source_dtype=movie.selection.metadata.dtype,
+        native_chunks=native,
+        cell_count=len(ids),
+        active_spatial_chunks=len(roi_chunks),
+        skipped_empty_spatial_chunks=total_spatial_chunks - len(roi_chunks),
+        time_chunk=time_chunk,
+        automatic_time_chunk=automatic_time_chunk,
+        task_count=task_count,
+        memory_limit_bytes=budget,
+        estimated_memory_per_task=estimated_memory,
+        estimated_source_chunks_touched=chunks_touched,
+        estimated_total_bytes_read=total_read,
+        expected_output_shape=output_shape,
+        expected_output_bytes=output_bytes,
+    )
+    return plan, ids, counts, roi_chunks
 
 
 def _discover_label_counts(
     label_data: da.Array,
     *,
-    budget: int | None,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Count labels one storage chunk at a time with one Dask worker.
+    spatial_chunks: tuple[tuple[int, ...], ...],
+    budget: int,
+) -> tuple[np.ndarray, np.ndarray, tuple[ROIChunk, ...], int]:
+    """Index labels one source-aligned spatial chunk at a time.
 
     A Python mapping is retained because the number of cells is normally tiny
     relative to the voxel count. Its conservative per-entry budget prevents a
     pathological one-label-per-voxel input from consuming unbounded memory.
     """
     counts_by_id: dict[int, int] = {}
+    roi_chunks: list[ROIChunk] = []
+    membership_count = 0
     itemsize = int(label_data.dtype.itemsize)
     entry_bytes = 160
-    block_grid = tuple(len(axis_chunks) for axis_chunks in label_data.chunks)
+    membership_bytes = 24
+    block_grid = tuple(len(axis_chunks) for axis_chunks in spatial_chunks)
     chunk_slices: list[tuple[slice, ...]] = []
-    for axis_chunks in label_data.chunks:
+    for axis_chunks in spatial_chunks:
         start = 0
         slices: list[slice] = []
         for chunk_size in axis_chunks:
@@ -198,15 +447,15 @@ def _discover_label_counts(
             start = stop
         chunk_slices.append(tuple(slices))
     for block_index in np.ndindex(*block_grid):
-        key = tuple(chunk_slices[axis][index] for axis, index in enumerate(block_index))
-        lazy_block = label_data[key]
+        block_key = tuple(
+            chunk_slices[axis][index] for axis, index in enumerate(block_index)
+        )
+        lazy_block = label_data[block_key]
         block_elements = math.prod(int(size) for size in lazy_block.shape)
         # Input, sort workspace, unique values, int64 counts, and aggregation
         # workspace can coexist during np.unique.
         block_workspace = block_elements * (4 * itemsize + 8)
-        if budget is not None and (
-            block_workspace + len(counts_by_id) * entry_bytes > budget
-        ):
+        if block_workspace + len(counts_by_id) * entry_bytes > budget:
             raise ValueError(
                 "label discovery requires an estimated chunk workspace exceeding "
                 f"memory_limit={budget} bytes; rechunk labels or raise the limit"
@@ -219,8 +468,13 @@ def _discover_label_counts(
         local_ids = local_ids[foreground]
         local_counts = local_counts[foreground]
         new_count = sum(int(value) not in counts_by_id for value in local_ids)
-        if budget is not None and (
-            block_workspace + (len(counts_by_id) + new_count) * entry_bytes > budget
+        local_label_ids = tuple(int(value) for value in local_ids)
+        new_memberships = len(local_label_ids)
+        if (
+            block_workspace
+            + (len(counts_by_id) + new_count) * entry_bytes
+            + (membership_count + new_memberships) * membership_bytes
+            > budget
         ):
             raise ValueError(
                 "label discovery found an estimated distinct-label workspace "
@@ -228,8 +482,11 @@ def _discover_label_counts(
                 f"memory_limit={budget} bytes"
             )
         for label_id, count in zip(local_ids, local_counts, strict=True):
-            key = int(label_id)
-            counts_by_id[key] = counts_by_id.get(key, 0) + int(count)
+            label_key = int(label_id)
+            counts_by_id[label_key] = counts_by_id.get(label_key, 0) + int(count)
+        if local_label_ids:
+            roi_chunks.append(ROIChunk(block_key, local_label_ids))
+            membership_count += new_memberships
 
     ordered_ids = sorted(counts_by_id)
     ids = np.fromiter(ordered_ids, dtype=np.uint64, count=len(ordered_ids))
@@ -238,7 +495,44 @@ def _discover_label_counts(
         dtype=np.int64,
         count=len(ordered_ids),
     )
-    return ids, counts
+    return ids, counts, tuple(roi_chunks), math.prod(block_grid)
+
+
+def _automatic_time_chunk(
+    movie: NeuroArray,
+    labels: NeuroArray,
+    cell_count: int,
+    spatial_shape: tuple[int, ...],
+    budget: int,
+    native_time: int,
+) -> int:
+    time_size = movie.shape[movie.axes.index("time")]
+    one = _estimated_trace_memory(
+        movie,
+        labels,
+        cell_count,
+        1,
+        spatial_shape,
+        native_time,
+    )
+    if one > budget:
+        raise ValueError(
+            "one source-aligned trace chunk requires an estimated "
+            f"{one} bytes, exceeding memory_limit={budget}"
+        )
+    two = _estimated_trace_memory(
+        movie,
+        labels,
+        cell_count,
+        2,
+        spatial_shape,
+        native_time,
+    )
+    incremental = max(1, two - one)
+    maximum = min(time_size, 1 + (budget - one) // incremental)
+    if native_time > 1 and maximum >= native_time:
+        maximum = max(native_time, (maximum // native_time) * native_time)
+    return max(1, maximum)
 
 
 def _time_partitions(
@@ -266,24 +560,29 @@ def _time_partitions(
 
 
 def _estimated_trace_memory(
-    movie: NeuroArray, labels: NeuroArray, cell_count: int, time_chunk: int
+    movie: NeuroArray,
+    labels: NeuroArray,
+    cell_count: int,
+    time_chunk: int,
+    spatial_shape: tuple[int, ...],
+    native_time: int,
 ) -> int:
-    plane_shape = list(labels.shape)
-    if "z" in labels.axes:
-        plane_shape[labels.axes.index("z")] = 1
-    plane_elements = int(np.prod(plane_shape, dtype=np.int64))
-    window_frames = min(time_chunk, movie.shape[movie.axes.index("time")])
-    movie_elements = window_frames * plane_elements
+    spatial_elements = math.prod(spatial_shape)
+    requested_frames = min(time_chunk, movie.shape[movie.axes.index("time")])
+    time_size = movie.shape[movie.axes.index("time")]
+    loaded_frames = max(requested_frames, min(native_time, time_size))
+    movie_elements = loaded_frames * spatial_elements
     source_movie_bytes = (
         movie_elements * np.dtype(movie.selection.metadata.dtype).itemsize
     )
     float_movie_bytes = movie_elements * np.dtype("float32").itemsize
     label_itemsize = np.dtype(labels.selection.metadata.dtype).itemsize
-    label_bytes = plane_elements * label_itemsize
-    label_workspace = plane_elements * (2 * label_itemsize + 9)
-    accumulator_bytes = time_chunk * cell_count * np.dtype("float64").itemsize
-    trace_output_bytes = time_chunk * cell_count * np.dtype("float32").itemsize
+    label_bytes = spatial_elements * label_itemsize
+    label_workspace = spatial_elements * (2 * label_itemsize + 9)
+    accumulator_bytes = requested_frames * cell_count * np.dtype("float64").itemsize
+    trace_output_bytes = requested_frames * cell_count * np.dtype("float32").itemsize
     cell_index_bytes = cell_count * 160
+    scheduler_and_cache_reserve = 128 * 1024 * 1024
     return (
         source_movie_bytes
         + 2 * float_movie_bytes
@@ -292,6 +591,7 @@ def _estimated_trace_memory(
         + accumulator_bytes
         + trace_output_bytes
         + cell_index_bytes
+        + scheduler_and_cache_reserve
     )
 
 
@@ -303,8 +603,8 @@ def _initialize_trace_output(
     workflow_id: str,
     partitions: tuple[Partition, ...],
     time_chunk: int,
-    estimated_memory: int,
-    memory_limit: int | str | None,
+    plan: TracePlan,
+    memory_limit: int | str,
 ) -> zarr.Array:
     existing = read_json(join_uri(uri, ".neuroflow", "provenance.json"))
     filesystem, root_path = fsspec.core.url_to_fs(uri)
@@ -375,6 +675,18 @@ def _initialize_trace_output(
     else:
         root.create_dataset("timestamps", data=time_values)
     execution_started = datetime.now(timezone.utc).isoformat()
+    upstream_provenance = (
+        labels.workflow.provenance if labels.workflow is not None else None
+    )
+    segmentation_identity = None
+    if isinstance(upstream_provenance, dict):
+        segmentation_identity = {
+            "workflow_id": upstream_provenance.get("workflow_id"),
+            "adapter": upstream_provenance.get("adapter"),
+            "parameters": upstream_provenance.get("parameters"),
+            "external_libraries": upstream_provenance.get("external_libraries"),
+            "result_checksum": upstream_provenance.get("result_checksum"),
+        }
     current_attempt: dict[str, object] = {
         "execution_started": execution_started,
         "status": "running",
@@ -384,13 +696,16 @@ def _initialize_trace_output(
         "schema_version": "1",
         "workflow_id": workflow_id,
         "source": asdict(movie.selection.metadata.source),
+        "source_backend": (movie.selection.metadata.attributes or {}).get("transport"),
         "nwb_paths": [movie.selection.metadata.path],
         "adapter": {"name": "mean-fluorescence-traces", "version": "1"},
         "parameters": {
             "time_chunk": time_chunk,
-            "estimated_memory_per_window": estimated_memory,
+            "automatic_time_chunk": plan.automatic_time_chunk,
+            "estimated_memory_per_window": plan.estimated_memory_per_task,
             "memory_limit": memory_limit,
         },
+        "preflight_plan": plan.to_dict(),
         "selection": {
             "shape": movie.shape,
             "axes": movie.axes,
@@ -401,6 +716,7 @@ def _initialize_trace_output(
             "path": labels.selection.metadata.path,
             "shape": labels.shape,
             "axes": labels.axes,
+            "segmentation_workflow": segmentation_identity,
         },
         "partition_plan": {
             "task_count": len(partitions),
@@ -420,6 +736,7 @@ def _initialize_trace_output(
             "coordinates": {"time": "timestamps", "cell": "cell_ids"},
         },
         "status": "running",
+        "environment": capture_environment(),
         "execution_started": execution_started,
         "execution_attempts": [current_attempt],
     }
@@ -501,7 +818,15 @@ def _finish_trace_attempt(
 
 
 def _finalize_trace_output(
-    uri: str, workflow_id: str, partitions: tuple[Partition, ...]
+    uri: str,
+    workflow_id: str,
+    partitions: tuple[Partition, ...],
+    *,
+    started_at: str,
+    wall_time_seconds: float,
+    computed_partitions: int,
+    resumed_partitions: int,
+    bytes_read: int | None,
 ) -> None:
     provenance_uri = join_uri(uri, ".neuroflow", "provenance.json")
     provenance = read_json(provenance_uri)
@@ -514,6 +839,37 @@ def _finalize_trace_output(
     provenance["status"] = "complete"
     provenance["completed_partitions"] = [item.key for item in partitions]
     provenance["failed_partitions"] = []
+    manifest_checksums: list[dict[str, object]] = []
+    for partition in partitions:
+        manifest = read_json(_manifest_uri(uri, partition.key))
+        if manifest is None:
+            raise RuntimeError(f"trace manifest disappeared: {partition.key}")
+        manifest_checksums.append(
+            {
+                "partition_id": partition.key,
+                "checksums": manifest.get("checksums"),
+            }
+        )
+    provenance["result_checksum"] = stable_hash(manifest_checksums)
+    provenance["integrity_verified"] = True
+    execution_metrics = {
+        "started_at": started_at,
+        "finished_at": finished,
+        "wall_time_seconds": wall_time_seconds,
+        "completed_task_count": len(partitions),
+        "computed_task_count": computed_partitions,
+        "resumed_task_count": resumed_partitions,
+        "partitions_completed": len(partitions),
+        "bytes_read": bytes_read,
+        "output_bytes": provenance["preflight_plan"]["output"][  # type: ignore[index]
+            "estimated_size_bytes"
+        ]["value"],  # type: ignore[index]
+        "peak_rss_bytes": _peak_rss_bytes(),
+    }
+    provenance["execution_metrics"] = execution_metrics
+    attempts = provenance.get("execution_attempts")
+    if isinstance(attempts, list) and attempts and isinstance(attempts[-1], dict):
+        attempts[-1]["execution_metrics"] = execution_metrics
     if previous_status != "complete":
         provenance["execution_finished"] = finished
     write_json_atomic(provenance_uri, provenance)
@@ -548,3 +904,25 @@ def _fail_trace_output(uri: str, workflow_id: str, error: Exception) -> None:
     if previous_status != "complete":
         provenance["execution_finished"] = finished
     write_json_atomic(provenance_uri, provenance)
+
+
+def _source_bytes_read(movie: NeuroArray) -> int | None:
+    stats = getattr(movie.source, "io_stats", None)
+    if not callable(stats):
+        return None
+    value = stats()
+    if not isinstance(value, dict):
+        return None
+    byte_count = value.get("response_content_bytes")
+    return byte_count if isinstance(byte_count, int) else None
+
+
+def _bytes_delta(before: int | None, after: int | None) -> int | None:
+    if before is None or after is None:
+        return None
+    return max(0, after - before)
+
+
+def _peak_rss_bytes() -> int:
+    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    return value if sys.platform == "darwin" else value * 1024

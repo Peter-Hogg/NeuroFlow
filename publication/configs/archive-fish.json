@@ -1,6 +1,7 @@
 {
   "asset_id": "4f898ff7-6084-4e84-a449-f05811c1d951",
   "asset_path": "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb",
+  "backend": "auto",
   "block_size_bytes": 262144,
   "cache_size_mib": 64,
   "dandiset": "DANDI:000350@0.240822.1759",

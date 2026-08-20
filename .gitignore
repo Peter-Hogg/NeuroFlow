@@ -30,3 +30,4 @@ venv/
 # Notebook and generated example artifacts
 .ipynb_checkpoints/
 examples/_output/
+publication/runs/

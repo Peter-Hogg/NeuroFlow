@@ -12,7 +12,9 @@ from typing import Any
 from neuroflow.benchmarking import validate_benchmark_record
 
 
-def load_records(results: Path) -> tuple[list[dict[str, Any]], list[str]]:
+def load_records(
+    results: Path, *, include_current: bool = False
+) -> tuple[list[dict[str, Any]], list[str]]:
     records: list[dict[str, Any]] = []
     skipped: list[str] = []
     for path in sorted(results.glob("*.json")):
@@ -23,8 +25,11 @@ def load_records(results: Path) -> tuple[list[dict[str, Any]], list[str]]:
                 raise ValueError("records must be a list")
             for candidate in candidates:
                 validate_benchmark_record(candidate)
-                if candidate["classification"] == "historical":
-                    skipped.append(f"{path}: historical")
+                classification = candidate["classification"]
+                if classification != "publication" and not (
+                    include_current and classification == "current"
+                ):
+                    skipped.append(f"{path}: {classification}")
                     continue
                 records.append(candidate)
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
@@ -43,6 +48,7 @@ def rows_for(records: Iterable[dict[str, Any]]) -> list[dict[str, object]]:
         rows.append(
             {
                 "benchmark": record["benchmark_name"],
+                "classification": record["classification"],
                 "backend": record["backend"],
                 "shape": "×".join(str(value) for value in source["shape"]),
                 "selected_bytes": source["selected_bytes"],
@@ -93,8 +99,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results", type=Path, default=Path("benchmarks/results"))
     parser.add_argument("--output", type=Path, default=Path("publication/tables"))
+    parser.add_argument(
+        "--include-current",
+        action="store_true",
+        help="include development records; never use this for final paper tables",
+    )
     args = parser.parse_args()
-    records, skipped = load_records(args.results)
+    records, skipped = load_records(
+        args.results, include_current=args.include_current
+    )
     write_tables(args.output, rows_for(records))
     for message in skipped:
         print(f"SKIP {message}")

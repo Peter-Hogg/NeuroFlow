@@ -30,6 +30,19 @@ layout against the planned layout before it trusts existing partition data.
 Trace extraction counts label IDs one label-storage chunk at a time with one
 Dask worker. It budgets the chunk-local unique workspace, the retained cell-ID
 map, and each movie window before allowing those allocations to grow.
+It then indexes masks by the movie's physical spatial chunks, skips empty
+chunks, fetches each active source chunk once per time window, and updates every
+intersecting soma accumulator. The preflight plan reads compact labels but no
+movie values. Trace output uses `(time, cell)` orientation with explicit time
+and cell-ID coordinates.
+
+## Transport and orchestration are separate
+
+remfile and LINDI make remote HDF5 bytes sliceable; PyNWB gives those arrays NWB
+meaning. NeuroFlow applies the same constrained planning and durable execution
+above either transport. `backend="auto"` currently selects remfile, while an
+explicit LINDI backend is available through the optional `lindi` extra. LINDI's
+cache is not reimplemented or configured through remfile-specific knobs.
 
 ## NumPy expressions are plans, not arrays in RAM
 

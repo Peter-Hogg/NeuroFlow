@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import resource
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -10,6 +12,12 @@ from neuroflow.provenance import capture_environment
 
 BENCHMARK_SCHEMA_VERSION = "1"
 BENCHMARK_CLASSIFICATIONS = {"current", "historical", "publication"}
+
+
+def peak_rss_bytes() -> int:
+    """Return the process high-water RSS in bytes on Linux and macOS."""
+    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    return value if sys.platform == "darwin" else value * 1024
 
 
 def benchmark_record(

@@ -51,3 +51,14 @@ External archive-scale runs, competitor measurements, expert biological
 validation, license approval, DOI deposition, releases, and journal actions are
 outside this local engineering run and must not be marked complete without
 their own retained evidence.
+
+## Revised flagship implementation
+
+The updated mission promotes the projection → actual Cellpose → whole-movie
+soma trace workflow above the projection-only demonstration. The current
+implementation and evidence ledger are maintained in the root
+`PUBLICATION_READINESS.md`. In particular,
+the repository now has optional LINDI transport, capability-based HDF5 array
+discovery, source-chunk-aware trace planning/execution, direct Cellpose and
+NumPy comparison paths, a full fish runner, and a manual LINDI/Dask baseline.
+Those harnesses are not substitutes for clean retained experiment records.

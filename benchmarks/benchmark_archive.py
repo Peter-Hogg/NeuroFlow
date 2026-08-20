@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import resource
 import time
 from pathlib import Path
 
@@ -20,7 +19,12 @@ from examples.dandi_fish_projection import (
     FishProjectionConfig,
     run_example,
 )
-from neuroflow.benchmarking import benchmark_record, write_benchmark_record
+from neuroflow.benchmarking import (
+    benchmark_record,
+    peak_rss_bytes,
+    write_benchmark_record,
+)
+from neuroflow.provenance import capture_environment
 
 
 def main() -> None:
@@ -29,17 +33,32 @@ def main() -> None:
     parser.add_argument("--tile-y", type=int, default=256)
     parser.add_argument("--tile-x", type=int, default=256)
     parser.add_argument("--max-workers", type=int, default=1)
+    parser.add_argument(
+        "--backend", choices=("auto", "lindi", "remfile"), default="auto"
+    )
     parser.add_argument("--cache-size-mib", type=int, default=64)
     parser.add_argument("--block-size", type=int, default=262_144)
     parser.add_argument("--result", type=Path, required=True)
     parser.add_argument("--preview", type=Path, required=True)
     parser.add_argument("--record", type=Path, required=True)
+    parser.add_argument(
+        "--classification", choices=("current", "publication"), default="current"
+    )
     args = parser.parse_args()
+    environment = capture_environment()
+    git = environment.get("git", {})
+    if (
+        args.classification == "publication"
+        and isinstance(git, dict)
+        and git.get("dirty") is not False
+    ):
+        parser.error("publication classification requires a clean Git tree")
     config = FishProjectionConfig(
         frames=args.frames,
         tile_y=args.tile_y,
         tile_x=args.tile_x,
         max_workers=args.max_workers,
+        backend=args.backend,
         cache_size=args.cache_size_mib * 1024 * 1024,
         block_size=args.block_size,
         output=args.result,
@@ -70,8 +89,8 @@ def main() -> None:
     selected_shape = tuple(int(item) for item in selected_shape_value)
     record = benchmark_record(
         name="dandi-fish-temporal-median",
-        classification="publication",
-        backend="dandi-nwb-hdf5-remfile",
+        classification=args.classification,
+        backend=f"dandi-nwb-hdf5-{summary['transport']}",
         source={
             "dataset_identifier": DANDISET.split("@", 1)[0],
             "dataset_version": DANDISET.split("@", 1)[1],
@@ -92,7 +111,7 @@ def main() -> None:
             "task_count": summary["task_count"],
             "bytes_read": remote_io.get("response_content_bytes"),
             "peak_rss_bytes": metrics.get("peak_rss_bytes")
-            or resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024,
+            or peak_rss_bytes(),
             "wall_time_seconds": wall_time,
             "cache_state": (
                 "bounded-remfile-cache; freshness must be recorded by runner"

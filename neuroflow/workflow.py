@@ -83,6 +83,7 @@ class WorkflowSpec:
                 "version": metadata.source.version,
                 "asset_id": metadata.source.asset_id,
                 "checksum": metadata.source.checksum,
+                "backend": attributes.get("transport"),
             },
             selection={
                 "path": metadata.path,
@@ -270,10 +271,19 @@ def reproduce(
             raise WorkflowSpecError("NeuroFlow array source requires a component")
         source, base_selection = open_array(source_uri, component=component)
     else:
+        resolved_storage_options = dict(storage_options or {})
+        backend = source_record.get("backend")
+        if backend in {"lindi", "remfile", "fsspec"}:
+            requested_backend = resolved_storage_options.get("transport")
+            if requested_backend not in (None, "auto", backend):
+                raise WorkflowSpecError(
+                    "storage transport conflicts with the workflow backend"
+                )
+            resolved_storage_options["transport"] = backend
         source = open_source(
             source_uri,
             version=version,
-            storage_options=storage_options,
+            storage_options=resolved_storage_options or None,
         )
         base_selection = source.select(
             NWBQuery(
@@ -387,6 +397,12 @@ def _apply_and_validate_selection(base: Selection, spec: WorkflowSpec) -> Select
             raise WorkflowSpecError(
                 f"resolved source {key} does not match the workflow specification"
             )
+    expected_backend = spec.source.get("backend")
+    actual_backend = (selection.metadata.attributes or {}).get("transport")
+    if expected_backend is not None and expected_backend != actual_backend:
+        raise WorkflowSpecError(
+            "resolved source backend does not match the workflow specification"
+        )
     if (
         selection.metadata.shape != expected_shape
         or np.dtype(selection.metadata.dtype)
@@ -442,6 +458,15 @@ def _validate_spec_dict(value: object) -> dict[str, object]:
     }:
         raise WorkflowSpecError("source type is not allowlisted")
     _string(source.get("uri"), "source URI")
+    if source.get("backend") not in {
+        None,
+        "local",
+        "local-or-fsspec",
+        "lindi",
+        "remfile",
+        "fsspec",
+    }:
+        raise WorkflowSpecError("source backend is not allowlisted")
     selection = _mapping(value["selection"], "selection")
     axes = _string_tuple(selection.get("axes"), "selection axes")
     shape = _positive_int_tuple(selection.get("shape"), "selection shape")

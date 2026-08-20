@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Literal
 from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
 
@@ -59,11 +60,18 @@ class DandiNWBSource:
         dandiset_id: str,
         *,
         version: str | None = None,
+        backend: Literal["auto", "lindi", "remfile"] = "auto",
         storage_options: dict[str, object] | None = None,
     ) -> None:
         self.dandiset_id = dandiset_id.zfill(6)
         options = dict(storage_options or {})
         token = options.pop("token", None) or options.pop("api_key", None)
+        transport = options.pop("transport", None)
+        if transport is not None and transport not in ("auto", "lindi", "remfile"):
+            raise ValueError("DANDI HDF5 transport must be auto, lindi, or remfile")
+        if backend != "auto" and transport not in (None, "auto", backend):
+            raise ValueError("backend conflicts with storage_options['transport']")
+        self.backend = backend if backend != "auto" else str(transport or "auto")
         self._headers = {"Authorization": f"token {token}"} if token else {}
         self._storage_options = options
         self.version = version or self._resolve_version()
@@ -208,7 +216,7 @@ class DandiNWBSource:
             options = (
                 {"anon": True, **self._storage_options}
                 if asset.is_zarr
-                else self._storage_options
+                else {"transport": self.backend, **self._storage_options}
             )
             child = source_class(
                 content_url,
@@ -238,6 +246,7 @@ class DandiNWBSource:
         """Aggregate observed HTTP data responses from opened child assets."""
         responses = 0
         response_bytes = 0
+        counters_available = True
         for child in self._children.values():
             stats = getattr(child, "io_stats", None)
             if not callable(stats):
@@ -249,11 +258,16 @@ class DandiNWBSource:
             size = value.get("response_content_bytes")
             if isinstance(count, int):
                 responses += count
+            elif count is None:
+                counters_available = False
             if isinstance(size, int):
                 response_bytes += size
+            elif size is None:
+                counters_available = False
         return {
-            "http_responses": responses,
-            "response_content_bytes": response_bytes,
+            "backend": self.backend,
+            "http_responses": responses if counters_available else None,
+            "response_content_bytes": response_bytes if counters_available else None,
         }
 
     def close(self) -> None:

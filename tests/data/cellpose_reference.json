@@ -1,0 +1,15 @@
+{
+  "background": 0.05,
+  "centers": [
+    [32, 34, 8, 1.0],
+    [78, 45, 10, 0.85],
+    [61, 92, 7, 1.1],
+    [101, 99, 9, 0.9]
+  ],
+  "description": "Deterministic compact projection for real Cellpose transport-equivalence validation; not biological ground truth.",
+  "dtype": "float32",
+  "noise_standard_deviation": 0.01,
+  "seed": 20260820,
+  "sha256": "36b2b982756a6a51d3c24c61c45f96c70aa3c1abcd49b1976ff93fb4956b1799",
+  "shape": [128, 128]
+}

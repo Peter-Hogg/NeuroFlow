@@ -15,6 +15,7 @@ Optional integrations are deliberately separate:
 ```bash
 uv sync --dev --extra cellpose
 uv sync --dev --extra pynapple
+uv sync --locked --dev --extra lindi
 uv sync --locked --dev --extra baselines
 ```
 
@@ -50,6 +51,44 @@ assert result.workflow.verify().valid
 Use named or contiguous NumPy slicing and a declared memory limit. Arithmetic,
 supported NumPy calls, metadata inspection, and `repr()` remain lazy. Numerical
 I/O starts only at `.compute()` or `.persist()`.
+
+## Archive-scale soma traces
+
+The flagship path keeps infrastructure choices out of the scientific code:
+
+```python
+import numpy as np
+import neuroflow
+from neuroflow.selection import NWBQuery
+
+source = neuroflow.open_dandi(
+    "DANDI:000350@0.240822.1759", backend="lindi"
+)
+movie = neuroflow.NeuroArray(
+    source,
+    source.select(
+        NWBQuery(
+            asset="4f898ff7-6084-4e84-a449-f05811c1d951",
+            name="NeuronOnePhotonSeries",
+        )
+    ),
+)
+projection = np.median(movie[:50], axis="time").astype("float32").persist(
+    "projection.zarr", memory_limit="2 GiB"
+)
+labels = projection.cellpose(
+    output="labels.zarr", pretrained_model="cpsam", memory_limit="2 GiB"
+)
+plan = movie.plan_traces(labels, memory_limit="2 GiB")
+print(plan.summary())
+traces = movie.extract_traces(
+    labels, output="traces.zarr", memory_limit="2 GiB"
+)
+```
+
+The trace result is oriented `(time, cell)` and includes `timestamps` and
+`cell_ids`. NeuroFlow chooses the time window from the memory target and source
+chunks; `time_chunk` remains an expert override.
 
 The workflow record can be checked and rerun without importing the analysis
 script:

@@ -16,6 +16,12 @@ All notable changes to NeuroFlow are documented here. The project follows
   conversion, iteration, unsupported broadcasting, and mutable NumPy outputs.
 - A 1 GiB default estimate for explicit in-memory compute and a 2 GiB per-task
   default for durable expression persistence.
+- A first-class optional LINDI backend for DANDI NWB-HDF5 sources.
+- Source-chunk-oriented trace planning with automatic time windows, empty-chunk
+  skipping, durable resume, integrity, and `(time, cell)` coordinates.
+- A plane-safe `projection.cellpose(...)` convenience path, an opt-in real
+  Cellpose equivalence test, and the end-to-end fish publication harness.
+- Manual PyNWB + remfile/LINDI + Dask trace baselines over identical masks.
 
 ### Changed
 
@@ -43,6 +49,8 @@ All notable changes to NeuroFlow are documented here. The project follows
   unique-ID and per-window workspaces, and returns a content-identified array.
 - Provenance preserves the original execution record and appends each resume
   attempt with its own policy, environment, timestamps, status, and error.
+- Remote-array discovery now uses a minimal sliceable-array capability check
+  instead of requiring a literal `h5py.Dataset`.
 
 ## [0.1.0] - 2026-08-13
 

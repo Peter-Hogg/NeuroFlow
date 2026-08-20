@@ -21,8 +21,8 @@ DANDI or local NWB → choose a series → plan bounded work → your function
 - Resume interrupted jobs from verified partitions instead of starting over.
 - Read local or DANDI-hosted NWB-Zarr and NWB-HDF5 data.
 
-NeuroFlow is an early `0.1` project. Its strongest path is chunked NWB-Zarr;
-remote HDF5 support is intentionally conservative and described below.
+NeuroFlow is an early `0.1` project. Chunked NWB-Zarr is the simplest path;
+remote NWB-HDF5 can use either remfile or the optional LINDI backend.
 
 The [complete user guide and API reference](https://peter-hogg.github.io/NeuroFlow/)
 build from `docs/` with Sphinx. After
@@ -61,8 +61,8 @@ is about 1 MiB. Internet access is required. See [the examples guide](examples/R
 for the exact asset, generated files, and options.
 
 For a real calcium movie, the fish example uses a plain NumPy temporal median
-through NeuroFlow to project 50 frames across all 29 z-planes of Misha Ahrens'
-150 GB whole-brain zebrafish recording:
+through NeuroFlow to project 50 frames across all 29 z-planes of a 323 GB
+logical whole-brain zebrafish recording:
 
 ```bash
 uv run python -m examples.dandi_fish_projection
@@ -94,33 +94,42 @@ the explicit bounded execution boundary:
 ```python
 import numpy as np
 import neuroflow
-from neuroflow_cellpose import CellposeAdapter
+from neuroflow.selection import NWBQuery
 
-movie = neuroflow.load("DANDI:000350@0.240822.1759", name="NeuronOnePhotonSeries")
-lazy_projection = np.sqrt(np.median(movie[:50], axis="time") + 1)
-projection = lazy_projection.persist(
-    "projection.zarr",
-    chunks=(256, 256, 1),
-    max_workers=2,
+fish = neuroflow.open_dandi(
+    "DANDI:000350@0.240822.1759", backend="lindi"
+)
+selected = fish.select(
+    NWBQuery(
+        asset="4f898ff7-6084-4e84-a449-f05811c1d951",
+        name="NeuronOnePhotonSeries",
+    )
+)
+movie = neuroflow.NeuroArray(fish, selected)
+
+projection = np.median(movie[:50], axis="time").astype("float32").persist(
+    "projection.zarr", memory_limit="2 GiB"
+)
+masks = projection.cellpose(
+    pretrained_model="cpsam",
+    output="fish-cellpose.zarr",
     memory_limit="2 GiB",
 )
-
-# Specialized stage: supply a model you have validated for this dataset.
-cellpose_adapter = CellposeAdapter(pretrained_model="/path/to/validated/model")
-cells = projection.segment(
-    cellpose_adapter,
-    output="cells",
-    tile_shape=(1,),
-    axes=("z",),
-    max_workers=1,
+print(movie.plan_traces(masks, memory_limit="2 GiB").summary())
+traces = movie.extract_traces(
+    masks,
+    output="fish-traces.zarr",
+    memory_limit="2 GiB",
 )
+assert neuroflow.open_result("fish-traces.zarr").verify().valid
 ```
 
 Persisted arrays are composable inputs through `neuroflow.open_array()`, which
 requires a complete result and verifies partition checksums by default. Dense
-labels can be passed to `movie.extract_traces(...)`, which reads bounded time
-windows and z-planes rather than materializing the movie or a cell-by-voxel
-matrix. `np.asarray(movie)`, iteration, truth testing, unsupported NumPy
+labels can be passed to `movie.extract_traces(...)`, which reads source-aligned
+spatial chunks in bounded time windows, skips chunks containing no soma, and
+stores a `(time, cell)` array. It never materializes the movie or a
+cell-by-voxel matrix. `np.asarray(movie)`, iteration, truth testing, unsupported NumPy
 functions, and general array broadcasting fail explicitly instead of silently
 loading data. See the
 [supported operation table](https://peter-hogg.github.io/NeuroFlow/High_Level_API.html).
@@ -163,13 +172,19 @@ work. Execution begins only at `result.execute()` or with `execute=True`.
 
 - **NWB-Zarr:** numerical arrays remain object-store-backed Zarr arrays. Native
   chunks are preserved and Dask can fetch independent chunks lazily.
-- **NWB-HDF5:** local files remain h5py datasets. Remote files are opened through
-  PyNWB's recommended `remfile` transport with a bounded 64 MiB in-memory cache;
-  fsspec remains available with `storage_options={"transport": "fsspec"}`. No
+- **NWB-HDF5:** local files remain lazily sliceable datasets. DANDI HDF5 can use
+  `backend="remfile"` or, after `uv sync --extra lindi`, `backend="lindi"`.
+  `backend="auto"` currently retains remfile as the conservative default;
+  fsspec remains available for direct URLs with
+  `storage_options={"transport": "fsspec"}`. No
   complete-file download or eager array conversion is performed. Metadata
   discovery may still require many range requests because HDF5 metadata is not
   object-store-native. See PyNWB's official
   [streaming guide](https://pynwb.readthedocs.io/en/stable/tutorials/advanced_io/streaming.html).
+- LINDI manages its own transport and cache. The current bridge does not expose
+  byte-transfer counters, so benchmark records use `null` rather than inventing
+  a value. The analysis, planning, persistence, and verification semantics are
+  otherwise backend-independent.
 - HDF5 datasets may be contiguous (`native_chunks=None`). Dask can still divide
   them into logical blocks, but those blocks are not physical HDF5 chunks and
   may require more range requests. The threaded scheduler is supported;
@@ -264,14 +279,10 @@ uv sync --extra cellpose
 ```
 
 ```python
-from neuroflow_cellpose import CellposeAdapter
-
-adapter = CellposeAdapter(
-    pretrained_model="cpsam_v2",
-    gpu=True,
-    diameter=30.0,
-    cellprob_threshold=0.0,
-    halo={"y": 32, "x": 32},
+labels = projection.cellpose(
+    pretrained_model="cpsam",
+    output="labels.zarr",
+    memory_limit="2 GiB",
 )
 ```
 

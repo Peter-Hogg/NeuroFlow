@@ -1,0 +1,13 @@
+{
+  "backend": "auto",
+  "cellpose_model": "cpsam",
+  "classification": "publication",
+  "dandiset": "DANDI:000350@0.240822.1759",
+  "memory_limit": "2 GiB",
+  "nwb_object": "/acquisition/NeuronOnePhotonSeries",
+  "output_root": "publication/runs",
+  "projection_frames": 50,
+  "validation_frames": 1,
+  "record": "benchmarks/results/publication-fish-soma-traces.json",
+  "schema_version": "1"
+}

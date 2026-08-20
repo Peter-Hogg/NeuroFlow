@@ -85,6 +85,35 @@ def open_source(
     )
 
 
+def open_dandi(
+    dandiset: str,
+    *,
+    version: str | None = None,
+    backend: Literal["auto", "lindi", "remfile"] = "auto",
+    storage_options: dict[str, object] | None = None,
+) -> DandiNWBSource:
+    """Open a Dandiset with replaceable HDF5 transport semantics.
+
+    ``backend='auto'`` retains the conservative remfile default for HDF5 blob
+    assets. LINDI is opt-in because backend availability and archive-side LINDI
+    artifacts can change independently of NeuroFlow.
+    """
+    match = re.fullmatch(
+        r"(?:DANDI:)?(\d{1,6})(?:@([^/]+))?", dandiset, re.IGNORECASE
+    )
+    if match is None:
+        raise ValueError("dandiset must be a numeric ID or DANDI:<ID>[@<version>]")
+    embedded_version = match.group(2)
+    if version and embedded_version and version != embedded_version:
+        raise ValueError("version conflicts with the DANDI identifier")
+    return DandiNWBSource(
+        match.group(1),
+        version=version or embedded_version,
+        backend=backend,
+        storage_options=storage_options,
+    )
+
+
 def plan(
     *,
     source: NWBSource,

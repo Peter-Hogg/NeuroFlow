@@ -6,12 +6,14 @@ from types import ModuleType
 
 import numpy as np
 import pytest
+import zarr
 
 import neuroflow
 from neuroflow.adapters import LoadedPartition, TaskContext
 from neuroflow.exceptions import AdapterCompatibilityError
 from neuroflow.partition import SpatialTilePlan
 from neuroflow.selection import NWBQuery
+from neuroflow.source.array import ArraySource
 from neuroflow.storage import SegmentationOutput
 from neuroflow_cellpose import CellposeAdapter
 from neuroflow_cellpose import adapter as cellpose_adapter_module
@@ -61,8 +63,9 @@ def test_cellpose_is_deferred_and_reports_missing_dependency(
         (slice(0, 4), slice(0, 4)),
         (slice(0, 4), slice(0, 4)),
     )
+    prepared = adapter.prepare(loaded, TaskContext("partition"))
     with pytest.raises(AdapterCompatibilityError, match="optional"):
-        adapter.run(loaded, TaskContext("partition"))
+        adapter.run(prepared, TaskContext("partition"))
 
 
 def test_cellpose_adapter_runs_as_optional_spatial_integration(
@@ -166,4 +169,65 @@ def test_friendly_segmentation_rejects_unreconciled_spatial_tiles(
             tile_shape=(2, 2),
             axes=("y", "x"),
         )
+    movie.close()
+
+
+def test_cellpose_can_process_a_rank_preserving_single_plane(
+    nwb_zarr: tuple[Path, np.ndarray],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_fake_cellpose(monkeypatch)
+    movie = neuroflow.load(nwb_zarr[0], name="movie").median(
+        "time", output=tmp_path / "projection.zarr", chunks=(3, 4)
+    )
+    # Add a rank-preserving z axis, matching the fish projection layout.
+    path = tmp_path / "projection-3d.zarr"
+    root = zarr.open_group(str(path), mode="w")
+    root.create_dataset(
+        "projection", data=movie.compute()[..., None], chunks=(3, 4, 1)
+    )
+    source = ArraySource(path, component="projection", axes=("y", "x", "z"))
+    projection = neuroflow.NeuroArray(source, source.select())
+    result = projection.segment(
+        CellposeAdapter(
+            pretrained_model="fake",
+            squeeze_singleton_axis=2,
+            memory="1 GiB",
+        ),
+        output=tmp_path / "plane-labels",
+        tile_shape=(1,),
+        axes=("z",),
+        memory_limit="1 GiB",
+    )
+
+    assert result.arrays["labels"].as_dask_array().shape == projection.shape
+    assert result.verify().valid
+    projection.close()
+    movie.close()
+
+
+def test_cellpose_convenience_returns_composable_labels(
+    nwb_zarr: tuple[Path, np.ndarray],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_fake_cellpose(monkeypatch)
+    movie = neuroflow.load(nwb_zarr[0], name="movie")
+    projection = movie.median(
+        "time", output=tmp_path / "projection-convenience.zarr"
+    )
+
+    labels = projection.cellpose(
+        pretrained_model="fake",
+        output=tmp_path / "cellpose-convenience.zarr",
+        memory_limit="1 GiB",
+    )
+
+    assert labels.axes == ("y", "x")
+    assert labels.shape == projection.shape
+    assert labels.workflow is not None
+    assert labels.workflow.verify().valid
+    labels.close()
+    projection.close()
     movie.close()

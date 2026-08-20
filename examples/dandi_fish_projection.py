@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 
@@ -40,6 +41,7 @@ class FishProjectionConfig:
     tile_y: int = 256
     tile_x: int = 256
     max_workers: int = 1
+    backend: Literal["auto", "lindi", "remfile"] = "auto"
     block_size: int = 262_144
     cache_size: int = 67_108_864
     output: Path = DEFAULT_OUTPUT
@@ -53,13 +55,18 @@ def build_projection(movie: neuroflow.NeuroArray) -> neuroflow.NeuroArray:
 
 
 def run_example(config: FishProjectionConfig) -> dict[str, object]:
-    source = neuroflow.open_source(
-        DANDISET,
-        storage_options={
-            "transport": "remfile",
+    storage_options: dict[str, object] | None = (
+        {
             "block_size": config.block_size,
             "cache_size": config.cache_size,
-        },
+        }
+        if config.backend != "lindi"
+        else None
+    )
+    source = neuroflow.open_dandi(
+        DANDISET,
+        backend=config.backend,
+        storage_options=storage_options,
     )
     try:
         selected = source.select(NWBQuery(asset=ASSET_ID, name=OBJECT_NAME))
@@ -83,6 +90,7 @@ def run_example(config: FishProjectionConfig) -> dict[str, object]:
         assert result is not None
         verification = result.verify()
         projection = projection_array.selection.as_dask_array()
+        attributes = bounded.metadata.attributes or {}
         middle_z = projection[:, :, MOVIE_SHAPE[3] // 2].compute()
         save_reference_png(middle_z, config.preview)
         return {
@@ -93,13 +101,13 @@ def run_example(config: FishProjectionConfig) -> dict[str, object]:
             "input_shape": bounded.metadata.shape,
             "input_dtype": bounded.metadata.dtype,
             "native_chunks": bounded.metadata.native_chunks,
-            "transport": bounded.metadata.attributes["transport"],
+            "transport": attributes.get("transport"),
             "task_count": result.plan.task_count,
             "native_chunks_touched": config.frames * MOVIE_SHAPE[3],
             "output_axes": result.plan.output_axes,
             "output_shape": projection.shape,
             "output_dtype": str(projection.dtype),
-            "output_chunks": projection.chunksize,
+            "output_chunks": tuple(int(axis[0]) for axis in projection.chunks),
             "verified": verification.valid,
             "remote_io": source.io_stats(),
             "output_uri": str(config.output),
@@ -116,6 +124,12 @@ def parse_args(argv: list[str] | None = None) -> FishProjectionConfig:
     parser.add_argument("--frames", type=int, default=50, help="leading time frames")
     parser.add_argument("--tile-y", type=int, default=256, help="output y chunk")
     parser.add_argument("--tile-x", type=int, default=256, help="output x chunk")
+    parser.add_argument(
+        "--backend",
+        choices=("auto", "lindi", "remfile"),
+        default="auto",
+        help="remote HDF5 backend (auto currently chooses remfile)",
+    )
     parser.add_argument(
         "--max-workers",
         type=int,
@@ -158,6 +172,7 @@ def parse_args(argv: list[str] | None = None) -> FishProjectionConfig:
         tile_y=args.tile_y,
         tile_x=args.tile_x,
         max_workers=args.max_workers,
+        backend=args.backend,
         block_size=args.block_size,
         cache_size=args.cache_size_mib * 1024 * 1024,
         output=args.output,

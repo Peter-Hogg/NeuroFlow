@@ -1,0 +1,60 @@
+name: Publication fish pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend:
+        description: NeuroFlow remote HDF5 backend
+        required: true
+        default: remfile
+        type: choice
+        options: [remfile, lindi]
+      run_baseline:
+        description: Also traverse the full movie with the manual Dask baseline
+        required: true
+        default: false
+        type: boolean
+      baseline_backend:
+        description: Manual baseline transport
+        required: true
+        default: lindi
+        type: choice
+        options: [lindi, remfile]
+
+jobs:
+  fish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 720
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+      - run: uv python install 3.10
+      - run: uv sync --locked --dev --extra cellpose --extra lindi
+      - name: Run projection, real Cellpose, whole-movie traces, and validation
+        run: >-
+          uv run python -m benchmarks.benchmark_fish_pipeline
+          --backend "${{ inputs.backend }}"
+          --classification publication
+          --record benchmarks/results/publication-fish-soma-traces.json
+      - name: Run the manual transport plus Dask trace baseline
+        if: ${{ inputs.run_baseline }}
+        run: >-
+          uv run python -m benchmarks.benchmark_fish_trace_baseline
+          --backend "${{ inputs.baseline_backend }}"
+          --labels publication/runs/fish-cellpose.zarr
+          --reference-traces publication/runs/fish-traces.zarr
+          --output "publication/runs/fish-${{ inputs.baseline_backend }}-dask-traces.zarr"
+          --record "benchmarks/results/publication-fish-${{ inputs.baseline_backend }}-dask-traces.json"
+          --classification publication
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ always() }}
+        with:
+          name: fish-publication-evidence-${{ github.sha }}
+          if-no-files-found: warn
+          path: |
+            benchmarks/results/publication-fish-*.json
+            publication/runs/fish-projection-z14.png
+            publication/runs/fish-traces.zarr
+            publication/runs/fish-*-dask-traces.zarr

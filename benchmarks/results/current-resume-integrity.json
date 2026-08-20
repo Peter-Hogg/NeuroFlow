@@ -1,0 +1,107 @@
+{
+  "backend": "nwb-zarr",
+  "baselines": [],
+  "benchmark_name": "resume-integrity",
+  "benchmark_schema_version": "1",
+  "classification": "current",
+  "environment": {
+    "cpu": {
+      "logical_count": 32,
+      "model": "AMD Ryzen 9 9950X 16-Core Processor"
+    },
+    "dependencies": {
+      "cellpose": null,
+      "dask": "2026.7.1",
+      "distributed": "2026.7.1",
+      "fsspec": "2026.7.0",
+      "h5py": "3.16.0",
+      "hdmf-zarr": "0.13.0",
+      "lindi": "0.4.6",
+      "neuroflow": "0.1.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.5",
+      "pyarrow": "25.0.0",
+      "pynapple": null,
+      "pynwb": "4.1.0",
+      "remfile": "0.1.14",
+      "s3fs": "2026.7.0",
+      "scipy": "1.18.0",
+      "xarray": "2026.7.0",
+      "zarr": "2.18.7"
+    },
+    "git": {
+      "commit": "4b2a563fb3330521cae595e86e2844c654582011",
+      "dirty": true,
+      "source": "git"
+    },
+    "neuroflow_version": "0.1.0",
+    "platform": {
+      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "release": "7.0.0-29-generic",
+      "system": "Linux"
+    },
+    "python": {
+      "executable": "python",
+      "implementation": "CPython",
+      "version": "3.12.3"
+    },
+    "schema_version": "1",
+    "total_ram_bytes": 132559962112
+  },
+  "execution": {
+    "bytes_read": null,
+    "cache_state": "local-temporary-source",
+    "memory_budget": null,
+    "network_context": null,
+    "partition_configuration": {
+      "time_window": 4
+    },
+    "peak_rss_bytes": 231075840,
+    "task_count": 3,
+    "wall_time_seconds": 0.1037402750007459
+  },
+  "notes": [
+    "The adapter intentionally raises on its second bounded call.",
+    "One persisted partition is then modified and checksum repair is run."
+  ],
+  "result": {
+    "checksum": "7b936ab74811b7192e450b9518e1e87308ad9ed252688cf842a98b2500f9d764",
+    "integrity_verified": true,
+    "numerical_validation": {
+      "atol": 0.0,
+      "maximum_absolute_error": 0.0,
+      "rtol": 0.0,
+      "valid": true
+    },
+    "output_bytes": 10041,
+    "resume": {
+      "calls_during_resume": 2,
+      "completed_before_interruption": 1,
+      "computed_task_count_after_repair": 1,
+      "corruption_detected": true,
+      "repair_calls": 1,
+      "valid_after_resume": true
+    }
+  },
+  "source": {
+    "asset": "source.nwb.zarr",
+    "dataset_identifier": "synthetic:resume-integrity",
+    "dataset_version": "1",
+    "dtype": "float32",
+    "path": "/acquisition/movie",
+    "physical_chunk_shape": [
+      1,
+      8,
+      8
+    ],
+    "selected_bytes": 3072,
+    "shape": [
+      12,
+      8,
+      8
+    ],
+    "total_logical_bytes": 3072
+  },
+  "timestamp": "2026-08-20T19:21:23.897004+00:00"
+}

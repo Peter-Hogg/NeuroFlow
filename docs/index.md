@@ -40,6 +40,16 @@ NeuroFlow_Architecture
 NeuroFlow_Architecture_Decisions
 ```
 
+```{toctree}
+:maxdepth: 1
+:caption: Development and release
+
+development/publication_readiness
+development/license_decision
+development/name_assessment
+development/history/README
+```
+
 Development and publication status are tracked in
 `development/publication_readiness.md`; historical design notes are indexed in
 `development/history/README.md` and are not a second user-facing API contract.

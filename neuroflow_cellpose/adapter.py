@@ -27,6 +27,13 @@ class _CellposeModel(Protocol):
 
 
 @dataclass(frozen=True)
+class _PreparedCellpose:
+    partition: LoadedPartition
+    model_input: np.ndarray
+    restore_axis: int | None
+
+
+@dataclass(frozen=True)
 class CellposeAdapter:
     """Apply a Cellpose 4.x model to one bounded spatial partition."""
 
@@ -46,6 +53,7 @@ class CellposeAdapter:
     anisotropy: float | None = None
     min_size: int = 15
     tile_overlap: float = 0.1
+    squeeze_singleton_axis: int | None = None
     halo: Mapping[str, int] | None = None
     parameters: Mapping[str, object] | None = None
     output: SegmentationOutputSchema = SegmentationOutputSchema()
@@ -65,6 +73,10 @@ class CellposeAdapter:
             raise ValueError("min_size cannot be negative")
         if not 0 <= self.tile_overlap <= 1:
             raise ValueError("tile_overlap must be between zero and one")
+        if self.squeeze_singleton_axis is not None and not isinstance(
+            self.squeeze_singleton_axis, int
+        ):
+            raise TypeError("squeeze_singleton_axis must be an integer or null")
 
     def requirements(self) -> AdapterRequirements:
         return AdapterRequirements(
@@ -98,6 +110,7 @@ class CellposeAdapter:
             "anisotropy": self.anisotropy,
             "min_size": self.min_size,
             "tile_overlap": self.tile_overlap,
+            "squeeze_singleton_axis": self.squeeze_singleton_axis,
             "halo": dict(self.halo or {}),
             **dict(self.parameters or {}),
         }
@@ -106,19 +119,27 @@ class CellposeAdapter:
         value = np.asarray(partition.data)
         if value.ndim < 2:
             raise AdapterCompatibilityError("Cellpose requires at least a 2D input")
-        return LoadedPartition(
-            data=value,
-            read_slices=partition.read_slices,
-            output_slices=partition.output_slices,
-            trim_slices=partition.trim_slices,
+        restore_axis = self.squeeze_singleton_axis
+        if restore_axis is not None:
+            normalized_axis = restore_axis % value.ndim
+            if value.shape[normalized_axis] != 1:
+                raise AdapterCompatibilityError(
+                    "squeeze_singleton_axis must identify a size-one partition axis"
+                )
+            value = np.squeeze(value, axis=normalized_axis)
+            restore_axis = normalized_axis
+        return _PreparedCellpose(
+            partition=partition,
+            model_input=value,
+            restore_axis=restore_axis,
         )
 
     def run(self, prepared: object, context: TaskContext) -> SegmentationTaskOutput:
-        if not isinstance(prepared, LoadedPartition):
-            raise TypeError("CellposeAdapter expects a LoadedPartition")
+        if not isinstance(prepared, _PreparedCellpose):
+            raise TypeError("CellposeAdapter expects its prepared partition")
         model = self._model()
         evaluation = model.eval(
-            np.asarray(prepared.data),
+            prepared.model_input,
             batch_size=self.batch_size,
             channels=list(self.channels) if self.channels is not None else None,
             channel_axis=self.channel_axis,
@@ -135,9 +156,15 @@ class CellposeAdapter:
         if not isinstance(evaluation, tuple) or not evaluation:
             raise TypeError("CellposeModel.eval() returned an unsupported value")
         labels = np.asarray(evaluation[0])
-        if labels.shape != np.asarray(prepared.data).shape:
+        if labels.shape != prepared.model_input.shape:
             raise AdapterCompatibilityError(
                 "Cellpose masks must match the prepared partition shape"
+            )
+        if prepared.restore_axis is not None:
+            labels = np.expand_dims(labels, axis=prepared.restore_axis)
+        if labels.shape != np.asarray(prepared.partition.data).shape:
+            raise AdapterCompatibilityError(
+                "restored Cellpose masks must match the source partition shape"
             )
         return SegmentationTaskOutput(labels, _object_table(labels))
 

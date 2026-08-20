@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import resource
 import tempfile
 import time
 from pathlib import Path
@@ -16,8 +15,13 @@ import zarr
 import neuroflow
 from benchmarks.benchmark_projection import _tree_size, _write_source
 from neuroflow.adapters import ArrayOutput, FunctionAdapter
-from neuroflow.benchmarking import benchmark_record, write_benchmark_record
+from neuroflow.benchmarking import (
+    benchmark_record,
+    peak_rss_bytes,
+    write_benchmark_record,
+)
 from neuroflow.partition import TimeWindowPlan
+from neuroflow.provenance import capture_environment
 from neuroflow.selection import NWBQuery
 from neuroflow.storage import ZarrOutput
 
@@ -29,7 +33,20 @@ def main() -> None:
         type=Path,
         default=Path("benchmarks/results/resume-integrity.json"),
     )
+    parser.add_argument(
+        "--classification",
+        choices=("current", "publication"),
+        default="current",
+    )
     args = parser.parse_args()
+    environment = capture_environment()
+    git = environment.get("git", {})
+    if (
+        args.classification == "publication"
+        and isinstance(git, dict)
+        and git.get("dirty") is not False
+    ):
+        parser.error("publication classification requires a clean Git tree")
     data = np.arange(12 * 8 * 8, dtype=np.float32).reshape(12, 8, 8)
     with tempfile.TemporaryDirectory(prefix="neuroflow-resume-benchmark-") as tmp:
         root = Path(tmp)
@@ -96,7 +113,7 @@ def main() -> None:
         maximum_error = float(np.max(np.abs(repaired - expected)))
         record = benchmark_record(
             name="resume-integrity",
-            classification="publication",
+            classification=args.classification,
             backend="nwb-zarr",
             source={
                 "dataset_identifier": "synthetic:resume-integrity",
@@ -114,8 +131,7 @@ def main() -> None:
                 "memory_budget": None,
                 "task_count": result.plan.task_count,
                 "bytes_read": None,
-                "peak_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                * 1024,
+                "peak_rss_bytes": peak_rss_bytes(),
                 "wall_time_seconds": wall_time,
                 "cache_state": "local-temporary-source",
                 "network_context": None,

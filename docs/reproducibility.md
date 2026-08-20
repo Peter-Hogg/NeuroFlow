@@ -87,8 +87,10 @@ uv run python -m benchmarks.benchmark_projection \
   --output benchmarks/results/publication-local-projection.json
 uv run python -m benchmarks.benchmark_scaling \
   --sizes 128,256,512 --frames 16 --repetitions 3 \
+  --classification publication \
   --output benchmarks/results/publication-scaling.json
 uv run python -m benchmarks.benchmark_resume_integrity \
+  --classification publication \
   --output benchmarks/results/publication-resume-integrity.json
 uv run python publication/generate_tables.py
 ```
@@ -100,13 +102,39 @@ process high-water mark, not a hard limit; unavailable byte-transfer data is
 ## Archive-scale case study
 
 ```bash
-bash benchmarks/run_fish_case_study.sh publication/runs/fish-projection
+uv sync --locked --dev --extra cellpose --extra lindi
+uv run python -m benchmarks.benchmark_fish_pipeline \
+  --backend remfile \
+  --classification publication \
+  --record benchmarks/results/publication-fish-soma-traces.json
 ```
 
-Use a fresh path and record cache/network context. Preserve the result and use
-resume for follow-up checks instead of repeatedly transferring public data.
-The retained 2026-08-13 case-study record is historical because it predates the
-current execution engine. It cannot support current-engine performance claims.
+This one command performs the bounded projection, actual plane-wise Cellpose,
+direct Cellpose comparison, source-chunk-aware whole-movie traces, direct NumPy
+validation on the leading frame, integrity verification, and a completed-result
+resume. It refuses `publication` classification from a dirty Git tree. Use a
+fresh path and record cache/network context; preserve completed results rather
+than repeatedly transferring public data.
+
+Run the fair manual LINDI/Dask trace baseline over the exact same masks:
+
+```bash
+uv run python -m benchmarks.benchmark_fish_trace_baseline \
+  --backend lindi \
+  --labels publication/runs/fish-cellpose.zarr \
+  --reference-traces publication/runs/fish-traces.zarr \
+  --output publication/runs/fish-lindi-dask-traces.zarr \
+  --record benchmarks/results/publication-fish-lindi-dask-traces.json \
+  --classification publication
+```
+
+The baseline intentionally requires manual time chunking, traversal,
+accumulators, persistence, and scheduler calls. It does not treat LINDI as a
+competing workflow engine. Compare `PyNWB + remfile + Dask`, `PyNWB + LINDI +
+Dask`, `NeuroFlow + remfile`, and `NeuroFlow + LINDI` as complete
+configurations. The retained 2026-08-13 record remains historical; the dirty
+2026-08-20 projection record is current development evidence, not a final
+publication run.
 
 ## Data citation
 

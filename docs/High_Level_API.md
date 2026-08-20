@@ -153,8 +153,12 @@ checksums, so changed upstream bytes cannot silently resume downstream work.
 output that successfully finished in the current process; `.persist()` uses
 that path internally to avoid immediately rereading the bytes it just wrote.
 
-Use
-`projection.segment(...)` for a Cellpose-style segmentation stage and
-`movie.extract_traces(labels, ...)` for bounded trace extraction. Specialized
+Use `projection.cellpose(...)` for the common 2-D or complete-z-plane Cellpose
+path; `projection.segment(...)` remains the lower-level adapter boundary.
+`movie.plan_traces(labels, memory_limit="2 GiB")` reads the compact labels but
+no movie values and reports active/skipped physical chunks, the automatic time
+window, estimated source reads, task memory, and output size.
+`movie.extract_traces(labels, ...)` persists bounded source-chunk-oriented mean
+traces as `(time, cell)` with timestamp and cell-ID coordinates. Specialized
 adapters remain explicit boundaries rather than pretending an external model is
 a NumPy ufunc.

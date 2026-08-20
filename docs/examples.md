@@ -36,6 +36,25 @@ The retained case-study measurement in
 adapter. It has the same source, selection, float32 output, and task geometry,
 but it is historical context—not a timing claim for the NumPy-expression engine.
 
+## Projection to soma traces
+
+Install Cellpose and the optional LINDI transport, then run the end-to-end
+publication harness from a clean checkout:
+
+```bash
+uv sync --locked --dev --extra cellpose --extra lindi
+uv run python -m benchmarks.benchmark_fish_pipeline \
+  --backend lindi \
+  --classification publication \
+  --record benchmarks/results/publication-fish-soma-traces.json
+```
+
+The harness segments each complete z-plane with actual Cellpose, compares the
+persisted labels to direct Cellpose on the same projection, extracts the full
+movie into `(time, cell)` traces, checks a direct NumPy reference subset, and
+records a no-recomputation resume. This is a long network experiment, not a
+quickstart smoke test.
+
 ## Dual-channel candidates
 
 The dual-channel example requires experimentally verified NWB series names.

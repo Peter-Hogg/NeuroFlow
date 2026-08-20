@@ -4,11 +4,15 @@ NeuroFlow provides execution and storage guarantees; it does not validate a
 biological interpretation.
 
 - Remote HDF5 requires a server supporting byte-range requests and uses threads.
+  The LINDI bridge currently reports transport byte counts as unknown because
+  LINDI does not expose those counters through the used API.
 - Logical x/y crops may still transfer complete physical HDF5 chunks.
 - Segmentation across NeuroFlow x/y tiles is rejected by the friendly API unless
   explicitly marked unreconciled.
 - Cellpose model choice, weights, thresholds, and biological accuracy require
   dataset-specific validation against expert-reviewed annotations.
+- The opt-in real Cellpose test establishes exact software-path equivalence on
+  a deterministic reference image; it does not establish biological accuracy.
 - Candidate detectors in examples are quality-control tools, not classifiers.
 - Memory budgets are conservative estimates, not operating-system hard limits.
 - Trace extraction bounds label discovery and movie windows, but a dataset with

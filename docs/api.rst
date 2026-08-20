@@ -9,6 +9,7 @@ Top-level API
 
 .. autofunction:: neuroflow.load
 .. autofunction:: neuroflow.open_source
+.. autofunction:: neuroflow.open_dandi
 .. autofunction:: neuroflow.open_array
 .. autofunction:: neuroflow.open_result
 .. autofunction:: neuroflow.plan

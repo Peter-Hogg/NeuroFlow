@@ -78,9 +78,36 @@ def test_dandi_routes_selected_blob_asset_to_hdf5(
 
     monkeypatch.setattr("neuroflow.source.dandi._get_json", response)
     monkeypatch.setattr("neuroflow.source.dandi.NWBHDF5Source", FakeHDF5Source)
-    source = DandiNWBSource("49", version="0.230223.1424")
+    source = DandiNWBSource(
+        "49", version="0.230223.1424", backend="lindi"
+    )
 
     assert source.select(NWBQuery(asset="blob-1", name="speed")) == "speed"
     assert calls[0][0] == "https://api.dandiarchive.org/api/assets/blob-1/download/"
     kwargs = cast(dict[str, object], calls[0][1])
     assert cast(SourceIdentity, kwargs["identity"]).asset_id == "blob-1"
+    assert cast(dict[str, object], kwargs["storage_options"])["transport"] == "lindi"
+
+
+def test_open_dandi_exposes_backend_without_low_level_cache_knobs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeDandiSource:
+        def __init__(self, dandiset_id: str, **kwargs: object) -> None:
+            captured.update(dandiset_id=dandiset_id, **kwargs)
+
+    monkeypatch.setattr("neuroflow.api.DandiNWBSource", FakeDandiSource)
+
+    source = __import__("neuroflow").open_dandi(
+        "DANDI:350@0.240822.1759", backend="lindi"
+    )
+
+    assert source is not None
+    assert captured == {
+        "dandiset_id": "350",
+        "version": "0.240822.1759",
+        "backend": "lindi",
+        "storage_options": None,
+    }

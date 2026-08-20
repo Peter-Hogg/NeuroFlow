@@ -15,6 +15,11 @@ jobs:
         run: uv run python -c "from cellpose.models import CellposeModel; print(CellposeModel)"
       - name: Validate installed Cellpose adapter
         run: uv run pytest -q tests/test_cellpose_adapter.py
+      - name: Compare real direct and NeuroFlow-mediated Cellpose
+        env:
+          NEUROFLOW_RUN_REAL_CELLPOSE: "1"
+          NEUROFLOW_CELLPOSE_MODEL: cpsam
+        run: uv run pytest -q tests/test_cellpose_real.py
 
   benchmark:
     runs-on: ubuntu-latest

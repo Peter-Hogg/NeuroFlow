@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import resource
 import tempfile
 import time
 from datetime import datetime, timezone
@@ -17,7 +16,12 @@ from hdmf_zarr import NWBZarrIO, ZarrDataIO
 from pynwb import NWBFile, TimeSeries
 
 import neuroflow
-from neuroflow.benchmarking import benchmark_record, write_benchmark_record
+from neuroflow.benchmarking import (
+    benchmark_record,
+    peak_rss_bytes,
+    write_benchmark_record,
+)
+from neuroflow.provenance import capture_environment
 from neuroflow.selection import NWBQuery
 
 
@@ -34,6 +38,14 @@ def main() -> None:
         default="current",
     )
     args = parser.parse_args()
+    environment = capture_environment()
+    git = environment.get("git", {})
+    if (
+        args.classification == "publication"
+        and isinstance(git, dict)
+        and git.get("dirty") is not False
+    ):
+        parser.error("publication classification requires a clean Git tree")
     if min(args.frames, args.height, args.width) < 1:
         parser.error("all dimensions must be positive")
     rng = np.random.default_rng(args.seed)
@@ -76,7 +88,7 @@ def main() -> None:
         output_bytes = _tree_size(result_path)
         maximum_error = float(np.max(np.abs(actual - expected)))
         dask_error = float(np.max(np.abs(dask_actual - expected)))
-        peak_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
+        peak_rss = peak_rss_bytes()
         execution_metrics = provenance.get("execution_metrics", {})
         if not isinstance(execution_metrics, dict):
             execution_metrics = {}

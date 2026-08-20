@@ -19,11 +19,24 @@ def main() -> None:
     parser.add_argument("--frames", type=int, default=16)
     parser.add_argument("--repetitions", type=int, default=1)
     parser.add_argument(
+        "--classification",
+        choices=("current", "publication"),
+        default="current",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=Path("benchmarks/results/synthetic-scaling.json"),
     )
     args = parser.parse_args()
+    environment = capture_environment()
+    git = environment.get("git", {})
+    if (
+        args.classification == "publication"
+        and isinstance(git, dict)
+        and git.get("dirty") is not False
+    ):
+        parser.error("publication classification requires a clean Git tree")
     try:
         sizes = [int(item) for item in args.sizes.split(",")]
     except ValueError as exc:
@@ -48,7 +61,7 @@ def main() -> None:
                     "--width",
                     str(size),
                     "--classification",
-                    "publication",
+                    args.classification,
                 ],
                 check=True,
                 capture_output=True,
@@ -61,7 +74,7 @@ def main() -> None:
         "suite_schema_version": "1",
         "suite_name": "synthetic-bounded-memory-scaling",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "environment": capture_environment(),
+        "environment": environment,
         "independent_process_per_record": True,
         "records": records,
         "notes": [

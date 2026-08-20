@@ -1,7 +1,7 @@
 """Public API for NeuroFlow."""
 
 from neuroflow._version import __version__
-from neuroflow.api import open_array, open_result, open_source, plan, run
+from neuroflow.api import open_array, open_dandi, open_result, open_source, plan, run
 from neuroflow.array import NeuroArray, load
 from neuroflow.exceptions import (
     AdapterCompatibilityError,
@@ -38,6 +38,7 @@ __all__ = [
     "compare_segmentations",
     "open_result",
     "open_array",
+    "open_dandi",
     "open_source",
     "plan",
     "run",

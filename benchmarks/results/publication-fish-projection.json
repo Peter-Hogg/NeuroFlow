@@ -3,7 +3,7 @@
   "baselines": [],
   "benchmark_name": "dandi-fish-temporal-median",
   "benchmark_schema_version": "1",
-  "classification": "publication",
+  "classification": "current",
   "environment": {
     "cpu": {
       "logical_count": 32,

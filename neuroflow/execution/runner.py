@@ -475,6 +475,7 @@ def initialize_output(
         "scheduler": scheduler,
         "execution_policy": execution_policy,
         "environment": environment,
+        "source_backend": (selection.metadata.attributes or {}).get("transport"),
         "status": "running",
     }
     provenance = {
@@ -482,6 +483,7 @@ def initialize_output(
         "workflow_id": execution_plan.workflow_id,
         "neuroflow_version": __version__,
         "source": asdict(selection.metadata.source),
+        "source_backend": (selection.metadata.attributes or {}).get("transport"),
         "nwb_paths": [selection.metadata.path],
         "adapter": {"name": adapter.name, "version": adapter.version},
         "parameters": dict(adapter_parameters),

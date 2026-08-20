@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import numpy as np
 from numpy.lib.mixins import NDArrayOperatorsMixin
@@ -36,6 +36,7 @@ from neuroflow.storage import SegmentationOutput, ZarrOutput
 
 if TYPE_CHECKING:
     from neuroflow.diagnostics.plan import ExecutionPlan
+    from neuroflow.traces import TracePlan
     from neuroflow.workflow import WorkflowSpec
 
 DEFAULT_COMPUTE_MEMORY_LIMIT = "1 GiB"
@@ -714,13 +715,61 @@ class NeuroArray(NDArrayOperatorsMixin):
             memory_limit=memory_limit,
         )
 
+    def cellpose(
+        self,
+        *,
+        output: str | Path,
+        pretrained_model: str = "cpsam",
+        memory_limit: int | str = DEFAULT_PERSIST_MEMORY_LIMIT,
+        max_workers: int = 1,
+        **model_settings: object,
+    ) -> NeuroArray:
+        """Segment a projection with Cellpose using a laptop-safe plane policy.
+
+        Two-dimensional inputs run as one image. A named ``z`` axis runs one
+        complete x/y plane per durable partition, avoiding unreconciled spatial
+        tiling while retaining resume and integrity semantics.
+        """
+        from neuroflow_cellpose import CellposeAdapter
+
+        if not isinstance(self.expression, InputExpr):
+            raise ValueError("persist the projection before Cellpose segmentation")
+        settings = dict(model_settings)
+        settings.setdefault(
+            "memory",
+            memory_limit if isinstance(memory_limit, str) else f"{memory_limit} B",
+        )
+        if "z" in self.axes:
+            z_axis = self.axes.index("z")
+            settings.setdefault("squeeze_singleton_axis", z_axis)
+            tile_shape = (1,)
+            axes = ("z",)
+        elif self.ndim == 2:
+            tile_shape = self.shape
+            axes = self.axes
+        else:
+            raise ValueError(
+                "Cellpose convenience requires a 2-D projection or named z planes"
+            )
+        adapter_type = cast(Any, CellposeAdapter)
+        result = self.segment(
+            adapter_type(pretrained_model=pretrained_model, **settings),
+            output=output,
+            tile_shape=tile_shape,
+            axes=axes,
+            max_workers=max_workers,
+            memory_limit=memory_limit,
+        )
+        source, selection = open_array(output, component="labels", verify=False)
+        return NeuroArray(source, selection, result)
+
     def extract_traces(
         self,
         labels: NeuroArray,
         *,
         output: str | Path,
-        time_chunk: int = 10,
-        memory_limit: int | str | None = None,
+        time_chunk: int | None = None,
+        memory_limit: int | str = DEFAULT_PERSIST_MEMORY_LIMIT,
     ) -> NeuroArray:
         """Extract mean fluorescence per label with bounded movie reads."""
         if not isinstance(self.expression, InputExpr):
@@ -733,6 +782,27 @@ class NeuroArray(NDArrayOperatorsMixin):
             self,
             labels,
             output=output,
+            time_chunk=time_chunk,
+            memory_limit=memory_limit,
+        )
+
+    def plan_traces(
+        self,
+        labels: NeuroArray,
+        *,
+        time_chunk: int | None = None,
+        memory_limit: int | str = DEFAULT_PERSIST_MEMORY_LIMIT,
+    ) -> TracePlan:
+        """Plan source-aligned trace extraction without reading movie values."""
+        if not isinstance(self.expression, InputExpr):
+            raise ValueError("persist the movie expression before extracting traces")
+        if not isinstance(labels.expression, InputExpr):
+            raise ValueError("persist the label expression before extracting traces")
+        from neuroflow.traces import plan_trace_extraction
+
+        return plan_trace_extraction(
+            self,
+            labels,
             time_chunk=time_chunk,
             memory_limit=memory_limit,
         )
