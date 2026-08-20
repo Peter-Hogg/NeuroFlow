@@ -1,7 +1,7 @@
 """Lightweight adapter for declared NumPy-like functions."""
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
@@ -18,8 +18,10 @@ from neuroflow.expression import (
     Expression,
     estimate_working_memory,
     evaluate_numpy,
+    expression_identity,
     expression_to_dict,
     output_shape_for_input,
+    staged_reductions,
 )
 from neuroflow.storage.base import validate_component_name
 
@@ -107,6 +109,9 @@ class ExpressionAdapter:
     deterministic: bool = True
     random_seed: int | None = None
     external_packages: tuple[str, ...] = ("numpy",)
+    staged_values: dict[str, object] = field(
+        default_factory=dict, compare=False, repr=False
+    )
 
     @property
     def output_axes(self) -> tuple[str, ...]:
@@ -142,7 +147,11 @@ class ExpressionAdapter:
     def run(self, prepared: object, context: TaskContext) -> object:
         if not isinstance(prepared, LoadedPartition):
             raise TypeError("ExpressionAdapter expects a LoadedPartition")
-        return evaluate_numpy(self.expression, np.asarray(prepared.data))
+        return evaluate_numpy(
+            self.expression,
+            np.asarray(prepared.data),
+            staged_values=self.staged_values,
+        )
 
     def persist(self, output: object, writer: object, context: TaskContext) -> object:
         write_array = getattr(writer, "write_array", None)
@@ -151,9 +160,26 @@ class ExpressionAdapter:
         return write_array(np.asarray(output, dtype=np.dtype(self.expression.dtype)))
 
     def estimate_task_memory(self, read_shape: tuple[int, ...]) -> int:
+        if self.source_free_when_staged:
+            return np.dtype(self.expression.dtype).itemsize * 2
         working = estimate_working_memory(self.expression, input_shape=read_shape)
         output_shape = output_shape_for_input(self.expression, read_shape)
         checksum_copy = (
             int(np.prod(output_shape)) * np.dtype(self.expression.dtype).itemsize
         )
         return working + checksum_copy
+
+    @property
+    def source_free_after_stages(self) -> bool:
+        return (
+            self.source_free_when_staged
+            and expression_identity(self.expression) in self.staged_values
+        )
+
+    @property
+    def source_free_when_staged(self) -> bool:
+        identity = expression_identity(self.expression)
+        return not self.expression.shape and any(
+            expression_identity(item) == identity
+            for item in staged_reductions(self.expression)
+        )

@@ -27,7 +27,16 @@ def parse_bytes(value: int | str) -> int:
         raise ValueError(f"invalid memory size: {value!r}")
     amount = float(match.group(1))
     unit = match.group(2).upper()
-    powers = {"B": 0, "KB": 1, "KIB": 1, "MB": 2, "MIB": 2,
-              "GB": 3, "GIB": 3, "TB": 4, "TIB": 4}
+    powers = {
+        "B": 0,
+        "KB": 1,
+        "KIB": 1,
+        "MB": 2,
+        "MIB": 2,
+        "GB": 3,
+        "GIB": 3,
+        "TB": 4,
+        "TIB": 4,
+    }
     base = 1024 if "I" in unit else 1000
     return int(amount * base ** powers[unit])

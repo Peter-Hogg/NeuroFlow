@@ -91,6 +91,7 @@ def run_example(config: FishProjectionConfig) -> dict[str, object]:
             "asset": ASSET_PATH,
             "input_axes": bounded.metadata.axes,
             "input_shape": bounded.metadata.shape,
+            "input_dtype": bounded.metadata.dtype,
             "native_chunks": bounded.metadata.native_chunks,
             "transport": bounded.metadata.attributes["transport"],
             "task_count": result.plan.task_count,

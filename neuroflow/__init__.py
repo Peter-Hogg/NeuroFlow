@@ -14,8 +14,10 @@ from neuroflow.exceptions import (
     ProvenanceMismatchError,
     SourceResolutionError,
     UnsupportedBackendError,
+    WorkflowSpecError,
 )
 from neuroflow.validation import SegmentationMetrics, compare_segmentations
+from neuroflow.workflow import WorkflowSpec, reproduce
 
 __all__ = [
     "AdapterCompatibilityError",
@@ -30,6 +32,8 @@ __all__ = [
     "SourceResolutionError",
     "SegmentationMetrics",
     "UnsupportedBackendError",
+    "WorkflowSpec",
+    "WorkflowSpecError",
     "__version__",
     "compare_segmentations",
     "open_result",
@@ -37,5 +41,6 @@ __all__ = [
     "open_source",
     "plan",
     "run",
+    "reproduce",
     "load",
 ]

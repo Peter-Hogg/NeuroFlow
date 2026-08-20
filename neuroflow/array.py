@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from numpy.lib.mixins import NDArrayOperatorsMixin
@@ -33,6 +33,10 @@ from neuroflow.results.workflow import WorkflowResult
 from neuroflow.selection import NWBQuery, Selection, absolute_selection_bounds
 from neuroflow.source.base import NWBSource
 from neuroflow.storage import SegmentationOutput, ZarrOutput
+
+if TYPE_CHECKING:
+    from neuroflow.diagnostics.plan import ExecutionPlan
+    from neuroflow.workflow import WorkflowSpec
 
 DEFAULT_COMPUTE_MEMORY_LIMIT = "1 GiB"
 DEFAULT_PERSIST_MEMORY_LIMIT = "2 GiB"
@@ -530,6 +534,73 @@ class NeuroArray(NDArrayOperatorsMixin):
         mode: Literal["create", "overwrite"] = "create",
     ) -> NeuroArray:
         """Execute bounded tasks and return a lazy handle to durable Zarr output."""
+        workflow = self._persist_workflow(
+            output,
+            chunks=chunks,
+            max_workers=max_workers,
+            memory_limit=memory_limit,
+            scheduler=scheduler,
+            resume=resume,
+            mode=mode,
+        )
+        workflow.execute()
+        # Execution just finalized every manifest and checksum in this process,
+        # so trust those records instead of rereading the complete output here.
+        source, selection = open_array(output, verify=False)
+        return NeuroArray(source, selection, workflow)
+
+    def to_spec(
+        self,
+        output: str | Path,
+        *,
+        chunks: tuple[int, ...] | None = None,
+        max_workers: int | None = None,
+        memory_limit: int | str | None = DEFAULT_PERSIST_MEMORY_LIMIT,
+        scheduler: Literal["threads", "processes", "distributed"] = "threads",
+        resume: bool = True,
+    ) -> WorkflowSpec:
+        """Describe a future persistence run as a safe portable workflow."""
+        workflow = self._persist_workflow(
+            output,
+            chunks=chunks,
+            max_workers=max_workers,
+            memory_limit=memory_limit,
+            scheduler=scheduler,
+            resume=resume,
+            mode="create",
+        )
+        return workflow.to_spec()
+
+    def plan(
+        self,
+        output: str | Path,
+        *,
+        chunks: tuple[int, ...] | None = None,
+        max_workers: int | None = None,
+        memory_limit: int | str | None = DEFAULT_PERSIST_MEMORY_LIMIT,
+    ) -> ExecutionPlan:
+        """Return the validated metadata-only persistence plan."""
+        return self._persist_workflow(
+            output,
+            chunks=chunks,
+            max_workers=max_workers,
+            memory_limit=memory_limit,
+            scheduler="threads",
+            resume=True,
+            mode="create",
+        ).plan
+
+    def _persist_workflow(
+        self,
+        output: str | Path,
+        *,
+        chunks: tuple[int, ...] | None,
+        max_workers: int | None,
+        memory_limit: int | str | None,
+        scheduler: Literal["threads", "processes", "distributed"],
+        resume: bool,
+        mode: Literal["create", "overwrite"],
+    ) -> WorkflowResult:
         if chunks is not None:
             if len(chunks) != self.ndim or any(
                 not isinstance(size, (int, np.integer))
@@ -544,7 +615,9 @@ class NeuroArray(NDArrayOperatorsMixin):
                 min(extent, int(chunk))
                 for extent, chunk in zip(self.shape, chunks, strict=True)
             )
-        required_axes = reduced_input_axes(self.expression)
+        required_axes = reduced_input_axes(
+            self.expression, exclude_staged_dependencies=True
+        )
         dropped_axes = tuple(
             axis for axis in self.selection.metadata.axes if axis not in self.axes
         )
@@ -585,7 +658,7 @@ class NeuroArray(NDArrayOperatorsMixin):
                 if axis not in required_axes
             ),
         )
-        workflow = run(
+        return run(
             source=self.source,
             selection=self.selection,
             adapter=adapter,
@@ -597,14 +670,10 @@ class NeuroArray(NDArrayOperatorsMixin):
             output=ZarrOutput(str(output), mode=mode),
             scheduler=scheduler,
             resume=resume,
-            execute=True,
+            execute=False,
             max_workers=max_workers,
             memory_limit=memory_limit,
         )
-        # Execution just finalized every manifest and checksum in this process,
-        # so trust those records instead of rereading the complete output here.
-        source, selection = open_array(output, verify=False)
-        return NeuroArray(source, selection, workflow)
 
     def segment(
         self,

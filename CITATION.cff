@@ -9,7 +9,9 @@ authors:
 repository-code: "https://github.com/Peter-Hogg/NeuroFlow"
 url: "https://github.com/Peter-Hogg/NeuroFlow"
 version: 0.1.0
-date-released: 2026-08-13
+abstract: >-
+  A bounded, resumable, provenance-aware execution layer for analysis of
+  archive-scale Neurodata Without Borders datasets.
 keywords:
   - DANDI
   - Dask

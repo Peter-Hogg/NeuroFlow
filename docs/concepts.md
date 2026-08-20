@@ -44,6 +44,25 @@ NeuroFlow therefore refuses implicit conversion, iteration, and truth testing.
 `.compute()` is explicit and has a conservative 1 GiB default estimate;
 `.persist()` is the preferred boundary for larger results.
 
+## Global scalars are explicit stages
+
+A global scalar `sum`, `mean`, `min`, or `max` used downstream becomes one
+deduplicated stage. NeuroFlow partitions the source on native chunk boundaries,
+stores checksummed partials, combines them deterministically, and substitutes
+the verified scalar into downstream bounded tasks. An interrupted run resumes
+valid partials. Unsupported non-scalar broadcasts and global order statistics
+fail during planning rather than trigger repeated or unbounded source reads.
+
+## A workflow specification is portable provenance
+
+`WorkflowSpec` is versioned, deterministic JSON for a safe subset of workflows.
+It records source identity and selection, canonical allowlisted expression,
+partition and memory policy, create-only output, and software metadata. It is
+validated rather than executed as code. `workflow.plan()` resolves the source
+and reports boundedness and explicit estimated/unknown cost fields before any
+numerical payload is read; post-run provenance records measured timing, task,
+resume, output, RSS, stage, integrity, Git, and environment information.
+
 ## Memory limits are estimates, not process isolation
 
 NeuroFlow limits source partitions, declared adapter memory, concurrency, and

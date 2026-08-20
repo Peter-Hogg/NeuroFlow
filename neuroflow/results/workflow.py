@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import TYPE_CHECKING, Literal, cast
 
 from dask.delayed import Delayed
 
 from neuroflow.adapters.base import AnalysisAdapter
-from neuroflow.adapters.numpy import ArrayOutput, TableOutput
+from neuroflow.adapters.numpy import ArrayOutput, ExpressionAdapter, TableOutput
 from neuroflow.adapters.segmentation import SegmentationOutputSchema
 from neuroflow.diagnostics.plan import ExecutionPlan
 from neuroflow.exceptions import IncompletePartitionError
@@ -23,6 +23,11 @@ from neuroflow.execution.runner import (
     manifest_uri,
     partition_identity,
 )
+from neuroflow.execution.stages import (
+    build_reduction_stage_plans,
+    execute_reduction_stages,
+    verify_reduction_stages,
+)
 from neuroflow.partition.base import Partition
 from neuroflow.provenance.hashing import stable_hash
 from neuroflow.results.array import ArrayResult
@@ -31,7 +36,7 @@ from neuroflow.results.table import TableResult
 from neuroflow.results.verification import VerificationReport
 from neuroflow.selection.query import Selection
 from neuroflow.source.base import NWBSource
-from neuroflow.storage.base import join_uri, read_json
+from neuroflow.storage.base import join_uri, read_json, write_json_atomic
 from neuroflow.storage.manifest import PartitionManifest
 from neuroflow.storage.parquet import ParquetOutput
 from neuroflow.storage.segmentation import SegmentationOutput
@@ -42,6 +47,9 @@ from neuroflow.storage.validation import (
 )
 from neuroflow.storage.zarr import ZarrOutput
 
+if TYPE_CHECKING:
+    from neuroflow.workflow import WorkflowSpec
+
 
 @dataclass
 class WorkflowResult:
@@ -50,6 +58,7 @@ class WorkflowResult:
     adapter: AnalysisAdapter
     output: ZarrOutput | ParquetOutput | SegmentationOutput
     plan: ExecutionPlan
+    partition: object | None = None
     scheduler: Literal["threads", "processes", "distributed"] = "threads"
     resume_enabled: bool = True
     max_workers: int | None = None
@@ -119,6 +128,15 @@ class WorkflowResult:
         return self.status.failed_partitions
 
     def execute(self) -> WorkflowResult:
+        stage_plans = (
+            build_reduction_stage_plans(
+                self.selection,
+                self.adapter.expression,
+                memory_limit=self.memory_limit,
+            )
+            if isinstance(self.adapter, ExpressionAdapter)
+            else ()
+        )
         initialize_output(
             source=self.source,
             selection=self.selection,
@@ -129,13 +147,40 @@ class WorkflowResult:
             resume=self.resume_enabled,
             max_workers=self.max_workers,
             memory_limit=self.memory_limit,
+            stages=tuple(item.to_dict() for item in stage_plans),
         )
         try:
-            execute_tasks(self._tasks, self.scheduler, max_workers=self.max_workers)
+            if isinstance(self.adapter, ExpressionAdapter):
+                stage_execution = execute_reduction_stages(
+                    selection=self.selection,
+                    staged_values=self.adapter.staged_values,
+                    output_uri=self.output.uri,
+                    workflow_id=self.plan.workflow_id,
+                    plans=stage_plans,
+                )
+                provenance_uri = join_uri(
+                    self.output.uri, ".neuroflow", "provenance.json"
+                )
+                provenance = read_json(provenance_uri)
+                if provenance is not None:
+                    provenance["stage_execution"] = list(stage_execution)
+                    write_json_atomic(provenance_uri, provenance)
+            task_results = execute_tasks(
+                self._tasks, self.scheduler, max_workers=self.max_workers
+            )
+            io_stats = getattr(self.source, "io_stats", None)
+            raw_source_metrics = io_stats() if callable(io_stats) else {}
+            source_metrics = (
+                cast(Mapping[str, object], raw_source_metrics)
+                if isinstance(raw_source_metrics, Mapping)
+                else {}
+            )
             finalize_output(
                 self.output,
                 self.plan.workflow_id,
                 self.plan.partitions,
+                task_results=task_results,
+                source_metrics=source_metrics,
             )
         except Exception as exc:
             fail_output(self.output, self.plan.workflow_id, exc)
@@ -146,6 +191,12 @@ class WorkflowResult:
         self.resume_enabled = True
         return self.execute()
 
+    def to_spec(self) -> WorkflowSpec:
+        """Return a validated portable specification for a safe workflow."""
+        from neuroflow.workflow import WorkflowSpec
+
+        return WorkflowSpec.from_workflow(self)
+
     def verify(self, *, checksums: bool = True) -> VerificationReport:
         entries = tuple(
             (
@@ -154,12 +205,19 @@ class WorkflowResult:
             )
             for partition in self.plan.partitions
         )
-        return _verify_partitions(
+        report = _verify_partitions(
             self.output.uri,
             self.plan.workflow_id,
             entries,
             output_kinds=_schema_output_kinds(getattr(self.adapter, "output", None)),
             checksums=checksums,
+        )
+        provenance = self.provenance or {}
+        stage_errors = verify_reduction_stages(self.output.uri, provenance)
+        return VerificationReport(
+            report.valid and not stage_errors,
+            report.checked_partitions,
+            (*stage_errors, *report.errors),
         )
 
 
@@ -300,10 +358,11 @@ class PersistedResult:
             output_kinds=output_kinds,
             checksums=checksums,
         )
+        stage_errors = verify_reduction_stages(self.uri, self.provenance_record)
         return VerificationReport(
-            report.valid and not errors,
+            report.valid and not errors and not stage_errors,
             report.checked_partitions,
-            (*errors, *report.errors),
+            (*errors, *stage_errors, *report.errors),
         )
 
     def array_source_identity(self, *, verify_checksums: bool = True) -> str:

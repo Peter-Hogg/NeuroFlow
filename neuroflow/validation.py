@@ -73,9 +73,7 @@ def compare_segmentations(
                 intersections[row, column] = count
 
     unions = (
-        predicted_sizes[:, np.newaxis]
-        + reference_sizes[np.newaxis, :]
-        - intersections
+        predicted_sizes[:, np.newaxis] + reference_sizes[np.newaxis, :] - intersections
     )
     ious = np.divide(
         intersections,

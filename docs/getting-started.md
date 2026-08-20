@@ -7,7 +7,7 @@ NeuroFlow requires Python 3.10 or newer. For a source checkout:
 ```bash
 git clone https://github.com/Peter-Hogg/NeuroFlow.git
 cd NeuroFlow
-uv sync --dev
+uv sync --locked --dev
 ```
 
 Optional integrations are deliberately separate:
@@ -15,6 +15,7 @@ Optional integrations are deliberately separate:
 ```bash
 uv sync --dev --extra cellpose
 uv sync --dev --extra pynapple
+uv sync --locked --dev --extra baselines
 ```
 
 ## A bounded local workflow
@@ -35,17 +36,30 @@ import neuroflow
 movie = neuroflow.load("session.nwb.zarr", name="movie")
 print(movie.axes, movie.shape)
 projection = np.median(movie[:50], axis="time")
-result = projection.persist(
+workflow = projection.to_spec(
     "projection.zarr",
     chunks=(256, 256),
     memory_limit="2 GiB",
 )
+workflow.to_json("projection-workflow.json")
+print(workflow.plan().summary())
+result = neuroflow.reproduce(workflow)
 assert result.workflow.verify().valid
 ```
 
 Use named or contiguous NumPy slicing and a declared memory limit. Arithmetic,
 supported NumPy calls, metadata inspection, and `repr()` remain lazy. Numerical
 I/O starts only at `.compute()` or `.persist()`.
+
+The workflow record can be checked and rerun without importing the analysis
+script:
+
+```bash
+uv run neuroflow plan projection-workflow.json
+uv run neuroflow reproduce projection-workflow.json \
+  --output projection-reproduction.zarr
+uv run neuroflow verify projection-reproduction.zarr
+```
 
 ## Result safety
 

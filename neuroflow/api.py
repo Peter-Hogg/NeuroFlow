@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import re
+from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
     from neuroflow.source.base import NWBSource, SourceSpec
     from neuroflow.storage.base import OutputSpec
 
+from neuroflow.adapters.numpy import ExpressionAdapter
 from neuroflow.exceptions import (
     IncompletePartitionError,
     OutputConflictError,
@@ -28,6 +30,7 @@ from neuroflow.exceptions import (
 )
 from neuroflow.execution.graph import build_plan
 from neuroflow.execution.resources import parse_bytes
+from neuroflow.execution.stages import build_reduction_stage_plans
 from neuroflow.results.workflow import PersistedResult, WorkflowResult
 from neuroflow.source.array import ArraySource
 from neuroflow.source.base import SourceSpec
@@ -157,12 +160,23 @@ def run(
         max_workers = int(
             min(max_workers or available_workers, safe_workers, available_workers)
         )
+    if isinstance(adapter, ExpressionAdapter):
+        stage_plans = build_reduction_stage_plans(
+            selection,
+            adapter.expression,
+            memory_limit=memory_limit,
+        )
+        execution_plan = replace(
+            execution_plan,
+            stages=tuple(item.to_dict() for item in stage_plans),
+        )
     result = WorkflowResult(
         source=source,
         selection=selection,
         adapter=adapter,
         output=output,
         plan=execution_plan,
+        partition=partition,
         scheduler=scheduler,
         resume_enabled=resume,
         max_workers=max_workers,

@@ -24,6 +24,7 @@ assert projection.workflow.verify().valid
 
 getting-started
 concepts
+workflows
 High_Level_API
 examples
 limitations
@@ -38,3 +39,7 @@ api
 NeuroFlow_Architecture
 NeuroFlow_Architecture_Decisions
 ```
+
+Development and publication status are tracked in
+`development/publication_readiness.md`; historical design notes are indexed in
+`development/history/README.md` and are not a second user-facing API contract.

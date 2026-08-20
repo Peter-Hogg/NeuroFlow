@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import importlib.metadata
-import os
-import platform
+import resource
+import sys
 from collections.abc import Mapping
 from contextlib import nullcontext
 from dataclasses import asdict
@@ -31,6 +31,7 @@ from neuroflow.exceptions import (
     ProvenanceMismatchError,
 )
 from neuroflow.partition.base import Partition
+from neuroflow.provenance.environment import capture_environment
 from neuroflow.provenance.hashing import stable_hash
 from neuroflow.selection.query import Selection, absolute_selection_bounds
 from neuroflow.source.base import NWBSource
@@ -135,7 +136,9 @@ def _execute_partition(
             output_kinds=output_kinds,
             checksums=True,
         ):
-            return manifest.to_dict()
+            resumed = manifest.to_dict()
+            resumed["_execution"] = "skipped"
+            return resumed
     seed = getattr(adapter, "random_seed", None)
     context = TaskContext(
         partition_id=partition_id,
@@ -180,10 +183,17 @@ def _execute_partition(
     else:
         raise TypeError("adapter has no supported output schema")
     try:
-        data = np.asarray(source_array[partition.read_slices])  # type: ignore[index]
+        source_free = bool(getattr(adapter, "source_free_after_stages", False))
+        data = (
+            np.empty((0,) * len(selection_axes), dtype=getattr(source_array, "dtype"))
+            if source_free
+            else np.asarray(source_array[partition.read_slices])  # type: ignore[index]
+        )
         time_axis = selection_axes.index("time") if "time" in selection_axes else None
         time_slice = partition.read_slices[time_axis] if time_axis is not None else None
-        if source_timestamps is not None and time_slice is not None:
+        if source_free:
+            timestamps = None
+        elif source_timestamps is not None and time_slice is not None:
             timestamps = np.asarray(source_timestamps[time_slice])  # type: ignore[index]
         elif sampling_rate is not None and time_slice is not None:
             start = time_slice.start or 0
@@ -236,7 +246,9 @@ def _execute_partition(
                 "adapter.persist() returned an invalid manifest: "
                 + "; ".join(manifest_errors)
             )
-        return manifest.to_dict()
+        completed = manifest.to_dict()
+        completed["_execution"] = "computed"
+        return completed
     except Exception as exc:
         failure = PartitionManifest(
             partition_id=partition_id,
@@ -293,6 +305,7 @@ def initialize_output(
     resume: bool,
     max_workers: int | None,
     memory_limit: int | str | None,
+    stages: tuple[dict[str, object], ...] = (),
 ) -> None:
     physical_source_uri = str(getattr(source, "uri", source.identity.uri))
     validate_output_separation(output.uri, {"source": physical_source_uri})
@@ -456,11 +469,7 @@ def initialize_output(
         "max_workers": max_workers,
         "memory_limit": memory_limit,
     }
-    environment = {
-        "python": platform.python_version(),
-        "platform": platform.platform(),
-        "pid": str(os.getpid()),
-    }
+    environment = capture_environment()
     current_attempt: dict[str, object] = {
         "execution_started": execution_started,
         "scheduler": scheduler,
@@ -508,6 +517,7 @@ def initialize_output(
                 for partition in execution_plan.partitions
             ],
         },
+        "stages": list(stages),
         "scheduler": scheduler,
         "execution_policy": execution_policy,
         "environment": environment,
@@ -617,6 +627,9 @@ def finalize_output(
     output: ExecutionOutput,
     workflow_id: str,
     partitions: tuple[Partition, ...],
+    *,
+    task_results: tuple[dict[str, object], ...] = (),
+    source_metrics: Mapping[str, object] | None = None,
 ) -> None:
     provenance_uri = join_uri(output.uri, ".neuroflow", "provenance.json")
     provenance = read_json(provenance_uri)
@@ -669,6 +682,7 @@ def finalize_output(
     except ValueError as exc:
         raise IncompletePartitionError(f"invalid output schema: {exc}") from exc
     errors: list[str] = []
+    output_bytes = 0
     for partition in partitions:
         partition_id = partition_identity(workflow_id, partition)
         raw_manifest = read_json(manifest_uri(output.uri, partition_id))
@@ -694,12 +708,18 @@ def finalize_output(
             output_kinds=output_kinds,
             checksums=False,
         )
+        output_bytes += sum(manifest.sizes.values())
         errors.extend(f"{partition_id}: {error}" for error in partition_errors)
     if errors:
         raise IncompletePartitionError(
             "cannot finalize incomplete or invalid partitions: " + "; ".join(errors[:3])
         )
     finished = datetime.now(timezone.utc).isoformat()
+    attempts = provenance.get("execution_attempts")
+    attempt_started: str | None = None
+    if isinstance(attempts, list) and attempts and isinstance(attempts[-1], dict):
+        raw_started = attempts[-1].get("execution_started")
+        attempt_started = raw_started if isinstance(raw_started, str) else None
     previous_status = _finish_current_attempt(
         provenance, status="complete", finished=finished
     )
@@ -709,6 +729,50 @@ def finalize_output(
     provenance["completed_partitions"] = complete
     provenance["failed_partitions"] = failed
     provenance["status"] = "complete"
+    if task_results:
+        computed_count = sum(
+            item.get("_execution") == "computed" for item in task_results
+        )
+        resumed_count = sum(
+            item.get("_execution") == "skipped" for item in task_results
+        )
+        wall_time = None
+        if attempt_started is not None:
+            try:
+                wall_time = (
+                    datetime.fromisoformat(finished)
+                    - datetime.fromisoformat(attempt_started)
+                ).total_seconds()
+            except ValueError:
+                pass
+        response_bytes = (
+            source_metrics.get("response_content_bytes")
+            if source_metrics is not None
+            else None
+        )
+        stage_execution = provenance.get("stage_execution", [])
+        provenance["execution_metrics"] = {
+            "schema_version": "1",
+            "execution_started": attempt_started,
+            "execution_finished": finished,
+            "wall_time_seconds": wall_time,
+            "completed_task_count": len(task_results),
+            "computed_task_count": computed_count,
+            "resumed_task_count": resumed_count,
+            "partitions_completed": computed_count,
+            "bytes_read": response_bytes,
+            "bytes_read_status": (
+                "measured" if isinstance(response_bytes, int) else "unknown"
+            ),
+            "output_bytes": output_bytes,
+            "peak_rss_bytes": _peak_rss_bytes(),
+            "stages": stage_execution if isinstance(stage_execution, list) else [],
+            "integrity_verification": {
+                "status": "measured",
+                "manifests": "valid",
+                "checksums": "not-run-during-finalization",
+            },
+        }
     write_json_atomic(provenance_uri, provenance)
     write_json_atomic(
         join_uri(output.uri, ".neuroflow", "result.json"),
@@ -721,6 +785,11 @@ def finalize_output(
             "provenance": provenance_uri,
         },
     )
+
+
+def _peak_rss_bytes() -> int:
+    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    return value if sys.platform == "darwin" else value * 1024
 
 
 def fail_output(output: ExecutionOutput, workflow_id: str, error: Exception) -> None:

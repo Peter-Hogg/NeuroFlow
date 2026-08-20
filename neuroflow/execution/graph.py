@@ -183,6 +183,24 @@ def build_plan(
     )
     warnings = list(validation.warnings)
     read_amplification = sum(read_elements) / selected_elements
+    maximum_partition_shape = tuple(
+        max(slice_shape(item.read_slices)[index] for item in partitions)
+        for index in range(len(selection.metadata.shape))
+    )
+    logical_bytes_read = sum(read_elements) * itemsize
+    if selection.metadata.native_chunks is None:
+        source_chunks_touched = None
+        estimated_total_bytes_read = None
+    else:
+        source_chunks_touched = sum(
+            _chunks_touched(item.read_slices, selection.metadata.native_chunks)
+            for item in partitions
+        )
+        estimated_total_bytes_read = (
+            source_chunks_touched
+            * element_count(selection.metadata.native_chunks)
+            * itemsize
+        )
     if read_amplification > 1.5:
         warnings.append("overlap causes more than 1.5x source read amplification")
     if selection.metadata.native_chunks:
@@ -214,6 +232,15 @@ def build_plan(
         task_count=len(partitions),
         memory_per_task=memory_per_task,
         read_amplification=read_amplification,
+        maximum_logical_partition_shape=maximum_partition_shape,
+        estimated_logical_bytes_read=logical_bytes_read,
+        estimated_source_chunks_touched=source_chunks_touched,
+        estimated_total_bytes_read=estimated_total_bytes_read,
+        bounded=True,
+        bounded_reasons=(
+            "every task has finite validated source slices",
+            "memory_per_task is derived before numerical I/O",
+        ),
         expected_output_size=(
             output_elements * np.dtype(schema.dtype).itemsize
             if isinstance(schema, ArrayOutput)
@@ -227,6 +254,15 @@ def build_plan(
         partitions=partitions,
         resources=requirements.resources,
     )
+
+
+def _chunks_touched(slices: tuple[slice, ...], chunks: tuple[int, ...]) -> int:
+    touched = 1
+    for item, chunk in zip(slices, chunks, strict=True):
+        start = item.start or 0
+        stop = item.stop or 0
+        touched *= max(0, (stop - 1) // chunk - start // chunk + 1)
+    return touched
 
 
 def _processing_axes(

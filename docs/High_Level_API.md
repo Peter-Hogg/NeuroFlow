@@ -62,20 +62,21 @@ may be combined when they refer to the same source selection and have identical
 shapes and axes.
 
 Raw ndarrays, differently bounded selections, and general array broadcasting
-are rejected. This rule is conservative and important: the current durable
-runner binds one source selection to each fused task.
+are rejected. A global 0-D `sum`, `mean`, `min`, or `max` of the same selection
+is the one deliberate broadcast exception. It becomes a bounded persisted
+stage and its verified scalar is reused by every downstream partition.
 
 ```python
 scaled = (movie + 1.0) / 2                 # supported
 combined = movie[:50] + movie[50:100]     # rejected: different selections
-centered = movie - movie.mean("time")      # rejected: non-local broadcast
+normalized = movie / movie.max()           # supported: staged scalar
+centered = movie - movie.mean("time")      # rejected: non-scalar broadcast
 ```
 
-The last expression requires a staged, multi-input dependency, which the
-`NeuroArray` expression engine does not yet implement. Use an explicit custom
-multi-input analysis stage for that operation. NeuroFlow will not compute a
-tile-local mean or repeatedly reread the complete remote array and pretend
-either behavior is equivalent to NumPy.
+The last expression requires a named-axis array broadcast, which the expression
+engine does not implement. Use an explicit custom multi-input analysis stage.
+NeuroFlow will not compute a tile-local mean or repeatedly reread the complete
+remote array and pretend either behavior is equivalent to NumPy.
 
 ## Explicit execution boundaries
 
@@ -103,6 +104,8 @@ the workload needs a different bound. It:
 - prevents parallel partitions from sharing a writable Zarr chunk;
 - records the canonical expression, selected asset, absolute bounds, NumPy
   version, partition layout, resource policy, and checksums;
+- persists bounded partials for global scalar stages and resumes only valid
+  partials before deterministically combining them;
 - resumes only partitions whose identity and checksum still match.
 
 The legacy convenience form remains available:

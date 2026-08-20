@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import argparse
-import importlib.metadata
+import hashlib
 import json
-import platform
 import resource
-import sys
 import tempfile
 import time
 from datetime import datetime, timezone
@@ -19,6 +17,7 @@ from hdmf_zarr import NWBZarrIO, ZarrDataIO
 from pynwb import NWBFile, TimeSeries
 
 import neuroflow
+from neuroflow.benchmarking import benchmark_record, write_benchmark_record
 from neuroflow.selection import NWBQuery
 
 
@@ -29,6 +28,11 @@ def main() -> None:
     parser.add_argument("--width", type=int, default=256)
     parser.add_argument("--seed", type=int, default=20260813)
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--classification",
+        choices=("current", "publication"),
+        default="current",
+    )
     args = parser.parse_args()
     if min(args.frames, args.height, args.width) < 1:
         parser.error("all dimensions must be positive")
@@ -65,46 +69,107 @@ def main() -> None:
         actual = projection.compute()
         neuroflow_seconds = time.perf_counter() - start
         valid = bool(projection.workflow.verify().valid)
+        plan = projection.workflow.plan
+        provenance = projection.workflow.provenance or {}
         projection.close()
         movie.close()
-        record = {
-            "schema_version": "1",
-            "recorded_at": datetime.now(timezone.utc).isoformat(),
-            "command": {
-                "frames": args.frames,
-                "height": args.height,
-                "width": args.width,
-                "seed": args.seed,
+        output_bytes = _tree_size(result_path)
+        maximum_error = float(np.max(np.abs(actual - expected)))
+        dask_error = float(np.max(np.abs(dask_actual - expected)))
+        peak_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
+        execution_metrics = provenance.get("execution_metrics", {})
+        if not isinstance(execution_metrics, dict):
+            execution_metrics = {}
+        record = benchmark_record(
+            name="local-projection-correctness",
+            classification=args.classification,
+            backend="nwb-zarr",
+            source={
+                "dataset_identifier": "synthetic:normal-projection",
+                "dataset_version": "1",
+                "asset": str(source_path.name),
+                "path": "/acquisition/movie",
+                "shape": list(data.shape),
+                "dtype": str(data.dtype),
+                "physical_chunk_shape": [1, args.height, args.width],
+                "total_logical_bytes": int(data.nbytes),
+                "selected_bytes": int(data.nbytes),
             },
-            "environment": {
-                "machine": platform.machine(),
-                "operating_system": platform.platform(),
-                "python": sys.version.split()[0],
-                "versions": {
-                    name: importlib.metadata.version(name)
-                    for name in ("dask", "hdmf-zarr", "neuroflow", "numpy", "pynwb")
+            execution={
+                "partition_configuration": {
+                    "processing_shape": list(plan.processing_partition_shape),
+                    "output_chunks": [128, 128],
                 },
+                "memory_budget": "1 GiB",
+                "task_count": plan.task_count,
+                "bytes_read": None,
+                "peak_rss_bytes": peak_rss,
+                "wall_time_seconds": neuroflow_seconds,
+                "cache_state": "local-temporary-source",
+                "network_context": None,
             },
-            "seed": args.seed,
-            "shape": list(data.shape),
-            "direct_numpy_seconds": direct_seconds,
-            "direct_dask_seconds": direct_dask_seconds,
-            "neuroflow_seconds": neuroflow_seconds,
-            "peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
-            "source_bytes": _tree_size(source_path),
-            "result_bytes": _tree_size(result_path),
-            "maximum_absolute_error": float(np.max(np.abs(actual - expected))),
-            "direct_dask_maximum_absolute_error": float(
-                np.max(np.abs(dask_actual - expected))
-            ),
-            "verified": valid,
-            "numerical_tolerance": {"atol": 0.0, "rtol": 0.0},
-        }
+            result={
+                "checksum": hashlib.sha256(actual.tobytes()).hexdigest(),
+                "numerical_validation": {
+                    "valid": maximum_error == 0,
+                    "maximum_absolute_error": maximum_error,
+                    "maximum_relative_error": 0.0,
+                    "atol": 0.0,
+                    "rtol": 0.0,
+                    "repeatability": "deterministic seed; single run in this record",
+                },
+                "integrity_verified": valid,
+                "resume": {
+                    "exercised": False,
+                    "resumed_partitions": execution_metrics.get(
+                        "resumed_task_count", 0
+                    ),
+                },
+                "output_bytes": output_bytes,
+            },
+            baselines=[
+                {
+                    "name": "direct-numpy",
+                    "version": np.__version__,
+                    "wall_time_seconds": direct_seconds,
+                    "maximum_absolute_error": 0.0,
+                    "cache_state": "in-memory-generated-input",
+                },
+                {
+                    "name": "direct-dask",
+                    "version": da.__version__ if hasattr(da, "__version__") else None,
+                    "wall_time_seconds": direct_dask_seconds,
+                    "maximum_absolute_error": dask_error,
+                    "cache_state": "local-temporary-source",
+                },
+            ],
+            notes=[
+                "Peak RSS is the process high-water mark across all three methods.",
+                "This small local run assesses correctness and overhead, not "
+                "remote I/O.",
+            ],
+        )
+        # Retain version-1 flat timing keys for the existing repetition summarizer.
+        record.update(
+            {
+                "schema_version": "2",
+                "command": {
+                    "frames": args.frames,
+                    "height": args.height,
+                    "width": args.width,
+                    "seed": args.seed,
+                },
+                "direct_numpy_seconds": direct_seconds,
+                "direct_dask_seconds": direct_dask_seconds,
+                "neuroflow_seconds": neuroflow_seconds,
+                "maximum_absolute_error": maximum_error,
+                "verified": valid,
+            }
+        )
     payload = json.dumps(record, indent=2, sort_keys=True)
     print(payload)
     if args.output is not None:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(payload + "\n")
+        write_benchmark_record(args.output, record)
 
 
 def _write_source(path: Path, data: np.ndarray) -> None:

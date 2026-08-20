@@ -24,11 +24,13 @@ biological interpretation.
 - NumPy compatibility is intentionally finite. Raw ndarray operands, general
   array broadcasting, transpose/reshape, fancy indexing, `out=`, mutable
   operations, and unlisted NumPy functions are rejected.
-- A branch such as `movie / movie.max()` needs a staged global reduction and is
-  rejected because the current single-stage persistence engine will not repeat
-  a full remote read for every output tile. It currently requires an explicit
-  custom multi-input stage; persisting the reduction alone does not make it a
-  compatible `NeuroArray` operand.
+- Global scalar `sum`, `mean`, `min`, and `max` can feed a downstream expression
+  through a persisted bounded reduction stage, so `movie / movie.max()` is
+  supported. The stage reads native-aligned bounded partitions once and its
+  scalar is reused by all downstream partitions. Non-scalar broadcasts such as
+  `movie - movie.mean("time")`, global median/percentile, variance, standard
+  deviation, and arbitrary multi-input DAGs remain unsupported and fail while
+  the expression is planned.
 - Exact median and percentile require every reduced axis in one processing
   partition. They remain bounded when retained axes can be tiled; a memory
   limit rejects unsafe global cases before numerical I/O.

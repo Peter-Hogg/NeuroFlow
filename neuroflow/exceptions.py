@@ -39,3 +39,7 @@ class IncompletePartitionError(NeuroFlowError):
 
 class ProvenanceMismatchError(NeuroFlowError):
     """Stored provenance does not match the requested workflow."""
+
+
+class WorkflowSpecError(NeuroFlowError, ValueError):
+    """A portable workflow file is invalid or unsupported."""

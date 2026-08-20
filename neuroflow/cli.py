@@ -1,10 +1,13 @@
 """Command-line entry point."""
 
 import json
+from pathlib import Path
 
 import typer
 
-from neuroflow import __version__, open_result, open_source
+from neuroflow import WorkflowSpec, __version__, open_result, open_source, reproduce
+from neuroflow.provenance import capture_environment
+from neuroflow.results.workflow import WorkflowResult
 
 app = typer.Typer(help="Lazy execution for archive-scale NWB analysis.")
 
@@ -98,3 +101,60 @@ def verify(
     )
     if not report.valid:
         raise typer.Exit(code=1)
+
+
+@app.command("plan")
+def plan_workflow(workflow: Path) -> None:
+    """Validate a portable workflow and print a metadata-only dry-run report."""
+    try:
+        spec = WorkflowSpec.from_json(workflow)
+        report = spec.plan()
+    except (OSError, ValueError) as exc:
+        typer.echo(f"workflow planning failed: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+    typer.echo(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+
+
+@app.command("reproduce")
+def reproduce_workflow(
+    workflow: Path,
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Use a fresh output path instead of the path stored in the workflow.",
+    ),
+) -> None:
+    """Execute an allowlisted portable workflow and verify its result."""
+    result: WorkflowResult | None = None
+    try:
+        result = reproduce(workflow, output=output)
+        verification = result.verify()
+    except (OSError, ValueError, RuntimeError) as exc:
+        typer.echo(f"workflow reproduction failed: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+    finally:
+        if result is not None:
+            result.source.close()
+    if result is None:  # pragma: no cover - every failure exits above
+        raise typer.Exit(code=2)
+    typer.echo(
+        json.dumps(
+            {
+                "workflow_id": result.plan.workflow_id,
+                "output": result.output.uri,
+                "status": result.status.state,
+                "integrity_verified": verification.valid,
+                "verification_errors": list(verification.errors),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    if not verification.valid:
+        raise typer.Exit(code=1)
+
+
+@app.command("environment")
+def environment() -> None:
+    """Print privacy-conscious machine and software metadata as JSON."""
+    typer.echo(json.dumps(capture_environment(), indent=2, sort_keys=True))

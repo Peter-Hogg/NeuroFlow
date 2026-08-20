@@ -39,6 +39,7 @@ dependencies = [
 [project.optional-dependencies]
 cellpose = ["cellpose>=4.1"]
 pynapple = ["pynapple>=0.11"]
+baselines = ["lindi>=0.4.6,<0.5"]
 
 [project.scripts]
 neuroflow = "neuroflow.cli:app"
