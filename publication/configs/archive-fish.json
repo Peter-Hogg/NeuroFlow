@@ -1,0 +1,16 @@
+{
+  "asset_id": "4f898ff7-6084-4e84-a449-f05811c1d951",
+  "asset_path": "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb",
+  "block_size_bytes": 262144,
+  "cache_size_mib": 64,
+  "dandiset": "DANDI:000350@0.240822.1759",
+  "frames": 50,
+  "max_workers": 1,
+  "memory_budget": "2 GiB",
+  "nwb_object": "/acquisition/NeuronOnePhotonSeries",
+  "result": "publication/runs/fish-projection.zarr",
+  "result_record": "benchmarks/results/publication-fish-projection.json",
+  "schema_version": "1",
+  "tile_x": 256,
+  "tile_y": 256
+}

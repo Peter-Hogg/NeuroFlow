@@ -1,0 +1,110 @@
+{
+  "backend": "dandi-nwb-hdf5-remfile",
+  "baselines": [],
+  "benchmark_name": "dandi-fish-temporal-median",
+  "benchmark_schema_version": "1",
+  "classification": "publication",
+  "environment": {
+    "cpu": {
+      "logical_count": 32,
+      "model": "AMD Ryzen 9 9950X 16-Core Processor"
+    },
+    "dependencies": {
+      "cellpose": null,
+      "dask": "2026.7.1",
+      "distributed": "2026.7.1",
+      "fsspec": "2026.7.0",
+      "h5py": "3.16.0",
+      "hdmf-zarr": "0.13.0",
+      "lindi": null,
+      "neuroflow": "0.1.0",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "pyarrow": "25.0.0",
+      "pynapple": null,
+      "pynwb": "4.1.0",
+      "remfile": "0.1.14",
+      "s3fs": "2026.7.0",
+      "scipy": "1.15.3",
+      "xarray": "2025.6.1",
+      "zarr": "2.18.3"
+    },
+    "git": {
+      "commit": "fe6fe36a63223e971f00f42e9a42414503147d5f",
+      "dirty": true,
+      "source": "git"
+    },
+    "neuroflow_version": "0.1.0",
+    "platform": {
+      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "release": "7.0.0-29-generic",
+      "system": "Linux"
+    },
+    "python": {
+      "executable": "python3",
+      "implementation": "CPython",
+      "version": "3.10.19"
+    },
+    "schema_version": "1",
+    "total_ram_bytes": 132559962112
+  },
+  "execution": {
+    "bytes_read": 2594344287,
+    "cache_state": "bounded-remfile-cache; freshness must be recorded by runner",
+    "memory_budget": "2 GiB",
+    "network_context": "public DANDI HTTPS; record location/link separately",
+    "partition_configuration": {
+      "native_chunks_touched": 1450,
+      "output_chunks": [
+        256,
+        256,
+        1
+      ]
+    },
+    "peak_rss_bytes": 1648193536,
+    "task_count": 29,
+    "wall_time_seconds": 218.41623729600178
+  },
+  "notes": [
+    "This script uses the current NumPy-expression engine.",
+    "Run once with a fresh output and retain it; do not repeatedly load the public archive for favorable timings.",
+    "Scientific interpretation is not established by this software benchmark."
+  ],
+  "result": {
+    "checksum": "fc494d49c76c747d3690504fb69c1667bd7a6c04709cd3ede3a364faf4ec2309",
+    "integrity_verified": true,
+    "numerical_validation": {
+      "atol": null,
+      "rtol": null,
+      "status": "requires independent retained reference comparison",
+      "valid": null
+    },
+    "output_bytes": 54755424,
+    "resume": {
+      "resumed_partitions": 0
+    }
+  },
+  "source": {
+    "asset": "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb",
+    "dataset_identifier": "DANDI:000350",
+    "dataset_version": "0.240822.1759",
+    "dtype": "int16",
+    "path": "/acquisition/NeuronOnePhotonSeries",
+    "physical_chunk_shape": [
+      1,
+      888,
+      2048,
+      1
+    ],
+    "selected_bytes": 5274009600,
+    "shape": [
+      50,
+      888,
+      2048,
+      29
+    ],
+    "total_logical_bytes": 323296788480
+  },
+  "timestamp": "2026-08-20T14:27:41.715036+00:00"
+}

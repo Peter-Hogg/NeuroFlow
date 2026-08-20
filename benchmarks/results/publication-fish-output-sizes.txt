@@ -1,0 +1,2 @@
+54755424	publication/runs/fish-projection.zarr
+1176848	publication/runs/fish-projection-z14.png

@@ -1,0 +1,8 @@
+{
+  "classification": "publication",
+  "frames": 16,
+  "independent_process_per_record": true,
+  "repetitions": 3,
+  "schema_version": "1",
+  "sizes": [128, 256, 512]
+}
