@@ -31,6 +31,11 @@ venv/
 .ipynb_checkpoints/
 examples/_output/
 publication/runs/
+# Archival-run output stores: large Zarr, produced by the publication
+# sequence, never committed. Ignored so the mid-sequence tree stays clean
+# for the dirty-tree gates.
+publication/runs-publication/
+publication/runs-publication-lindi/
 
 # Ad-hoc local inspection scripts for the retained fish run. Kept out of the
 # tree rather than packaged: they need matplotlib/napari, which are not project
