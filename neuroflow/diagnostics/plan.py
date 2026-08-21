@@ -24,7 +24,8 @@ class ExecutionPlan:
     estimated_logical_bytes_read: int
     estimated_source_chunks_touched: int | None
     estimated_total_bytes_read: int | None
-    bounded: bool
+    estimated_transport_bytes_read: int | None = None
+    bounded: bool = True
     bounded_reasons: tuple[str, ...] = ()
     stages: tuple[dict[str, object], ...] = ()
     expected_output_size: int | None = None
@@ -76,8 +77,18 @@ class ExecutionPlan:
                 "estimated_total_bytes_read": measurement(
                     self.estimated_total_bytes_read,
                     note=(
-                        "uncompressed physical-chunk bytes; compression, caches, and "
-                        "HTTP transport can change actual transfer"
+                        "uncompressed physical-chunk bytes at source-chunk "
+                        "granularity; see estimated_transport_bytes_read for "
+                        "the transport-level figure"
+                    ),
+                ),
+                "estimated_transport_bytes_read": measurement(
+                    self.estimated_transport_bytes_read,
+                    note=(
+                        "uncompressed source chunks rounded up to whole "
+                        "transport blocks with no cache reuse; compression and "
+                        "block reuse pull actual transfer below this, and "
+                        "transports without a block model report unknown"
                     ),
                 ),
                 "read_amplification": measurement(self.read_amplification),
@@ -118,6 +129,9 @@ class ExecutionPlan:
             f"tasks: {self.task_count}, memory/task={self.memory_per_task} bytes",
             f"bounded: {self.bounded}",
             f"read amplification: {self.read_amplification:.2f}x",
+            "estimated reads: "
+            f"source-chunk={self.estimated_total_bytes_read or 'unknown'} bytes, "
+            f"transport={self.estimated_transport_bytes_read or 'unknown'} bytes",
             f"expected output: {output}",
             f"resources: {resource}",
         ]

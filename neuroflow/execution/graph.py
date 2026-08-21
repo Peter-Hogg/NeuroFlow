@@ -24,6 +24,33 @@ from neuroflow.storage.segmentation import SegmentationOutput
 from neuroflow.storage.zarr import ZarrOutput
 
 
+def estimate_transport_bytes(
+    source_chunks_touched: int | None,
+    chunk_bytes: int | None,
+    block_size: int | None,
+) -> int | None:
+    """Model bytes a block transport moves for the planned chunk touches.
+
+    Source-chunk bytes and transport bytes are different quantities. A block
+    transport moves whole blocks per chunk touch, so a 32 KiB chunk fetched
+    through a 1 MiB block costs the block: on DANDI:000223 the chunk-level
+    estimate was 192 MiB while the measured HTTP transfer was 3.26 GiB. This
+    is a no-reuse figure on uncompressed data -- compression and cache reuse
+    pull the real transfer below it -- and transports without a block model
+    (LINDI, local files) stay honestly unknown rather than reporting the
+    chunk-level number as if it were transfer.
+    """
+    if (
+        source_chunks_touched is None
+        or chunk_bytes is None
+        or block_size is None
+        or block_size <= 0
+    ):
+        return None
+    blocks_per_touch = max(1, -(-chunk_bytes // block_size))
+    return source_chunks_touched * blocks_per_touch * block_size
+
+
 def _value_spec(value: object) -> object:
     if is_dataclass(value) and not isinstance(value, type):
         return asdict(value)
@@ -201,6 +228,16 @@ def build_plan(
             * element_count(selection.metadata.native_chunks)
             * itemsize
         )
+    block_size = (selection.metadata.attributes or {}).get("transport_block_size")
+    estimated_transport_bytes_read = estimate_transport_bytes(
+        source_chunks_touched,
+        (
+            element_count(selection.metadata.native_chunks) * itemsize
+            if selection.metadata.native_chunks is not None
+            else None
+        ),
+        block_size if isinstance(block_size, int) else None,
+    )
     if read_amplification > 1.5:
         warnings.append("overlap causes more than 1.5x source read amplification")
     if selection.metadata.native_chunks:
@@ -236,6 +273,7 @@ def build_plan(
         estimated_logical_bytes_read=logical_bytes_read,
         estimated_source_chunks_touched=source_chunks_touched,
         estimated_total_bytes_read=estimated_total_bytes_read,
+        estimated_transport_bytes_read=estimated_transport_bytes_read,
         bounded=True,
         bounded_reasons=(
             "every task has finite validated source slices",

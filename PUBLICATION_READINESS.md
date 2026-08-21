@@ -267,25 +267,44 @@ What passed, on the first unfamiliar dataset:
   contained. `_array_metadata` in `neuroflow/source/hdf5.py` now skips such
   non-array containers; `tests/test_hdf5_source.py` pins it.
 
-What this run exposed, measured and left open rather than smoothed over:
+The first run of this smoke test exposed two planner-model limits on
+fine-chunked layouts (retained as
+`benchmarks/results/current-dandi-smoke-000223-before-planner-fix.json`), and
+both were then fixed and re-measured. An independent rerun by the maintainer
+reproduced the pre-fix overrun (2,774 MiB engine, 3,126 MiB process) before the
+fixes were applied.
 
-1. **The engine overran the total-process target on this geometry**:
-   2,865 MiB engine-phase peak against the 2,048 MiB target (+40%), where the
-   fish-geometry fixture at the same target overran by 0.7%. The per-task
-   estimate (3.4 MiB) is so small on fine-chunked layouts that the planner
-   grants concurrency up to the core count, and per-worker constant overhead
-   (thread state, read buffers, in-flight blocks) is not modelled. The fish
-   geometry, with two multi-GiB tasks, could never expose this.
-2. **Transport-level read amplification is not modelled**: the plan estimated
-   192 MiB of chunk-level reads (amplification 1.0, with an explicit note that
-   transport can change actual transfer); the measured HTTP transfer was
-   3,264 MiB (17.0x) across 475 responses in 75.9 s. 32 KiB chunks are fetched
-   through 256 KiB transport blocks laid out frame-major, and 64 tasks evict
-   one another's blocks in the shared 64 MiB cache.
+1. **Concurrency-aware process-memory modelling.** Before: the per-task
+   estimate on this layout is 3.4 MiB, so dividing the budget by task data
+   alone granted concurrency up to the core count (32 workers) and the engine
+   peaked at 2,865 MiB against the 2,048 MiB target (+40%). The measured cost
+   is ~73-77 MiB per worker through the remfile+h5py read path (a local Zarr
+   sweep of the same geometry shows 6-8 MiB per worker, so the remote read
+   path dominates). The planner now charges a measured 96 MiB envelope
+   (`WORKER_RUNTIME_OVERHEAD_BYTES`) for every worker beyond the first, whose
+   runtime slack already sits in the process floor. After, same command:
+   **17 granted workers, 1,770 MiB engine peak, 2,084 MiB whole-process peak —
+   1.8% above the 2 GiB target with the harness's own reference computation
+   included — at no wall-time cost (65.5 s vs 66.6 s).** Whole-process RSS is
+   the primary user-facing metric; the engine-phase figure is diagnostic.
+   Large-task grants are unchanged by the new term (fish-geometry grants are
+   identical), and regression tests pin the derivation.
+2. **Source-chunk bytes and transport bytes are now reported separately.**
+   Before: the plan's only read figure was 192 MiB of source-chunk bytes
+   (amplification 1.0) while the measured HTTP transfer was 3,264 MiB (17.0x) —
+   32 KiB chunks are fetched through 1 MiB transport blocks laid out
+   frame-major, with 64 tasks evicting one another's blocks in the shared
+   cache. The plan now also reports `estimated_transport_bytes_read`, a
+   no-reuse upper figure on uncompressed data (chunk touches x whole transport
+   blocks), and the source exposes its block size for the model. After: the
+   plan reports **192 MiB source-chunk / 6,144 MiB transport (no-reuse)**, and
+   the measured 3,156 MiB sits between the two exactly as the model's notes
+   predict (cache reuse and compression pull actual transfer below the upper
+   figure). LINDI and local files report the transport figure as honestly
+   unknown rather than echoing the chunk-level number.
 
-Both findings are planner-model accuracy limits on fine-chunked layouts, not
-correctness defects — the numbers produced are exact and verified. Fixing them
-is engine work deliberately outside this validation's scope.
+Correctness was never at issue — before and after, the output is bitwise
+identical to the independent reference and verifies against its manifest.
 
 ## Dask/LINDI baseline (Priority 4)
 
@@ -322,7 +341,7 @@ Two claims must not be conflated:
 
 Command | Result
 --- | ---
-`.venv/bin/python -m pytest -q` | **224 passed, 1 skipped**
+`.venv/bin/python -m pytest -q` | **226 passed, 1 skipped**
 `.venv/bin/python -m ruff check .` | **All checks passed**
 `.venv/bin/python -m basedpyright` | **0 errors, 0 warnings, 0 notes**
 
@@ -351,13 +370,12 @@ identical labels.
 3. **The 4 GiB / 206-frame overrun is unexplained in detail.** The direction and
    magnitude are measured; the specific unmodelled allocation is hypothesised,
    not confirmed.
-3a. **The planner's resource model is geometry-dependent.** On the fine-chunked
-   DANDI:000223 layout the engine peaked 40% above a 2 GiB target and
-   transferred 17.0x the chunk-level read estimate (see the second-dataset
-   smoke section). Two candidate model improvements are known — a per-worker
-   constant overhead term in the concurrency derivation, and a transport-block
-   term in the read estimate — but both are engine changes that must not be
-   made casually against the retained evidence.
+3a. **Resolved: the geometry-dependence found on DANDI:000223.** The
+   per-worker runtime envelope and the separate transport-bytes estimate (see
+   the second-dataset smoke section) bring the same command from a 3,126 MiB
+   whole-process peak to 2,084 MiB against the 2 GiB target. The residual
+   +1.8% is consistent with the target being approximate and unenforced; the
+   4 GiB large-window overrun in item 3 is a different cause and remains open.
 4. **No clean-tree publication record exists** for any stage. Every retained
    record is `current` with `git.dirty: true`.
 5. Naming caution, not an error: `benchmarks/results/current-scaling.json` is
@@ -447,7 +465,7 @@ when segmentation runs `cpsam` on CPU, by design. Use 4 GiB, or keep 2 GiB with
 | Whole-process memory cost is attributable to named, separately measured components | **SUPPORTED** — twelve isolated component probes retained |
 | `memory_limit` is an approximate total process-memory target, not a per-task allowance | **SUPPORTED** — exact decomposition, documented, regression-tested |
 | A 2 GiB target yields substantially lower process RSS than before | **SUPPORTED** — 2,062 MiB measured versus 6,097 MiB for the same nominal request |
-| `memory_limit` is a reliable bound on process RSS | **PARTIALLY SUPPORTED** — geometry-dependent: 0.7% overrun at 2 GiB on fish-like chunking, 14.5% at 4 GiB with a large window, and 40% on the fine-chunked DANDI:000223 layout; approximate, unenforced, and must be described as a target |
+| `memory_limit` is a reliable bound on process RSS | **PARTIALLY SUPPORTED** — 0.7% overrun at 2 GiB on fish-like chunking and 1.8% whole-process on the fine-chunked DANDI:000223 layout after the per-worker runtime envelope (40% before it); 14.5% at 4 GiB with a large window remains open; approximate, unenforced, and must be described as a target |
 | Users state resources and NeuroFlow chooses partitioning and concurrency without low-level knobs | **PARTIALLY SUPPORTED** — demonstrated locally on synthetic data (1→21 workers from the target alone); not yet demonstrated on the archive |
 | GPU execution is supported and reduces host memory and Cellpose time | **PARTIALLY SUPPORTED** — component-level measurement is strong (3.21→2.09 GB host, 66.14→2.03 s, 32.5x); no full GPU archive run exists |
 | Resource scaling behaviour across memory and worker configurations | **PARTIALLY SUPPORTED** — complete five-point local curve; no archive-scale curve |

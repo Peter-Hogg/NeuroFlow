@@ -127,6 +127,7 @@ class NWBHDF5Source:
         self._http_responses = 0
         self._response_content_bytes = 0
         self.transport = "local"
+        self.transport_block_size: int | None = None
         try:
             requested_transport = self.storage_options.get("transport", "auto")
             use_transport_layer = "://" in self.uri or requested_transport == "lindi"
@@ -138,6 +139,15 @@ class NWBHDF5Source:
                         raise SourceResolutionError(f"source is not a file: {path}")
                     self.uri = str(path)
                 self._remote_file, self.transport = _open_remote_file(self.uri, options)
+                # Retained so planning can model transport-block reads: every
+                # chunk fetched through remfile/fsspec moves whole blocks of
+                # this size, not just the chunk's own bytes. LINDI manages its
+                # own remote access and exposes no equivalent.
+                if self.transport in ("remfile", "fsspec"):
+                    block_value = self.storage_options.get("block_size", 1_048_576)
+                    self.transport_block_size = (
+                        int(block_value) if isinstance(block_value, int) else None
+                    )
                 session = getattr(self._remote_file, "session", None)
                 hooks = getattr(session, "hooks", None)
                 if isinstance(hooks, dict):
@@ -216,6 +226,7 @@ class NWBHDF5Source:
                 attributes={
                     "backend": "nwb-hdf5",
                     "transport": self.transport,
+                    "transport_block_size": self.transport_block_size,
                     "type_hierarchy": tuple(sorted(_type_names(obj))),
                     "subject_id": getattr(
                         getattr(self._nwbfile, "subject", None), "subject_id", None

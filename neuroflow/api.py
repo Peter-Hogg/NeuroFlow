@@ -29,7 +29,11 @@ from neuroflow.exceptions import (
     UnsupportedBackendError,
 )
 from neuroflow.execution.graph import build_plan
-from neuroflow.execution.resources import parse_bytes, resolve_memory_budget
+from neuroflow.execution.resources import (
+    WORKER_RUNTIME_OVERHEAD_BYTES,
+    parse_bytes,
+    resolve_memory_budget,
+)
 from neuroflow.execution.stages import build_reduction_stage_plans
 from neuroflow.results.workflow import PersistedResult, WorkflowResult
 from neuroflow.source.array import ArraySource
@@ -220,7 +224,19 @@ def run(
                 f"target ({budget.process_overhead_bytes} bytes of process "
                 "overhead)"
             )
-        safe_workers = max(1, budget.task_bytes // max(per_worker, 1))
+        # Each concurrent worker costs its partition data *plus* runtime state
+        # the per-task estimate cannot see: thread and allocator-arena
+        # residency and the remote read path's transport blocks and
+        # decompression buffers. On many-small-task workloads the data term is
+        # a few MiB, so dividing the budget by data alone granted concurrency
+        # up to the core count and overran a 2 GiB total-process target by
+        # ~40% on DANDI:000223. The first worker's runtime slack is already in
+        # the process floor; every additional worker is charged the measured
+        # envelope on top of its data.
+        additional = max(0, budget.task_bytes - per_worker) // (
+            per_worker + WORKER_RUNTIME_OVERHEAD_BYTES
+        )
+        safe_workers = 1 + additional
         # ``max_workers`` is an availability ceiling, not a demand. The contract
         # is that a user states the resources they have and the planner picks
         # partitioning and concurrency to fit; refusing the call would push them

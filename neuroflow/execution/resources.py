@@ -65,6 +65,23 @@ PROCESS_OVERHEAD_COMPONENTS: dict[str, int] = {
 
 DEFAULT_PROCESS_OVERHEAD_BYTES = sum(PROCESS_OVERHEAD_COMPONENTS.values())
 
+# Resident cost of one *additional* concurrent worker beyond its modelled
+# partition data: thread and allocator-arena state, per-thread NumPy
+# temporaries, and above all the remote HDF5 read path, which holds transport
+# blocks and decompression buffers per in-flight read. The first worker's
+# runtime slack is already inside the process floor (``dask_runtime``), so
+# this charge applies to concurrency growth only.
+#
+# Measured, not invented: on the fine-chunked DANDI:000223 smoke run
+# (``benchmarks/results/current-dandi-smoke-000223.json``; 3.4 MiB modelled
+# tasks, 32 granted workers) the engine-phase peak implies ~73-77 MiB per
+# worker through remfile+h5py, while a local Zarr sweep of the same geometry
+# shows 6-8 MiB per worker with no remote read path. 96 MiB is the rounded-up
+# envelope over the remote figure. Without this term the planner granted
+# concurrency up to the core count on many-small-task workloads and overran a
+# 2 GiB total-process target by ~40%.
+WORKER_RUNTIME_OVERHEAD_BYTES = 96 * 1024 * 1024
+
 
 @dataclass(frozen=True)
 class MemoryBudget:

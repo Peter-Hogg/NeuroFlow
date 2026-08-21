@@ -107,7 +107,10 @@ Process overhead is charged once, not per task. Its components are measured by
 rounded-up envelope over those measurements (448 MiB by default: interpreter and
 libraries, dask runtime, source read cache, output write buffers). Only the
 remainder bounds partition working sets, and concurrency is derived by dividing
-that remainder by the per-worker cost.
+that remainder by the per-worker cost. Per-worker cost is partition data plus a
+measured runtime envelope (thread, allocator, and remote-read-path residency)
+charged for every worker beyond the first, so workloads with tiny partitions no
+longer scale to the core count and overrun the target.
 
 Two consequences are worth stating plainly:
 

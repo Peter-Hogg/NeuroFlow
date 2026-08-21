@@ -312,9 +312,15 @@ def test_stated_worker_availability_is_clamped_not_refused(tmp_path: Path) -> No
     caller to hand-tune a low-level knob to rediscover M -- a number the
     planner had already computed. Concurrency is clamped instead, and the
     granted count is recorded in provenance so the reduction stays auditable.
+
+    Every additional worker is charged ``WORKER_RUNTIME_OVERHEAD_BYTES`` of
+    runtime residency on top of its partition data, so sub-100-MiB targets now
+    grant a single worker and growth shows at GiB scale. Dividing the budget by
+    data alone let a 3.4 MiB-per-task workload run at the full core count and
+    overrun a 2 GiB total-process target by ~40% on DANDI:000223.
     """
     granted_by_limit: dict[str, int] = {}
-    for limit in ("8 MiB", "16 MiB", "64 MiB"):
+    for limit in ("64 MiB", "1 GiB", "2 GiB"):
         movie, _ = _fish_like_movie(
             tmp_path / limit.replace(" ", ""),
             frames=8,
@@ -345,14 +351,14 @@ def test_stated_worker_availability_is_clamped_not_refused(tmp_path: Path) -> No
 
     # Nothing was refused, and concurrency rose with the target instead of the
     # caller having to discover the safe number themselves.
-    assert granted_by_limit["8 MiB"] == 1
+    assert granted_by_limit["64 MiB"] == 1
     assert (
-        granted_by_limit["8 MiB"]
-        < granted_by_limit["16 MiB"]
-        < granted_by_limit["64 MiB"]
+        granted_by_limit["64 MiB"]
+        < granted_by_limit["1 GiB"]
+        < granted_by_limit["2 GiB"]
     )
-    # Memory, not the core count, is what bound these runs.
-    assert granted_by_limit["64 MiB"] < 64
+    # Memory, not the core count or the stated availability, bound these runs.
+    assert granted_by_limit["2 GiB"] < 64
 
 
 def test_compute_bounds_array_data_by_task_bytes_not_the_headline_total(
@@ -466,3 +472,35 @@ def test_default_segmentation_limit_admits_the_default_model() -> None:
     # One real fish plane must fit in what is left after the model reserve.
     assert adapter.estimate_task_memory((888, 2048)) <= budget.task_bytes
     assert budget.attainable
+
+
+def test_concurrency_charges_runtime_overhead_per_additional_worker() -> None:
+    """Tiny per-task estimates must not grant concurrency up to the core count.
+
+    On DANDI:000223 the modelled task data was 3.4 MiB, so dividing the budget
+    by data alone granted 32 workers and the engine peaked ~40% above a 2 GiB
+    total-process target; the measured cost was ~73-77 MiB per worker through
+    the remote read path. The derivation now charges the measured envelope for
+    every worker beyond the first, whose runtime slack already sits in the
+    process floor.
+    """
+    from neuroflow.execution.resources import WORKER_RUNTIME_OVERHEAD_BYTES
+
+    budget = resolve_memory_budget("2 GiB")
+    data = 3_407_872  # the DANDI:000223 per-task estimate
+
+    granted = 1 + max(0, budget.task_bytes - data) // (
+        data + WORKER_RUNTIME_OVERHEAD_BYTES
+    )
+    # 17 with the 96 MiB envelope: enough concurrency to hide remote latency,
+    # bounded so the implied peak (overhead + 17 * measured per-worker cost)
+    # stays under the 2 GiB target instead of reaching the core count.
+    assert granted == 17
+    implied_peak = (
+        budget.process_overhead_bytes + granted * (77 * 1024 * 1024 + data)
+    )
+    assert implied_peak <= budget.total_bytes
+
+    # The envelope must stay above the remote measurement it cites; lowering
+    # it to grant more workers re-introduces the overrun.
+    assert WORKER_RUNTIME_OVERHEAD_BYTES >= 77 * 1024 * 1024

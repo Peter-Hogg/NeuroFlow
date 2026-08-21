@@ -753,3 +753,34 @@ def test_checksum_verification_detects_and_repairs_corrupt_partition(
         result.arrays["result"].as_dask_array().compute(), nwb_zarr[1]
     )
     source.close()
+
+
+def test_transport_bytes_are_separated_from_source_chunk_bytes() -> None:
+    """The plan must not present chunk-level bytes as expected transfer.
+
+    On DANDI:000223 the chunk-level read estimate was 192 MiB while the
+    measured HTTP transfer was 3.26 GiB: a block transport moves whole blocks
+    per chunk touch, and 32 KiB chunks fetched through 1 MiB blocks cost the
+    block. The two quantities are reported separately, with the transport
+    figure a no-reuse model that the measured transfer stays below.
+    """
+    from neuroflow.execution.graph import estimate_transport_bytes
+
+    # The DANDI:000223 smoke geometry: 6,144 touches of 32 KiB chunks through
+    # the 1 MiB default block. The model gives the no-reuse figure and the
+    # retained measurement (3,422,379,957 bytes) sits below it, while the
+    # chunk-level figure (201,326,592 bytes) sits far below the measurement.
+    modelled = estimate_transport_bytes(6144, 32 * 1024 * 2, 1_048_576)
+    assert modelled == 6144 * 1_048_576
+    assert 201_326_592 < 3_422_379_957 < modelled
+
+    # Chunks larger than a block round up to whole blocks (fish geometry:
+    # 3.47 MiB chunks through 256 KiB blocks cost 14 blocks per touch).
+    fish_chunk = 888 * 2048 * 2
+    assert estimate_transport_bytes(1, fish_chunk, 262_144) == 14 * 262_144
+
+    # No block model means no number: transports that manage their own remote
+    # access (LINDI) and local files must stay unknown rather than echoing the
+    # chunk-level figure as transfer.
+    assert estimate_transport_bytes(6144, 32 * 1024 * 2, None) is None
+    assert estimate_transport_bytes(None, 32 * 1024 * 2, 1_048_576) is None
