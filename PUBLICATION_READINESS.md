@@ -337,13 +337,21 @@ fixes were applied.
    sweep of the same geometry shows 6-8 MiB per worker, so the remote read
    path dominates). The planner now charges a measured 96 MiB envelope
    (`WORKER_RUNTIME_OVERHEAD_BYTES`) for every worker beyond the first, whose
-   runtime slack already sits in the process floor. After, same command:
-   **17 granted workers, 1,770 MiB engine peak, 2,084 MiB whole-process peak —
-   1.8% above the 2 GiB target with the harness's own reference computation
-   included — at no wall-time cost (65.5 s vs 66.6 s).** Whole-process RSS is
-   the primary user-facing metric; the engine-phase figure is diagnostic.
-   Large-task grants are unchanged by the new term (fish-geometry grants are
-   identical), and regression tests pin the derivation.
+   runtime slack already sits in the process floor. After, same command,
+   **three independent cold repetitions** (fresh process and output root
+   each, identical output checksums across all three): **17 granted workers;
+   engine-phase peak median 2,058 MiB, range [1,934, 2,077] — at target
+   (+0.5% median, +1.4% worst) versus +40% before; whole-process peak median
+   2,313 MiB, range [2,275, 2,336], which additionally contains the
+   harness's own direct-reference computation; wall time median 70.8 s,
+   range [65.9, 73.9], versus 66.6 s before the fix — no meaningful cost.**
+   Whole-process RSS is the primary user-facing metric; the engine-phase
+   figure is diagnostic. Note the remote path's real run-to-run spread
+   (~140 MiB) against the ≤2 MiB spread of the local fixture: single remote
+   runs land anywhere in that band, which is exactly why medians and ranges
+   are reported. Large-task grants are unchanged by the new term
+   (fish-geometry grants are identical), and regression tests pin the
+   derivation.
 2. **Source-chunk bytes and transport bytes are now reported separately.**
    Before: the plan's only read figure was 192 MiB of source-chunk bytes
    (amplification 1.0) while the measured HTTP transfer was 3,264 MiB (17.0x) —
@@ -427,10 +435,13 @@ identical labels.
    not confirmed.
 3a. **Resolved: the geometry-dependence found on DANDI:000223.** The
    per-worker runtime envelope and the separate transport-bytes estimate (see
-   the second-dataset smoke section) bring the same command from a 3,126 MiB
-   whole-process peak to 2,084 MiB against the 2 GiB target. The residual
-   +1.8% is consistent with the target being approximate and unenforced; the
-   4 GiB large-window overrun in item 3 is a different cause and remains open.
+   the second-dataset smoke section) bring the same command from a ~3,130 MiB
+   whole-process peak to an engine-phase median of 2,058 MiB [1,934, 2,077]
+   over three cold repetitions — at the 2 GiB target (+0.5% median, +1.4%
+   worst) — with the whole-process median at 2,313 MiB including the
+   harness's own reference computation. The residual is consistent with the
+   target being approximate and unenforced; the 4 GiB large-window overrun in
+   item 3 is a different cause and remains open.
 4. **No clean-tree publication record exists** for any stage. Every retained
    record is `current` with `git.dirty: true`.
 5. Naming caution, not an error: `benchmarks/results/current-scaling.json` is
@@ -561,11 +572,11 @@ concurrency advantage in the comparison.
 | Extracted traces match a direct NumPy reference | **SUPPORTED** — maximum absolute and relative error 0.0 on the validated frames |
 | Whole-process memory cost is attributable to named, separately measured components | **SUPPORTED** — twelve isolated component probes retained |
 | `memory_limit` is an approximate total process-memory target, not a per-task allowance | **SUPPORTED** — exact decomposition, documented, regression-tested |
-| A 2 GiB target yields substantially lower process RSS than before | **SUPPORTED** — 2,062 MiB measured versus 6,097 MiB for the same nominal request |
-| `memory_limit` is a reliable bound on process RSS | **PARTIALLY SUPPORTED** — 0.7% overrun at 2 GiB on fish-like chunking and 1.8% whole-process on the fine-chunked DANDI:000223 layout after the per-worker runtime envelope (40% before it); 14.5% at 4 GiB with a large window remains open; approximate, unenforced, and must be described as a target |
+| A 2 GiB target yields substantially lower process RSS than before | **SUPPORTED** — median 2,061 MiB [2,061, 2,062] over three repetitions versus 6,097 MiB for the same nominal request |
+| `memory_limit` is a reliable bound on process RSS | **PARTIALLY SUPPORTED** — with repetitions (n=3, median [range]): +0.6% [≤1 MiB spread] at 2 GiB on fish-like chunking; engine-phase +0.5% [−5.6%, +1.4%] on the fine-chunked DANDI:000223 layout after the per-worker runtime envelope (+40% before it); +14.5% [≤2 MiB spread] at 4 GiB with a large window remains open; approximate, unenforced, and must be described as a target |
 | Users state resources and NeuroFlow chooses partitioning and concurrency without low-level knobs | **PARTIALLY SUPPORTED** — demonstrated locally on synthetic data (1→21 workers from the target alone); not yet demonstrated on the archive |
 | GPU execution is supported and reduces host memory and Cellpose time | **PARTIALLY SUPPORTED** — component-level measurement is strong (3.21→2.09 GB host, 66.14→2.03 s, 32.5x); no full GPU archive run exists |
-| Resource scaling behaviour across memory and worker configurations | **PARTIALLY SUPPORTED** — complete five-point local curve; no archive-scale curve |
+| Resource scaling behaviour across memory and worker configurations | **PARTIALLY SUPPORTED** — complete five-point local curve with three repetitions per point (≤2 MiB spreads); no archive-scale curve |
 | Computation semantics are independent of transport (remfile vs LINDI) | **PARTIALLY SUPPORTED** — byte-identical remote projection (equal checksums, error 0.0, same workflow_id) on a small slice of the real asset; full fish workflow through LINDI awaits the publication run |
 | The execution engine is dataset-independent by construction and was validated on two real DANDI datasets with distinct imaging geometries, in addition to synthetic test fixtures | **SUPPORTED** for correctness and semantics — DANDI:000350 (4-D int16, plane-sized chunks, archive scale) and DANDI:000223 (3-D uint16, 32 KiB chunks, discovery by NWB type, exact agreement with an independent reference, verified output, correct axis inference). Planner resource-model *accuracy* on fine-chunked geometry is a separate, partially supported claim (see the RSS row). No broad validation across all NWB modalities is claimed |
 | NeuroFlow compares favourably to a PyNWB + LINDI + Dask baseline | **NOT YET SUPPORTED** — the baseline's numerical core is locally validated against NumPy and NeuroFlow, but the archive-scale baseline has never been run; no comparative wall-time/RSS/transfer numbers exist |
