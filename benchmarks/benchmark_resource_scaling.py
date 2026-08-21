@@ -23,6 +23,7 @@ import argparse
 import json
 import os
 import resource
+import statistics
 import subprocess
 import sys
 import time
@@ -207,9 +208,21 @@ def main() -> None:
         help="single 'memory_limit:workers' point; used for subprocess dispatch",
     )
     parser.add_argument(
+        "--repetitions",
+        type=int,
+        default=1,
+        help=(
+            "independent repeats of every configuration, each in a fresh "
+            "process with a fresh output root; the record then reports "
+            "median and min-max range instead of a single observation"
+        ),
+    )
+    parser.add_argument(
         "--classification", choices=("current", "publication"), default="current"
     )
     arguments = parser.parse_args()
+    if arguments.repetitions < 1:
+        parser.error("--repetitions must be at least 1")
     environment = capture_environment()
     git = cast(dict[str, object], environment["git"])
     if arguments.classification == "publication" and git.get("dirty") is not False:
@@ -236,8 +249,7 @@ def main() -> None:
         )
         return
 
-    results: list[dict[str, Any]] = []
-    for limit, workers in DEFAULT_CONFIGURATIONS:
+    def run_one(limit: str, workers: int, output_root: Path) -> dict[str, Any]:
         process = subprocess.run(
             [
                 sys.executable,
@@ -246,7 +258,7 @@ def main() -> None:
                 "--fixture-root",
                 str(arguments.fixture_root),
                 "--output-root",
-                str(arguments.output_root),
+                str(output_root),
                 "--frames",
                 str(arguments.frames),
                 "--cells",
@@ -261,21 +273,18 @@ def main() -> None:
             env={**os.environ, "PYTHONWARNINGS": "ignore"},
         )
         if process.returncode != 0:
-            results.append(
-                {
-                    "memory_limit": limit,
-                    "workers": workers,
-                    "status": "failed",
-                    "returncode": process.returncode,
-                    "stderr": process.stderr[-3000:],
-                }
-            )
-            continue
+            return {
+                "memory_limit": limit,
+                "workers": workers,
+                "status": "failed",
+                "returncode": process.returncode,
+                "stderr": process.stderr[-3000:],
+            }
         payload = None
         for line in process.stdout.splitlines():
             if line.strip().startswith("{"):
                 payload = json.loads(line)
-        results.append(
+        return (
             payload
             if payload is not None
             else {
@@ -286,6 +295,55 @@ def main() -> None:
             }
         )
 
+    results: list[dict[str, Any]] = []
+    for limit, workers in DEFAULT_CONFIGURATIONS:
+        if arguments.repetitions == 1:
+            results.append(run_one(limit, workers, arguments.output_root))
+            continue
+        # Peak RSS is a high-water mark and resume would skip recomputation,
+        # so every repetition gets a fresh process *and* a fresh output root:
+        # rerunning into an existing store would measure a zero-compute
+        # resume, not a repetition.
+        runs = [
+            run_one(limit, workers, arguments.output_root / f"rep{index}")
+            for index in range(arguments.repetitions)
+        ]
+        measured = [run for run in runs if run.get("status") == "measured"]
+
+        def spread(values: list[float]) -> dict[str, float] | None:
+            if not values:
+                return None
+            return {
+                "median": float(statistics.median(values)),
+                "min": float(min(values)),
+                "max": float(max(values)),
+            }
+
+        results.append(
+            {
+                "memory_limit": limit,
+                "workers": workers,
+                "status": "measured" if len(measured) == len(runs) else "failed",
+                "repetition_count": len(runs),
+                "repetitions": runs,
+                "summary": {
+                    "measured_process_peak_rss_bytes": spread(
+                        [
+                            float(run["measured_process_peak_rss_bytes"])
+                            for run in measured
+                        ]
+                    ),
+                    "wall_time_seconds": spread(
+                        [
+                            float(run["projection"]["wall_time_seconds"])
+                            + float(run["traces"]["wall_time_seconds"])
+                            for run in measured
+                        ]
+                    ),
+                },
+            }
+        )
+
     suite = {
         "suite_schema_version": "1",
         "suite_name": "resource-scaling",
@@ -293,6 +351,7 @@ def main() -> None:
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "environment": environment,
         "independent_process_per_configuration": True,
+        "repetitions_per_configuration": arguments.repetitions,
         "fixture": {
             "kind": "local synthetic",
             "reason": (

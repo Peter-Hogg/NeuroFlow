@@ -24,6 +24,11 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
+import os
+import statistics
+import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any, cast
@@ -77,6 +82,114 @@ def _list_assets(source: Any, limit: int = 10) -> str:
     return "\n".join(lines)
 
 
+def _run_repetitions(args: argparse.Namespace) -> None:
+    """Repeat the single-run benchmark in fresh subprocesses and aggregate.
+
+    Each repetition gets its own interpreter (peak RSS is a non-resettable
+    high-water mark) and its own output root (rerunning into an existing
+    store would measure a zero-compute resume, not a repetition).
+    """
+    per_run: list[dict[str, Any]] = []
+    for index in range(args.repetitions):
+        rep_record = args.record.parent / f"{args.record.stem}-rep{index}.json"
+        command = [
+            sys.executable,
+            "-m",
+            "benchmarks.benchmark_dandi_smoke",
+            "--dandiset",
+            args.dandiset,
+            "--neurodata-type",
+            args.neurodata_type,
+            "--backend",
+            args.backend,
+            "--frames",
+            str(args.frames),
+            "--memory-limit",
+            args.memory_limit,
+            "--output-root",
+            str(args.output_root / f"rep{index}"),
+            "--record",
+            str(rep_record),
+            "--repetitions",
+            "1",
+            "--classification",
+            args.classification,
+        ]
+        if args.asset is not None:
+            command.extend(["--asset", args.asset])
+        if args.name is not None:
+            command.extend(["--name", args.name])
+        if args.expect_axes is not None:
+            command.extend(["--expect-axes", args.expect_axes])
+        process = subprocess.run(
+            command,
+            check=False,
+            cwd=str(Path(__file__).resolve().parent.parent),
+            env={**os.environ, "PYTHONWARNINGS": "ignore"},
+        )
+        if process.returncode != 0:
+            raise SystemExit(
+                f"repetition {index} failed with exit code {process.returncode}"
+            )
+        per_run.append(json.loads(rep_record.read_text()))
+
+    def spread(values: list[float]) -> dict[str, float]:
+        return {
+            "median": float(statistics.median(values)),
+            "min": float(min(values)),
+            "max": float(max(values)),
+        }
+
+    checksums = {run["result"]["checksum"] for run in per_run}
+    aggregate = {
+        "aggregate_schema_version": "1",
+        "benchmark_name": "dandi-second-dataset-smoke-repetitions",
+        "classification": args.classification,
+        "repetition_count": args.repetitions,
+        "environment": capture_environment(),
+        # One checksum across every repetition is itself evidence: the
+        # computation is deterministic under repeated cold execution.
+        "checksums_identical_across_repetitions": len(checksums) == 1,
+        "checksums": sorted(checksums),
+        "summary": {
+            "engine_phase_peak_rss_bytes": spread(
+                [
+                    float(run["execution"]["engine_phase_peak_rss_bytes"])
+                    for run in per_run
+                ]
+            ),
+            "process_peak_rss_bytes": spread(
+                [float(run["execution"]["peak_rss_bytes"]) for run in per_run]
+            ),
+            "wall_time_seconds": spread(
+                [float(run["execution"]["wall_time_seconds"]) for run in per_run]
+            ),
+            "bytes_read": spread(
+                [
+                    float(run["execution"]["bytes_read"])
+                    for run in per_run
+                    if run["execution"]["bytes_read"] is not None
+                ]
+            )
+            if any(run["execution"]["bytes_read"] is not None for run in per_run)
+            else None,
+        },
+        "runs": per_run,
+    }
+    args.record.parent.mkdir(parents=True, exist_ok=True)
+    args.record.write_text(json.dumps(aggregate, indent=2, sort_keys=True) + "\n")
+    summary = aggregate["summary"]
+    assert isinstance(summary, dict)
+    process_peak = summary["process_peak_rss_bytes"]
+    print(
+        f"repetitions={args.repetitions} "
+        f"checksums_identical={aggregate['checksums_identical_across_repetitions']} "
+        f"process_peak_median={process_peak['median']:.0f} "
+        f"range=[{process_peak['min']:.0f}, {process_peak['max']:.0f}] "
+        f"record={args.record}"
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -106,15 +219,31 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--record", type=Path, required=True)
     parser.add_argument(
+        "--repetitions",
+        type=int,
+        default=1,
+        help=(
+            "independent repeats, each in a fresh process with a fresh output "
+            "root so peak RSS is a true high-water mark and nothing resumes; "
+            "the record then reports median and min-max range plus a check "
+            "that every repetition produced the identical checksum"
+        ),
+    )
+    parser.add_argument(
         "--classification", choices=("current", "publication"), default="current"
     )
     args = parser.parse_args()
+    if args.repetitions < 1:
+        parser.error("--repetitions must be at least 1")
     environment = capture_environment()
     git = cast(dict[str, object], environment["git"])
     if args.classification == "publication" and git.get("dirty") is not False:
         parser.error("publication classification requires a clean Git tree")
     if not 1 <= args.frames <= 1024:
         parser.error("--frames must stay within 1..1024; this is a smoke test")
+    if args.repetitions > 1:
+        _run_repetitions(args)
+        return
 
     started = time.perf_counter()
     source = neuroflow.open_dandi(args.dandiset, backend=args.backend)

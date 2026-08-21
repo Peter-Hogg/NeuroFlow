@@ -187,3 +187,34 @@ def test_remote_response_metrics_count_headers_without_reading_bodies() -> None:
         "http_responses": 1,
         "response_content_bytes": 4096,
     }
+
+
+def test_axis_inference_is_a_documented_convention_not_nwb_semantics() -> None:
+    """Pin the conservative axis-label defaults so they change deliberately.
+
+    NWB carries no per-axis names, so NeuroFlow assigns conventional labels:
+    ``time`` first when rate/timestamps exist, ``(y, x, z)`` suffixes by rank,
+    and 4-D ``ImageSeries`` as ``(time, y, x, z)``. That convention labels the
+    second axis of a ``(time, channel)`` series ``y`` -- mechanically harmless
+    (reductions address it by name) but semantically spatial-sounding. The
+    behaviour is documented; this test exists so any change to it is a
+    deliberate, reviewed decision rather than drift.
+    """
+    from neuroflow.source.local import _infer_axes
+
+    class _Series:
+        rate = 30.0
+
+    # ndim 3 with a rate: the smoke-validated TwoPhotonSeries case.
+    assert _infer_axes(_Series(), 3) == ("time", "y", "x")
+    # ndim 2 with a rate: an ephys (time, channel) matrix is labelled y.
+    assert _infer_axes(_Series(), 2) == ("time", "y")
+    # ndim 1 keeps just the leading axis.
+    assert _infer_axes(_Series(), 1) == ("time",)
+    # Without rate or timestamps nothing pretends to be time.
+    assert _infer_axes(object(), 3) == ("axis_0", "y", "x")
+    # 4-D ImageSeries uses NWB's volumetric convention.
+    image_series = type("ImageSeries", (), {"rate": 30.0})()
+    assert _infer_axes(image_series, 4) == ("time", "y", "x", "z")
+    # 4-D non-image data falls back to (z, y, x) rather than guessing planes.
+    assert _infer_axes(_Series(), 4) == ("time", "z", "y", "x")

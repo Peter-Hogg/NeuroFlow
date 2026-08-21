@@ -61,7 +61,7 @@ def resolve_cellpose_device(requested: DeviceChoice | str = "auto") -> CellposeD
     """Resolve ``auto``/``cpu``/``cuda`` into a concrete device.
 
     ``auto`` selects CUDA when PyTorch reports a usable CUDA device and CPU
-    otherwise, so the same command works on a workstation and on a laptop.
+    otherwise, so the same command works with and without a GPU present.
     An explicit ``cuda`` request fails loudly rather than silently degrading:
     a benchmark that quietly ran on CPU would misattribute its timings.
     """

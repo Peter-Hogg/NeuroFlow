@@ -130,7 +130,8 @@ assert neuroflow.open_result("fish-traces.zarr").verify().valid
 ```
 
 `memory_limit` is an approximate **total process-memory target** — the number a
-laptop user means by "stay under 2 GiB" — not a per-task allowance. The planner
+user on resource-constrained commodity hardware means by "stay under 2 GiB" —
+not a per-task allowance. The planner
 charges measured process overhead once, sizes partitions and concurrency from
 the remainder, and refuses work that cannot fit rather than overrunning
 silently. It is a planning target, not an OS-enforced cap; every run records
@@ -145,7 +146,15 @@ spatial chunks in bounded time windows, skips chunks containing no soma, and
 stores a `(time, cell)` array. It never materializes the movie or a
 cell-by-voxel matrix. `np.asarray(movie)`, iteration, truth testing, unsupported NumPy
 functions, and general array broadcasting fail explicitly instead of silently
-loading data. See the
+loading data.
+
+Expressions cover **one source selection plus scalars**. A second array operand
+is accepted only when it references the identical selection; combining two
+different arrays — the ΔF/F idiom `movie / f0` against a persisted baseline —
+is refused explicitly (`NeuroArray operands must use the same source
+selection`) rather than being answered wrongly. The supported pattern is to
+extract compact results (traces, projections) through NeuroFlow and normalize
+downstream in plain NumPy, where both operands fit in memory. See the
 [supported operation table](https://peter-hogg.github.io/NeuroFlow/High_Level_API.html).
 
 ## Bring your own function

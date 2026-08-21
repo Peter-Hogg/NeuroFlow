@@ -78,6 +78,41 @@ engine does not implement. Use an explicit custom multi-input analysis stage.
 NeuroFlow will not compute a tile-local mean or repeatedly reread the complete
 remote array and pretend either behavior is equivalent to NumPy.
 
+Stated plainly for calcium-imaging users: expressions cover **one source
+selection plus scalars** (with the staged global-scalar exception above).
+Per-pixel dF/F against a persisted baseline array — `movie / f0` where `f0`
+came from an earlier persist — combines two different selections and is
+refused explicitly with `NeuroArray operands must use the same source
+selection`. The supported pattern is to extract compact results (traces,
+projections) through NeuroFlow and normalize downstream in plain NumPy, where
+both operands comfortably fit in memory. `tests/test_numpy_api.py` pins both
+the refusal and the message.
+
+### NaN policy
+
+There are no `nanmean`-style variants. Reductions follow NumPy's propagation
+rules exactly: a NaN in the input surfaces as a NaN in precisely the reduced
+positions NumPy would produce. Silently skipping NaN would change the science,
+so NeuroFlow refuses to make that choice for the user; mask or impute
+explicitly before reduction if propagation is not wanted.
+`tests/test_numpy_api.py::test_nan_values_propagate_exactly_as_in_numpy` pins
+this behaviour.
+
+### Axis labels are a convention, not NWB semantics
+
+NWB carries no per-axis names, so NeuroFlow assigns conservative conventional
+labels at discovery: `time` first whenever the object has a rate or
+timestamps, then `(y,)`, `(y, x)`, or `(z, y, x)` by rank, with 4-D
+`ImageSeries` mapped to `(time, y, x, z)`. One consequence is worth knowing: a
+2-D `(time, channel)` electrophysiology matrix is labelled `("time", "y")` —
+the second axis gets a spatial-sounding name even though it is a channel axis.
+This is mechanically harmless (operations address axes by name, whatever the
+name is) but semantically arbitrary; reductions over such data should be
+written knowing that `"y"` simply means "the second axis". The convention is
+pinned by
+`tests/test_hdf5_source.py::test_axis_inference_is_a_documented_convention_not_nwb_semantics`
+so any change to it is deliberate.
+
 ## Explicit execution boundaries
 
 `compute()` materializes an in-memory NumPy array and defaults to a conservative
@@ -94,8 +129,8 @@ handles are not sent to processes.
 ### What `memory_limit` means
 
 `memory_limit` is an **approximate total process-memory target**, not a per-task
-allowance for array data. It is the number a laptop user means when they say
-"stay under 2 GiB". It decomposes as:
+allowance for array data. It is the number a user on resource-constrained
+commodity hardware means when they say "stay under 2 GiB". It decomposes as:
 
 ```text
 memory_limit = process overhead + task working set

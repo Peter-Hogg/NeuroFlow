@@ -50,7 +50,8 @@ The target workflows combine:
 
 - chunked dense arrays
 - irregular outputs
-- laptop-to-cluster execution
+- resource-bounded execution on commodity hardware (laptop-to-cluster
+  portability is a design goal; only single-machine execution is validated)
 - CPU and GPU tasks
 - large remote inputs
 - workflows that must remain lazy

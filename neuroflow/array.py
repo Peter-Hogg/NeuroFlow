@@ -742,7 +742,9 @@ class NeuroArray(NDArrayOperatorsMixin):
         max_workers: int = 1,
         **model_settings: object,
     ) -> NeuroArray:
-        """Segment a projection with Cellpose using a laptop-safe plane policy.
+        """Segment a projection with Cellpose, one plane per bounded partition.
+
+        The plane policy is sized for laptop-scale memory targets.
 
         Two-dimensional inputs run as one image. A named ``z`` axis runs one
         complete x/y plane per durable partition, avoiding unreconciled spatial

@@ -645,7 +645,7 @@ Resume must reject stale outputs when source identity, adapter version, paramete
 6. A result can be reopened lazily in a fresh Python process.
 7. Provenance uniquely identifies source, adapter, parameters, and output.
 8. Cellpose or a stand-in variable-output segmentation adapter writes directly to persistent storage.
-9. One laptop and one distributed-cluster execution use the same analysis definition.
+9. One single-machine and one distributed-cluster execution use the same analysis definition (design goal; distributed execution is not currently validated).
 10. Optional integrations are absent without breaking core imports.
 
 ---

@@ -2,342 +2,1122 @@
   "classification": "current",
   "configurations": [
     {
-      "measured_process_peak_rss_bytes": 2161872896,
       "memory_limit": "2 GiB",
-      "projection": {
-        "granted_workers": 1,
-        "planned_memory_per_task": 1425801216,
-        "requested_workers": 1,
-        "task_count": 1,
-        "wall_time_seconds": 4.944068329001311
-      },
-      "status": "measured",
-      "trace_plan": {
-        "automatic_time_chunk": true,
-        "budget": {
-          "enforcement": "planning-only; no OS-level memory cap is installed",
-          "external_reserve_bytes": 0,
-          "interpretation": "approximate-total-process-target",
-          "measured_process_floor_bytes": 469762048,
-          "note": "task_bytes bounds partition working sets; the total target is attainable",
-          "process_overhead_bytes": 469762048,
-          "process_overhead_components": {
-            "dask_runtime": 134217728,
-            "interpreter_and_libraries": 234881024,
-            "output_write_buffers": 33554432,
-            "source_read_cache": 67108864
+      "repetition_count": 3,
+      "repetitions": [
+        {
+          "measured_process_peak_rss_bytes": 2161426432,
+          "memory_limit": "2 GiB",
+          "projection": {
+            "granted_workers": 1,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 1,
+            "task_count": 1,
+            "wall_time_seconds": 4.9864799229981145
           },
-          "task_bytes": 1677721600,
-          "total_bytes": 2147483648,
-          "total_target_attainable": true
-        },
-        "cell_count": 512,
-        "estimated_total_bytes_read": 698351616,
-        "planned_process_peak_bytes": 2130788352,
-        "planned_task_working_bytes": 1661026304,
-        "task_count": 3,
-        "time_window": 88
-      },
-      "traces": {
-        "bytes_read": null,
-        "computed_task_count": 3,
-        "memory": {
-          "budget": {
-            "enforcement": "planning-only; no OS-level memory cap is installed",
-            "external_reserve_bytes": 0,
-            "interpretation": "approximate-total-process-target",
-            "measured_process_floor_bytes": 469762048,
-            "note": "task_bytes bounds partition working sets; the total target is attainable",
-            "process_overhead_bytes": 469762048,
-            "process_overhead_components": {
-              "dask_runtime": 134217728,
-              "interpreter_and_libraries": 234881024,
-              "output_write_buffers": 33554432,
-              "source_read_cache": 67108864
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 1677721600,
+              "total_bytes": 2147483648,
+              "total_target_attainable": true
             },
-            "task_bytes": 1677721600,
-            "total_bytes": 2147483648,
-            "total_target_attainable": true
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 2130788352,
+            "planned_task_working_bytes": 1661026304,
+            "task_count": 3,
+            "time_window": 88
           },
-          "measured_process_peak_rss_bytes": 2161872896,
-          "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-          "planned_process_peak_bytes": 2130788352,
-          "planned_task_working_bytes": 1661026304
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 3,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 1677721600,
+                "total_bytes": 2147483648,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2161426432,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 2130788352,
+              "planned_task_working_bytes": 1661026304
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 2.154777692994685
+          },
+          "workers": 1
         },
-        "output_bytes": 398848,
-        "wall_time_seconds": 2.146873948004213
+        {
+          "measured_process_peak_rss_bytes": 2162216960,
+          "memory_limit": "2 GiB",
+          "projection": {
+            "granted_workers": 1,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 1,
+            "task_count": 1,
+            "wall_time_seconds": 5.009227122005541
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 1677721600,
+              "total_bytes": 2147483648,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 2130788352,
+            "planned_task_working_bytes": 1661026304,
+            "task_count": 3,
+            "time_window": 88
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 3,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 1677721600,
+                "total_bytes": 2147483648,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2162216960,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 2130788352,
+              "planned_task_working_bytes": 1661026304
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 2.1899220479972428
+          },
+          "workers": 1
+        },
+        {
+          "measured_process_peak_rss_bytes": 2161119232,
+          "memory_limit": "2 GiB",
+          "projection": {
+            "granted_workers": 1,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 1,
+            "task_count": 1,
+            "wall_time_seconds": 5.010120937004103
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 1677721600,
+              "total_bytes": 2147483648,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 2130788352,
+            "planned_task_working_bytes": 1661026304,
+            "task_count": 3,
+            "time_window": 88
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 3,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 1677721600,
+                "total_bytes": 2147483648,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2161119232,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 2130788352,
+              "planned_task_working_bytes": 1661026304
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 2.157673350011464
+          },
+          "workers": 1
+        }
+      ],
+      "status": "measured",
+      "summary": {
+        "measured_process_peak_rss_bytes": {
+          "max": 2162216960.0,
+          "median": 2161426432.0,
+          "min": 2161119232.0
+        },
+        "wall_time_seconds": {
+          "max": 7.199149170002784,
+          "median": 7.1677942870155675,
+          "min": 7.141257615992799
+        }
       },
       "workers": 1
     },
     {
-      "measured_process_peak_rss_bytes": 3049132032,
       "memory_limit": "4 GiB",
-      "projection": {
-        "granted_workers": 1,
-        "planned_memory_per_task": 1425801216,
-        "requested_workers": 1,
-        "task_count": 1,
-        "wall_time_seconds": 4.967270089997328
-      },
-      "status": "measured",
-      "trace_plan": {
-        "automatic_time_chunk": true,
-        "budget": {
-          "enforcement": "planning-only; no OS-level memory cap is installed",
-          "external_reserve_bytes": 0,
-          "interpretation": "approximate-total-process-target",
-          "measured_process_floor_bytes": 469762048,
-          "note": "task_bytes bounds partition working sets; the total target is attainable",
-          "process_overhead_bytes": 469762048,
-          "process_overhead_components": {
-            "dask_runtime": 134217728,
-            "interpreter_and_libraries": 234881024,
-            "output_write_buffers": 33554432,
-            "source_read_cache": 67108864
+      "repetition_count": 3,
+      "repetitions": [
+        {
+          "measured_process_peak_rss_bytes": 3049209856,
+          "memory_limit": "4 GiB",
+          "projection": {
+            "granted_workers": 1,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 1,
+            "task_count": 1,
+            "wall_time_seconds": 4.963169757000287
           },
-          "task_bytes": 3825205248,
-          "total_bytes": 4294967296,
-          "total_target_attainable": true
-        },
-        "cell_count": 512,
-        "estimated_total_bytes_read": 698351616,
-        "planned_process_peak_bytes": 4022796288,
-        "planned_task_working_bytes": 3553034240,
-        "task_count": 1,
-        "time_window": 192
-      },
-      "traces": {
-        "bytes_read": null,
-        "computed_task_count": 1,
-        "memory": {
-          "budget": {
-            "enforcement": "planning-only; no OS-level memory cap is installed",
-            "external_reserve_bytes": 0,
-            "interpretation": "approximate-total-process-target",
-            "measured_process_floor_bytes": 469762048,
-            "note": "task_bytes bounds partition working sets; the total target is attainable",
-            "process_overhead_bytes": 469762048,
-            "process_overhead_components": {
-              "dask_runtime": 134217728,
-              "interpreter_and_libraries": 234881024,
-              "output_write_buffers": 33554432,
-              "source_read_cache": 67108864
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 3825205248,
+              "total_bytes": 4294967296,
+              "total_target_attainable": true
             },
-            "task_bytes": 3825205248,
-            "total_bytes": 4294967296,
-            "total_target_attainable": true
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
           },
-          "measured_process_peak_rss_bytes": 3049132032,
-          "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-          "planned_process_peak_bytes": 4022796288,
-          "planned_task_working_bytes": 3553034240
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 3825205248,
+                "total_bytes": 4294967296,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 3049209856,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.208121594012482
+          },
+          "workers": 1
         },
-        "output_bytes": 398848,
-        "wall_time_seconds": 1.1806979510001838
+        {
+          "measured_process_peak_rss_bytes": 3048980480,
+          "memory_limit": "4 GiB",
+          "projection": {
+            "granted_workers": 1,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 1,
+            "task_count": 1,
+            "wall_time_seconds": 4.953585638999357
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 3825205248,
+              "total_bytes": 4294967296,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 3825205248,
+                "total_bytes": 4294967296,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 3048980480,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.1969738470070297
+          },
+          "workers": 1
+        },
+        {
+          "measured_process_peak_rss_bytes": 3049553920,
+          "memory_limit": "4 GiB",
+          "projection": {
+            "granted_workers": 1,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 1,
+            "task_count": 1,
+            "wall_time_seconds": 5.021945273998426
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 3825205248,
+              "total_bytes": 4294967296,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 3825205248,
+                "total_bytes": 4294967296,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 3049553920,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.2060076699999627
+          },
+          "workers": 1
+        }
+      ],
+      "status": "measured",
+      "summary": {
+        "measured_process_peak_rss_bytes": {
+          "max": 3049553920.0,
+          "median": 3049209856.0,
+          "min": 3048980480.0
+        },
+        "wall_time_seconds": {
+          "max": 6.227952943998389,
+          "median": 6.171291351012769,
+          "min": 6.150559486006387
+        }
       },
       "workers": 1
     },
     {
-      "measured_process_peak_rss_bytes": 2405949440,
       "memory_limit": "4 GiB",
-      "projection": {
-        "granted_workers": 2,
-        "planned_memory_per_task": 1425801216,
-        "requested_workers": 2,
-        "task_count": 1,
-        "wall_time_seconds": 4.968509186001029
-      },
-      "status": "measured",
-      "trace_plan": {
-        "automatic_time_chunk": true,
-        "budget": {
-          "enforcement": "planning-only; no OS-level memory cap is installed",
-          "external_reserve_bytes": 0,
-          "interpretation": "approximate-total-process-target",
-          "measured_process_floor_bytes": 469762048,
-          "note": "task_bytes bounds partition working sets; the total target is attainable",
-          "process_overhead_bytes": 469762048,
-          "process_overhead_components": {
-            "dask_runtime": 134217728,
-            "interpreter_and_libraries": 234881024,
-            "output_write_buffers": 33554432,
-            "source_read_cache": 67108864
+      "repetition_count": 3,
+      "repetitions": [
+        {
+          "measured_process_peak_rss_bytes": 2405990400,
+          "memory_limit": "4 GiB",
+          "projection": {
+            "granted_workers": 2,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 2,
+            "task_count": 1,
+            "wall_time_seconds": 4.992441447000601
           },
-          "task_bytes": 3825205248,
-          "total_bytes": 4294967296,
-          "total_target_attainable": true
-        },
-        "cell_count": 512,
-        "estimated_total_bytes_read": 698351616,
-        "planned_process_peak_bytes": 4022796288,
-        "planned_task_working_bytes": 3553034240,
-        "task_count": 1,
-        "time_window": 192
-      },
-      "traces": {
-        "bytes_read": null,
-        "computed_task_count": 1,
-        "memory": {
-          "budget": {
-            "enforcement": "planning-only; no OS-level memory cap is installed",
-            "external_reserve_bytes": 0,
-            "interpretation": "approximate-total-process-target",
-            "measured_process_floor_bytes": 469762048,
-            "note": "task_bytes bounds partition working sets; the total target is attainable",
-            "process_overhead_bytes": 469762048,
-            "process_overhead_components": {
-              "dask_runtime": 134217728,
-              "interpreter_and_libraries": 234881024,
-              "output_write_buffers": 33554432,
-              "source_read_cache": 67108864
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 3825205248,
+              "total_bytes": 4294967296,
+              "total_target_attainable": true
             },
-            "task_bytes": 3825205248,
-            "total_bytes": 4294967296,
-            "total_target_attainable": true
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
           },
-          "measured_process_peak_rss_bytes": 2405949440,
-          "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-          "planned_process_peak_bytes": 4022796288,
-          "planned_task_working_bytes": 3553034240
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 3825205248,
+                "total_bytes": 4294967296,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2405990400,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.2310201069922186
+          },
+          "workers": 2
         },
-        "output_bytes": 398848,
-        "wall_time_seconds": 1.2586413429962704
+        {
+          "measured_process_peak_rss_bytes": 2404552704,
+          "memory_limit": "4 GiB",
+          "projection": {
+            "granted_workers": 2,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 2,
+            "task_count": 1,
+            "wall_time_seconds": 4.980435668010614
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 3825205248,
+              "total_bytes": 4294967296,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 3825205248,
+                "total_bytes": 4294967296,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2404552704,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.2610477190028178
+          },
+          "workers": 2
+        },
+        {
+          "measured_process_peak_rss_bytes": 2404679680,
+          "memory_limit": "4 GiB",
+          "projection": {
+            "granted_workers": 2,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 2,
+            "task_count": 1,
+            "wall_time_seconds": 5.010059451000416
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 3825205248,
+              "total_bytes": 4294967296,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 3825205248,
+                "total_bytes": 4294967296,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2404679680,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.2184124889899977
+          },
+          "workers": 2
+        }
+      ],
+      "status": "measured",
+      "summary": {
+        "measured_process_peak_rss_bytes": {
+          "max": 2405990400.0,
+          "median": 2404679680.0,
+          "min": 2404552704.0
+        },
+        "wall_time_seconds": {
+          "max": 6.241483387013432,
+          "median": 6.228471939990413,
+          "min": 6.22346155399282
+        }
       },
       "workers": 2
     },
     {
-      "measured_process_peak_rss_bytes": 2404945920,
       "memory_limit": "8 GiB",
-      "projection": {
-        "granted_workers": 2,
-        "planned_memory_per_task": 1425801216,
-        "requested_workers": 2,
-        "task_count": 1,
-        "wall_time_seconds": 4.972819353992236
-      },
-      "status": "measured",
-      "trace_plan": {
-        "automatic_time_chunk": true,
-        "budget": {
-          "enforcement": "planning-only; no OS-level memory cap is installed",
-          "external_reserve_bytes": 0,
-          "interpretation": "approximate-total-process-target",
-          "measured_process_floor_bytes": 469762048,
-          "note": "task_bytes bounds partition working sets; the total target is attainable",
-          "process_overhead_bytes": 469762048,
-          "process_overhead_components": {
-            "dask_runtime": 134217728,
-            "interpreter_and_libraries": 234881024,
-            "output_write_buffers": 33554432,
-            "source_read_cache": 67108864
+      "repetition_count": 3,
+      "repetitions": [
+        {
+          "measured_process_peak_rss_bytes": 2405060608,
+          "memory_limit": "8 GiB",
+          "projection": {
+            "granted_workers": 2,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 2,
+            "task_count": 1,
+            "wall_time_seconds": 5.027684866989148
           },
-          "task_bytes": 8120172544,
-          "total_bytes": 8589934592,
-          "total_target_attainable": true
-        },
-        "cell_count": 512,
-        "estimated_total_bytes_read": 698351616,
-        "planned_process_peak_bytes": 4022796288,
-        "planned_task_working_bytes": 3553034240,
-        "task_count": 1,
-        "time_window": 192
-      },
-      "traces": {
-        "bytes_read": null,
-        "computed_task_count": 1,
-        "memory": {
-          "budget": {
-            "enforcement": "planning-only; no OS-level memory cap is installed",
-            "external_reserve_bytes": 0,
-            "interpretation": "approximate-total-process-target",
-            "measured_process_floor_bytes": 469762048,
-            "note": "task_bytes bounds partition working sets; the total target is attainable",
-            "process_overhead_bytes": 469762048,
-            "process_overhead_components": {
-              "dask_runtime": 134217728,
-              "interpreter_and_libraries": 234881024,
-              "output_write_buffers": 33554432,
-              "source_read_cache": 67108864
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 8120172544,
+              "total_bytes": 8589934592,
+              "total_target_attainable": true
             },
-            "task_bytes": 8120172544,
-            "total_bytes": 8589934592,
-            "total_target_attainable": true
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
           },
-          "measured_process_peak_rss_bytes": 2404945920,
-          "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-          "planned_process_peak_bytes": 4022796288,
-          "planned_task_working_bytes": 3553034240
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 8120172544,
+                "total_bytes": 8589934592,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2405060608,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.2186727419903036
+          },
+          "workers": 2
         },
-        "output_bytes": 398848,
-        "wall_time_seconds": 1.2146944730047835
+        {
+          "measured_process_peak_rss_bytes": 2404663296,
+          "memory_limit": "8 GiB",
+          "projection": {
+            "granted_workers": 2,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 2,
+            "task_count": 1,
+            "wall_time_seconds": 4.96175857000344
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 8120172544,
+              "total_bytes": 8589934592,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 8120172544,
+                "total_bytes": 8589934592,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2404663296,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.221573757007718
+          },
+          "workers": 2
+        },
+        {
+          "measured_process_peak_rss_bytes": 2406109184,
+          "memory_limit": "8 GiB",
+          "projection": {
+            "granted_workers": 2,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 2,
+            "task_count": 1,
+            "wall_time_seconds": 4.945181763003347
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 8120172544,
+              "total_bytes": 8589934592,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 8120172544,
+                "total_bytes": 8589934592,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2406109184,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.2181292159948498
+          },
+          "workers": 2
+        }
+      ],
+      "status": "measured",
+      "summary": {
+        "measured_process_peak_rss_bytes": {
+          "max": 2406109184.0,
+          "median": 2405060608.0,
+          "min": 2404663296.0
+        },
+        "wall_time_seconds": {
+          "max": 6.2463576089794515,
+          "median": 6.183332327011158,
+          "min": 6.163310978998197
+        }
       },
       "workers": 2
     },
     {
-      "measured_process_peak_rss_bytes": 2405679104,
       "memory_limit": "8 GiB",
-      "projection": {
-        "granted_workers": 4,
-        "planned_memory_per_task": 1425801216,
-        "requested_workers": 4,
-        "task_count": 1,
-        "wall_time_seconds": 4.936646966001717
-      },
-      "status": "measured",
-      "trace_plan": {
-        "automatic_time_chunk": true,
-        "budget": {
-          "enforcement": "planning-only; no OS-level memory cap is installed",
-          "external_reserve_bytes": 0,
-          "interpretation": "approximate-total-process-target",
-          "measured_process_floor_bytes": 469762048,
-          "note": "task_bytes bounds partition working sets; the total target is attainable",
-          "process_overhead_bytes": 469762048,
-          "process_overhead_components": {
-            "dask_runtime": 134217728,
-            "interpreter_and_libraries": 234881024,
-            "output_write_buffers": 33554432,
-            "source_read_cache": 67108864
+      "repetition_count": 3,
+      "repetitions": [
+        {
+          "measured_process_peak_rss_bytes": 2404483072,
+          "memory_limit": "8 GiB",
+          "projection": {
+            "granted_workers": 4,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 4,
+            "task_count": 1,
+            "wall_time_seconds": 4.975649329004227
           },
-          "task_bytes": 8120172544,
-          "total_bytes": 8589934592,
-          "total_target_attainable": true
-        },
-        "cell_count": 512,
-        "estimated_total_bytes_read": 698351616,
-        "planned_process_peak_bytes": 4022796288,
-        "planned_task_working_bytes": 3553034240,
-        "task_count": 1,
-        "time_window": 192
-      },
-      "traces": {
-        "bytes_read": null,
-        "computed_task_count": 1,
-        "memory": {
-          "budget": {
-            "enforcement": "planning-only; no OS-level memory cap is installed",
-            "external_reserve_bytes": 0,
-            "interpretation": "approximate-total-process-target",
-            "measured_process_floor_bytes": 469762048,
-            "note": "task_bytes bounds partition working sets; the total target is attainable",
-            "process_overhead_bytes": 469762048,
-            "process_overhead_components": {
-              "dask_runtime": 134217728,
-              "interpreter_and_libraries": 234881024,
-              "output_write_buffers": 33554432,
-              "source_read_cache": 67108864
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 8120172544,
+              "total_bytes": 8589934592,
+              "total_target_attainable": true
             },
-            "task_bytes": 8120172544,
-            "total_bytes": 8589934592,
-            "total_target_attainable": true
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
           },
-          "measured_process_peak_rss_bytes": 2405679104,
-          "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-          "planned_process_peak_bytes": 4022796288,
-          "planned_task_working_bytes": 3553034240
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 8120172544,
+                "total_bytes": 8589934592,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2404483072,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.2344870649976656
+          },
+          "workers": 4
         },
-        "output_bytes": 398848,
-        "wall_time_seconds": 1.2180126649909653
+        {
+          "measured_process_peak_rss_bytes": 2405801984,
+          "memory_limit": "8 GiB",
+          "projection": {
+            "granted_workers": 4,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 4,
+            "task_count": 1,
+            "wall_time_seconds": 4.959816889997455
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 8120172544,
+              "total_bytes": 8589934592,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 8120172544,
+                "total_bytes": 8589934592,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2405801984,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.2149376050074352
+          },
+          "workers": 4
+        },
+        {
+          "measured_process_peak_rss_bytes": 2405838848,
+          "memory_limit": "8 GiB",
+          "projection": {
+            "granted_workers": 4,
+            "planned_memory_per_task": 1425801216,
+            "requested_workers": 4,
+            "task_count": 1,
+            "wall_time_seconds": 4.965687392003019
+          },
+          "status": "measured",
+          "trace_plan": {
+            "automatic_time_chunk": true,
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 8120172544,
+              "total_bytes": 8589934592,
+              "total_target_attainable": true
+            },
+            "cell_count": 512,
+            "estimated_total_bytes_read": 698351616,
+            "planned_process_peak_bytes": 4022796288,
+            "planned_task_working_bytes": 3553034240,
+            "task_count": 1,
+            "time_window": 192
+          },
+          "traces": {
+            "bytes_read": null,
+            "computed_task_count": 1,
+            "memory": {
+              "budget": {
+                "enforcement": "planning-only; no OS-level memory cap is installed",
+                "external_reserve_bytes": 0,
+                "interpretation": "approximate-total-process-target",
+                "measured_process_floor_bytes": 469762048,
+                "note": "task_bytes bounds partition working sets; the total target is attainable",
+                "process_overhead_bytes": 469762048,
+                "process_overhead_components": {
+                  "dask_runtime": 134217728,
+                  "interpreter_and_libraries": 234881024,
+                  "output_write_buffers": 33554432,
+                  "source_read_cache": 67108864
+                },
+                "task_bytes": 8120172544,
+                "total_bytes": 8589934592,
+                "total_target_attainable": true
+              },
+              "measured_process_peak_rss_bytes": 2405838848,
+              "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+              "planned_process_peak_bytes": 4022796288,
+              "planned_task_working_bytes": 3553034240
+            },
+            "output_bytes": 398848,
+            "wall_time_seconds": 1.2373589130002074
+          },
+          "workers": 4
+        }
+      ],
+      "status": "measured",
+      "summary": {
+        "measured_process_peak_rss_bytes": {
+          "max": 2405838848.0,
+          "median": 2405801984.0,
+          "min": 2404483072.0
+        },
+        "wall_time_seconds": {
+          "max": 6.210136394001893,
+          "median": 6.203046305003227,
+          "min": 6.1747544950048905
+        }
       },
       "workers": 4
     }
@@ -368,7 +1148,7 @@
       "zarr": "2.18.3"
     },
     "git": {
-      "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+      "commit": "be718c9c814c95cd97aaa32fe91499fb3069b334",
       "dirty": true,
       "source": "git"
     },
@@ -411,7 +1191,8 @@
     "Trace extraction processes one time partition at a time by design, so the worker dimension is exercised through the graph-executed projection path.",
     "Peak RSS is a whole-process high-water mark for the configuration's own subprocess."
   ],
+  "repetitions_per_configuration": 3,
   "suite_name": "resource-scaling",
   "suite_schema_version": "1",
-  "timestamp": "2026-08-21T16:00:24.500848+00:00"
+  "timestamp": "2026-08-21T19:07:31.849031+00:00"
 }

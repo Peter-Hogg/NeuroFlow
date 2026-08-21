@@ -553,3 +553,62 @@ def test_chained_result_identity_includes_upstream_workflow(
     second_downstream.close()
     second_upstream.close()
     movie.close()
+
+
+def test_nan_values_propagate_exactly_as_in_numpy(tmp_path: Path) -> None:
+    """No silent NaN skipping: reductions follow NumPy's propagation rules.
+
+    Real recordings contain NaN (dropped frames, motion-corrected borders).
+    NeuroFlow deliberately offers no ``nanmean``-style variants, so a NaN in
+    the input must surface as a NaN in exactly the reduced positions NumPy
+    would produce -- silently skipping it would change the science.
+    """
+    values = np.arange(24, dtype=np.float32).reshape(4, 2, 3)
+    values[1, 0, 2] = np.nan
+    values[3, 1, 0] = np.nan
+    path = tmp_path / "movie.zarr"
+    group = zarr.open_group(str(path), mode="w")
+    group.create_dataset("movie", data=values, chunks=(1, 2, 3))
+    source = ArraySource(path, component="movie", axes=("time", "y", "x"))
+    movie = neuroflow.NeuroArray(source, source.select())
+
+    mean = np.mean(movie, axis="time").compute()  # type: ignore[call-overload]
+    median = np.median(movie, axis="time").compute()  # type: ignore[call-overload]
+
+    np.testing.assert_array_equal(mean, np.mean(values, axis=0))
+    np.testing.assert_array_equal(median, np.median(values, axis=0))
+    # The NaN positions themselves are part of the contract.
+    assert np.isnan(mean[0, 2]) and np.isnan(mean[1, 0])
+    assert np.count_nonzero(np.isnan(mean)) == 2
+    movie.close()
+
+
+def test_cross_array_operations_are_refused_with_guidance(tmp_path: Path) -> None:
+    """Expressions cover one source selection plus scalars, stated loudly.
+
+    Combining two different arrays -- the dF/F idiom ``movie / f0`` against a
+    persisted baseline -- is out of contract. The refusal must be explicit and
+    say what to do instead; a silent wrong answer (evaluating one operand
+    twice) would be a scientific defect, not a missing feature.
+    """
+    path = tmp_path / "arrays.zarr"
+    group = zarr.open_group(str(path), mode="w")
+    group.create_dataset("a", data=np.full((2, 3), 10.0, dtype=np.float32))
+    group.create_dataset("b", data=np.full((2, 3), 2.0, dtype=np.float32))
+    source_a = ArraySource(path, component="a", axes=("y", "x"))
+    source_b = ArraySource(path, component="b", axes=("y", "x"))
+    left = neuroflow.NeuroArray(source_a, source_a.select())
+    right = neuroflow.NeuroArray(source_b, source_b.select())
+
+    with pytest.raises(ValueError, match="same source selection"):
+        _ = left / right
+
+    # Scalars stay supported, and a second operand over the *identical*
+    # selection is legitimate (same data, so nothing can silently diverge).
+    scalar = (left * np.float32(0.5)).compute()
+    np.testing.assert_array_equal(scalar, np.full((2, 3), 5.0, dtype=np.float32))
+    same = neuroflow.NeuroArray(source_a, source_a.select())
+    doubled = (left + same).compute()
+    np.testing.assert_array_equal(doubled, np.full((2, 3), 20.0, dtype=np.float32))
+    left.close()
+    right.close()

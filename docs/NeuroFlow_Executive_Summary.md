@@ -23,8 +23,9 @@ The framework separates four concerns:
 
 Researchers write ordinary analysis functions or lightweight adapters.
 NeuroFlow constructs lazy execution graphs, partitions work, manages
-overlap, schedules execution from laptop to cluster, records provenance,
-and stores outputs in scalable formats.
+overlap, schedules bounded execution on resource-constrained commodity
+hardware (cluster execution remains a design goal, not a validated
+capability), records provenance, and stores outputs in scalable formats.
 
 The flagship use case is whole-brain zebrafish light-sheet imaging where
 movies, segmentations, and extracted traces are too large for

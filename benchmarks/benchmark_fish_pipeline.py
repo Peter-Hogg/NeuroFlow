@@ -214,6 +214,14 @@ def main() -> None:
         "--backend", choices=("auto", "lindi", "remfile"), default="auto"
     )
     parser.add_argument("--memory-limit", default="2 GiB")
+    # Explicit transport configuration, applied to every stage and recorded
+    # numerically. The projection stage previously ran through the example
+    # default (256 KiB blocks) while trace extraction opened with the library
+    # default (1 MiB blocks), so transfer figures mixed two configurations and
+    # were not comparable with the manual baseline. remfile only; LINDI
+    # manages its own remote access and ignores these.
+    parser.add_argument("--block-size", type=int, default=1_048_576)
+    parser.add_argument("--cache-size-mib", type=int, default=64)
     parser.add_argument("--projection-frames", type=int, default=50)
     parser.add_argument("--validation-frames", type=int, default=1)
     parser.add_argument("--cellpose-model", default="cpsam")
@@ -256,6 +264,8 @@ def main() -> None:
         FishProjectionConfig(
             frames=args.projection_frames,
             backend=cast(Literal["auto", "lindi", "remfile"], args.backend),
+            block_size=args.block_size,
+            cache_size=args.cache_size_mib * 1024 * 1024,
             output=projection_path,
             preview=preview_path,
         )
@@ -300,6 +310,14 @@ def main() -> None:
         movie_source = neuroflow.open_dandi(
             DANDISET,
             backend=cast(Literal["auto", "lindi", "remfile"], args.backend),
+            storage_options=(
+                None
+                if args.backend == "lindi"
+                else {
+                    "block_size": args.block_size,
+                    "cache_size": args.cache_size_mib * 1024 * 1024,
+                }
+            ),
         )
         movie_selection = movie_source.select(
             NWBQuery(asset=ASSET_ID, name=OBJECT_NAME)
@@ -427,7 +445,20 @@ def main() -> None:
                     "backend-managed; LINDI counters unavailable through the "
                     "current bridge"
                     if args.backend == "lindi"
-                    else "bounded remfile"
+                    else (
+                        f"bounded remfile: block {args.block_size} B, cache "
+                        f"{args.cache_size_mib} MiB, identical across every "
+                        "stage"
+                    )
+                ),
+                "transport_configuration": (
+                    {"managed_by": "lindi"}
+                    if args.backend == "lindi"
+                    else {
+                        "block_size": args.block_size,
+                        "cache_size_bytes": args.cache_size_mib * 1024 * 1024,
+                        "applies_to": "projection, trace extraction, resume",
+                    }
                 ),
                 "network_context": "public DANDI HTTPS; runner location is external",
             },

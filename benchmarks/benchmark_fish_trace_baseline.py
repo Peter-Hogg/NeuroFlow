@@ -99,8 +99,19 @@ def main() -> None:
     parser.add_argument("--record", type=Path, required=True)
     parser.add_argument("--source-url", default=DEFAULT_SOURCE_URL)
     parser.add_argument("--backend", choices=("lindi", "remfile"), required=True)
-    parser.add_argument("--time-chunk", type=int, default=16)
-    parser.add_argument("--block-size", type=int, default=262_144)
+    parser.add_argument(
+        "--time-chunk",
+        type=int,
+        default=16,
+        help=(
+            "frames per accumulation pass; for a like-for-like comparison set "
+            "this to trace_plan.time_window from the NeuroFlow record so both "
+            "tools traverse the movie in the same temporal windows"
+        ),
+    )
+    # Defaults match NeuroFlow's transport defaults (1 MiB blocks, 64 MiB
+    # cache) so transfer figures are comparable unless deliberately varied.
+    parser.add_argument("--block-size", type=int, default=1_048_576)
     parser.add_argument("--cache-size-mib", type=int, default=64)
     parser.add_argument(
         "--classification", choices=("current", "publication"), default="current"
@@ -218,10 +229,32 @@ def main() -> None:
             "peak_rss_bytes": _peak_rss_bytes(),
             "wall_time_seconds": wall_time,
             "cache_state": (
-                f"manual remfile cache={args.cache_size_mib} MiB"
+                f"manual remfile: block {args.block_size} B, cache "
+                f"{args.cache_size_mib} MiB"
                 if args.backend == "remfile"
                 else "LINDI-managed; counters unavailable through this bridge"
             ),
+            # A comparison is only as fair as its shared configuration; these
+            # are the knobs that must match the NeuroFlow record for transfer
+            # and wall-time figures to be comparable, recorded so a reader can
+            # check parity instead of trusting it.
+            "configuration_parity": {
+                "time_chunk_frames": args.time_chunk,
+                "block_size": (
+                    args.block_size if args.backend == "remfile" else None
+                ),
+                "cache_size_bytes": (
+                    args.cache_size_mib * 1024 * 1024
+                    if args.backend == "remfile"
+                    else None
+                ),
+                "note": (
+                    "set --time-chunk to the NeuroFlow record's "
+                    "trace_plan.time_window and keep block/cache at the shared "
+                    "defaults; the baseline reads the identical retained masks "
+                    "via --labels"
+                ),
+            },
             "network_context": "public DANDI HTTPS; runner location is external",
         },
         result={

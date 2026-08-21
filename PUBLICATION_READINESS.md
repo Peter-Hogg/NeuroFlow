@@ -4,6 +4,15 @@ Status date: 2026-08-21. This is an evidence ledger, not a claim that the
 release or manuscript is complete. Every number below is either quoted from a
 retained JSON record under `benchmarks/results/` or marked as not yet measured.
 
+**Hardware context, stated once so no claim overreaches it:** every
+measurement in this repository was produced on one machine — a 32-core AMD
+Ryzen 9 9950X with 132 GB RAM and an NVIDIA RTX PRO 4500 (recorded in each
+record's `environment` block). "Laptop-scale" therefore always means a
+*laptop-scale memory target enforced by the planner on that workstation*, not
+a measurement on laptop hardware. No claim of validated laptop or cluster
+execution is made anywhere in this repository; where design documents mention
+cluster portability they now label it a design goal.
+
 ## Engineering outcome
 
 The release-candidate implementation supports the intended north-star path:
@@ -72,6 +81,44 @@ The guarantee is real; the flag is not an additional check.
 
 GPU VRAM is reported separately and is never counted against the host
 `memory_limit`.
+
+### Referee-response pass (submission hardening)
+
+- **Baseline parity (fairness).** The fish pipeline previously mixed two
+  transport configurations across its own stages (the projection stage used
+  the example default of 256 KiB blocks while trace extraction used the 1 MiB
+  library default) and recorded neither; the manual baseline defaulted to
+  256 KiB blocks. Transfer comparisons across differing block sizes measure
+  configuration, not tools. Both benchmarks now take explicit
+  `--block-size`/`--cache-size-mib` with identical defaults (1 MiB / 64 MiB),
+  apply them to every stage, and record them numerically
+  (`transport_configuration` / `configuration_parity`). The baseline's
+  `--time-chunk` help now instructs matching the NeuroFlow record's
+  `trace_plan.time_window`.
+- **Scientific regression tests added:** persisted results are bitwise
+  identical across `max_workers=1` and `4` (staged-mean partial combination is
+  where concurrency could diverge); NaN propagation matches NumPy exactly with
+  no silent skipping; the axis-label convention is pinned, including the
+  documented `(time, channel) -> ("time", "y")` case; and cross-array
+  operations are refused with the exact guidance message while same-selection
+  operands and scalars keep working.
+- **Expression contract documented:** expressions cover one source selection
+  plus scalars (plus the staged global-scalar exception); per-pixel dF/F
+  against a persisted baseline is refused explicitly, and the supported
+  pattern — extract compact results, normalize downstream in NumPy — is stated
+  in the README and `docs/High_Level_API.md`, alongside a NaN-policy section
+  and the axis-label convention.
+- **Hardware wording pass:** unsupported "laptop"/"cluster" capability claims
+  were replaced with "laptop-scale memory target" / "resource-constrained
+  commodity hardware", and the design documents now label laptop-to-cluster
+  portability a design goal. See the hardware-context statement at the top of
+  this ledger.
+- **Repetitions:** `benchmark_resource_scaling.py` and
+  `benchmark_dandi_smoke.py` accept `--repetitions N` (fresh process and fresh
+  output root per repeat, so nothing resumes and each peak RSS is a true
+  high-water mark) and report median and min-max range; the smoke aggregate
+  additionally asserts that every repetition produced the identical output
+  checksum.
 
 ## Measured memory attribution
 
@@ -161,7 +208,7 @@ Two findings must be stated plainly rather than smoothed over:
    requested total. The overrun grows with window size, so the planner
    under-models large transient allocations — plausibly the internal copy an
    exact median requires. A 2 GiB request overran by only 0.7%. The target is
-   therefore honest at laptop scale and optimistic at large windows.
+   therefore honest at laptop-scale targets and optimistic at large windows.
 2. **A 384-frame exact median cannot fit 2 GiB at this plane geometry**, and is
    refused rather than attempted. With one native chunk per 888x2048 plane there
    is no smaller spatial tile available, so the reduction axis cannot be
@@ -420,19 +467,33 @@ git rev-parse HEAD              # record this commit in the manuscript
 .venv/bin/python benchmarks/memory_attribution.py \
     --record benchmarks/results/publication-memory-attribution.json
 
-# 3. Resource scaling, local fixture.
-.venv/bin/python benchmarks/benchmark_resource_scaling.py \
+# 3. Resource scaling, local fixture, three repetitions per configuration.
+.venv/bin/python -m benchmarks.benchmark_resource_scaling \
     --fixture-root /tmp/nf-scaling --output-root /tmp/nf-scaling-out \
-    --frames 192 \
+    --frames 192 --repetitions 3 \
     --record benchmarks/results/publication-resource-scaling.json \
+    --classification publication
+
+# 3b. Second-dataset generality smoke, three repetitions.
+.venv/bin/python -m benchmarks.benchmark_dandi_smoke \
+    --dandiset "DANDI:000223@0.260528.0906" \
+    --asset cc499fe1-fe23-42aa-8db0-0e689970fb89 \
+    --neurodata-type TwoPhotonSeries --frames 96 \
+    --memory-limit "2 GiB" --expect-axes time,y,x --backend remfile \
+    --repetitions 3 \
+    --output-root /tmp/nf-smoke \
+    --record benchmarks/results/publication-dandi-smoke-000223.json \
     --classification publication
 
 # 4. Archive-scale fish pipeline. THE EXPENSIVE RUN — hours, ~230 GB read.
 #    --output-root MUST NOT be publication/runs, which holds retained evidence.
+#    Transport configuration is explicit and recorded so the baseline in
+#    step 6 can be configured identically.
 .venv/bin/python benchmarks/benchmark_fish_pipeline.py \
     --output-root publication/runs-publication \
     --record benchmarks/results/publication-fish-soma-traces-remfile.json \
     --backend remfile --memory-limit "4 GiB" --cellpose-device auto \
+    --block-size 1048576 --cache-size-mib 64 \
     --classification publication
 
 # 5. Same workflow over LINDI, for transport independence.
@@ -442,18 +503,46 @@ git rev-parse HEAD              # record this commit in the manuscript
     --backend lindi --memory-limit "4 GiB" --cellpose-device auto \
     --classification publication
 
-# 6. Fair baseline over the retained masks from step 4.
+# 6. Fair baseline over the retained masks from step 4, configured for
+#    parity: identical block/cache to step 4, and --time-chunk set to the
+#    NeuroFlow record's chosen window so both tools traverse the movie in
+#    the same temporal passes. Read it first:
+#      python -c "import json; print(json.load(open(
+#        'benchmarks/results/publication-fish-soma-traces-remfile.json'
+#      ))['execution']['trace_plan']['time_window'])"
 .venv/bin/python benchmarks/benchmark_fish_trace_baseline.py \
     --labels publication/runs-publication/fish-cellpose.zarr \
     --reference-traces publication/runs-publication/fish-traces.zarr \
     --output /tmp/nf-baseline-traces.zarr \
+    --record benchmarks/results/publication-fish-remfile-dask-traces.json \
+    --backend remfile --block-size 1048576 --cache-size-mib 64 \
+    --time-chunk <time_window from step 4's record> \
+    --classification publication
+
+# 6b. The LINDI-transport baseline variant (no transport counters; peak RSS
+#     and wall time are still measured).
+.venv/bin/python benchmarks/benchmark_fish_trace_baseline.py \
+    --labels publication/runs-publication/fish-cellpose.zarr \
+    --reference-traces publication/runs-publication/fish-traces.zarr \
+    --output /tmp/nf-baseline-traces-lindi.zarr \
     --record benchmarks/results/publication-fish-lindi-dask-traces.json \
-    --backend lindi --classification publication
+    --backend lindi \
+    --time-chunk <time_window from step 4's record> \
+    --classification publication
 ```
 
 Note the memory limit in steps 4-5: `--memory-limit "2 GiB"` will be **refused**
 when segmentation runs `cpsam` on CPU, by design. Use 4 GiB, or keep 2 GiB with
 `--cellpose-device cuda` on a GPU host.
+
+Comparability statement for step 6, to be carried into the manuscript: block
+size, cache size, and temporal window are identical on both sides and recorded
+in both records (`transport_configuration` in the NeuroFlow record,
+`configuration_parity` in the baseline record); both sides consume the
+identical retained masks; and both sides execute their accumulation
+single-threaded (the baseline hardcodes one Dask worker, and NeuroFlow's trace
+extraction runs one partition at a time by design), so neither tool holds a
+concurrency advantage in the comparison.
 
 ## Manuscript claim classification
 

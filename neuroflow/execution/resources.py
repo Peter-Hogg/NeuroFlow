@@ -87,8 +87,9 @@ WORKER_RUNTIME_OVERHEAD_BYTES = 96 * 1024 * 1024
 class MemoryBudget:
     """Split a total process-memory target into overhead and task working set.
 
-    ``memory_limit`` is a *total process* target: the number a laptop user
-    means when they say "stay under 2 GiB". A planner cannot spend all of it on
+    ``memory_limit`` is a *total process* target: the number a user on
+    resource-constrained commodity hardware means when they say "stay under
+    2 GiB". A planner cannot spend all of it on
     partition data, because an already-running Python process holds an
     interpreter, imported libraries, lazy dask graphs, a bounded remote read
     cache and output buffers before the first byte of science data arrives.

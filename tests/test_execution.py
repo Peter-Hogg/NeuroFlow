@@ -784,3 +784,43 @@ def test_transport_bytes_are_separated_from_source_chunk_bytes() -> None:
     # chunk-level figure as transfer.
     assert estimate_transport_bytes(6144, 32 * 1024 * 2, None) is None
     assert estimate_transport_bytes(None, 32 * 1024 * 2, 1_048_576) is None
+
+
+def test_persisted_results_are_identical_across_worker_counts(
+    tmp_path: Path,
+) -> None:
+    """Concurrency must not change the numbers.
+
+    Staged reductions combine bounded partials, and partial-combination order
+    is exactly where parallel execution could diverge from serial execution.
+    Every equivalence claim in the publication evidence silently assumes this
+    invariance, so it is pinned here: the same expression persisted at one and
+    at several workers must produce bitwise-identical, checksum-equal output.
+    """
+    rng = np.random.default_rng(11)
+    values = rng.integers(0, 4096, size=(24, 64, 64, 2), dtype=np.int16)
+    group = zarr.open_group(str(tmp_path / "movie.zarr"), mode="w")
+    group.create_dataset("movie", data=values, chunks=(1, 64, 64, 1))
+    from neuroflow.source.array import ArraySource
+
+    outputs: dict[int, np.ndarray] = {}
+    for workers in (1, 4):
+        source = ArraySource(
+            tmp_path / "movie.zarr", component="movie", axes=("time", "y", "x", "z")
+        )
+        movie = neuroflow.NeuroArray(source, source.select())
+        expression = np.mean(movie, axis="time").astype(  # type: ignore[call-overload]
+            np.float32
+        )
+        output = tmp_path / f"mean-w{workers}.zarr"
+        result = expression.persist(
+            output, max_workers=workers, memory_limit="1 GiB"
+        )
+        reopened_source, reopened = neuroflow.open_array(output)
+        outputs[workers] = np.asarray(reopened.as_dask_array().compute())
+        reopened_source.close()
+        result.close()
+        source.close()
+
+    np.testing.assert_array_equal(outputs[1], outputs[4])
+    assert outputs[1].dtype == outputs[4].dtype
