@@ -344,7 +344,12 @@ def _array_metadata(
         chunks = (
             tuple(int(item) for item in raw_chunks) if raw_chunks is not None else None
         )
-    except (TypeError, ValueError):
+    except (AttributeError, TypeError, ValueError):
+        # Real NWB files contain container datasets that look partly like
+        # arrays -- hdmf's HDF5 object-reference wrappers expose ``shape`` and
+        # ``dtype`` but no ``ndim``. Those are not selectable science arrays,
+        # so discovery must skip them rather than crash on an unfamiliar but
+        # valid file (found on DANDI:000223).
         return None
     if not shape or ndim != len(shape) or any(size < 0 for size in shape):
         return None

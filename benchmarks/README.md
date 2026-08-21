@@ -83,6 +83,27 @@ Each backend gets its own subprocess so the peak RSS values are independent.
 no transport counter. The slice is small on purpose: this is an equivalence
 claim, not a throughput claim.
 
+`benchmark_dandi_smoke` is the generality check: the ordinary public workflow
+(discover with `NWBQuery(neurodata_type=...)`, inspect inferred axes and
+physical chunks, preflight a plan, persist a bounded temporal mean, verify,
+compare against a plain h5py + NumPy reference) on a dataset chosen entirely
+from the command line, with no dataset-specific code:
+
+```bash
+uv run python -m benchmarks.benchmark_dandi_smoke \
+  --dandiset "DANDI:000223@0.260528.0906" \
+  --asset cc499fe1-fe23-42aa-8db0-0e689970fb89 \
+  --neurodata-type TwoPhotonSeries --frames 96 \
+  --expect-axes time,y,x \
+  --output-root /tmp/dandi-smoke \
+  --record benchmarks/results/current-dandi-smoke-000223.json
+```
+
+`--expect-axes` turns the axis inference into an assertion instead of a hidden
+assumption. The record separates `engine_phase_peak_rss_bytes` from the
+whole-process peak, because the harness's own independent reference computation
+loads raw frames into the same process.
+
 `results/fish-case-study-2026-08-13.json` is explicitly historical because it
 predates the current engine. `results/local-summary.json` uses a legacy summary
 format. Neither is silently converted into publication evidence.

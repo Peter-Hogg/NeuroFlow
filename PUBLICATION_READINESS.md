@@ -229,6 +229,64 @@ What this does **not** show: the full fish workflow (Cellpose + whole-movie
 traces) has not been run through LINDI. Transport independence is demonstrated
 for the projection stage on the real remote asset, not yet end to end.
 
+## Second-dataset generality smoke (DANDI:000223)
+
+`benchmarks/benchmark_dandi_smoke.py`
+(`benchmarks/results/current-dandi-smoke-000223.json`) runs the ordinary public
+workflow — discover with `NWBQuery(neurodata_type="TwoPhotonSeries")`, inspect
+inferred axes and physical chunks, preflight a plan, persist a bounded temporal
+mean under a 2 GiB target, verify, compare against an independent plain
+h5py + NumPy reference — on a dataset the repository had never touched. Every
+identifier arrives on the command line; the harness contains no
+dataset-specific code and no fish constants.
+
+Dataset: `DANDI:000223@0.260528.0906`, asset
+`sub-3112/sub-3112_ecephys+ophys.nwb` (one of 20; paired spine calcium
+imaging). The selected object is `/acquisition/TwoPhotonSeries`, shape
+`(1800, 1024, 1024)` uint16 — genuinely different from the fish in
+dimensionality (3-D vs 4-D), dtype (uint16 vs int16), and above all storage
+geometry: native chunks `(1, 128, 128)`, sixty-four 32 KiB tiles per frame,
+versus the fish's one whole 3.6 MB plane per chunk.
+
+What passed, on the first unfamiliar dataset:
+
+- **Discovery**: the object was found through the public query mechanism by
+  NWB type, not by an internal HDF5 path.
+- **Axis inference**: `--expect-axes time,y,x` asserted, and the inference
+  produced exactly `("time", "y", "x")` for the 3-D series.
+- **Automatic partitioning**: the planner chose 64 partitions of
+  `(96, 128, 128)` from the memory target alone; the command line set no tile,
+  chunk, block, cache, or worker parameters.
+- **Correctness**: the persisted 96-frame temporal mean is **bitwise
+  identical** to the independent reference (elementwise equal, maximum absolute
+  and relative error 0.0), and the output verified against its checksum
+  manifest.
+- **A real generality bug was caught and fixed**: discovery crashed with
+  `AttributeError` on hdmf's HDF5 object-reference wrappers, which expose
+  `shape` and `dtype` but no `ndim` — an object species the fish file never
+  contained. `_array_metadata` in `neuroflow/source/hdf5.py` now skips such
+  non-array containers; `tests/test_hdf5_source.py` pins it.
+
+What this run exposed, measured and left open rather than smoothed over:
+
+1. **The engine overran the total-process target on this geometry**:
+   2,865 MiB engine-phase peak against the 2,048 MiB target (+40%), where the
+   fish-geometry fixture at the same target overran by 0.7%. The per-task
+   estimate (3.4 MiB) is so small on fine-chunked layouts that the planner
+   grants concurrency up to the core count, and per-worker constant overhead
+   (thread state, read buffers, in-flight blocks) is not modelled. The fish
+   geometry, with two multi-GiB tasks, could never expose this.
+2. **Transport-level read amplification is not modelled**: the plan estimated
+   192 MiB of chunk-level reads (amplification 1.0, with an explicit note that
+   transport can change actual transfer); the measured HTTP transfer was
+   3,264 MiB (17.0x) across 475 responses in 75.9 s. 32 KiB chunks are fetched
+   through 256 KiB transport blocks laid out frame-major, and 64 tasks evict
+   one another's blocks in the shared 64 MiB cache.
+
+Both findings are planner-model accuracy limits on fine-chunked layouts, not
+correctness defects — the numbers produced are exact and verified. Fixing them
+is engine work deliberately outside this validation's scope.
+
 ## Dask/LINDI baseline (Priority 4)
 
 `benchmarks/benchmark_fish_trace_baseline.py` implements the fair baseline:
@@ -264,7 +322,7 @@ Two claims must not be conflated:
 
 Command | Result
 --- | ---
-`.venv/bin/python -m pytest -q` | **223 passed, 1 skipped**
+`.venv/bin/python -m pytest -q` | **224 passed, 1 skipped**
 `.venv/bin/python -m ruff check .` | **All checks passed**
 `.venv/bin/python -m basedpyright` | **0 errors, 0 warnings, 0 notes**
 
@@ -293,6 +351,13 @@ identical labels.
 3. **The 4 GiB / 206-frame overrun is unexplained in detail.** The direction and
    magnitude are measured; the specific unmodelled allocation is hypothesised,
    not confirmed.
+3a. **The planner's resource model is geometry-dependent.** On the fine-chunked
+   DANDI:000223 layout the engine peaked 40% above a 2 GiB target and
+   transferred 17.0x the chunk-level read estimate (see the second-dataset
+   smoke section). Two candidate model improvements are known — a per-worker
+   constant overhead term in the concurrency derivation, and a transport-block
+   term in the read estimate — but both are engine changes that must not be
+   made casually against the retained evidence.
 4. **No clean-tree publication record exists** for any stage. Every retained
    record is `current` with `git.dirty: true`.
 5. Naming caution, not an error: `benchmarks/results/current-scaling.json` is
@@ -382,11 +447,12 @@ when segmentation runs `cpsam` on CPU, by design. Use 4 GiB, or keep 2 GiB with
 | Whole-process memory cost is attributable to named, separately measured components | **SUPPORTED** — twelve isolated component probes retained |
 | `memory_limit` is an approximate total process-memory target, not a per-task allowance | **SUPPORTED** — exact decomposition, documented, regression-tested |
 | A 2 GiB target yields substantially lower process RSS than before | **SUPPORTED** — 2,062 MiB measured versus 6,097 MiB for the same nominal request |
-| `memory_limit` is a reliable bound on process RSS | **PARTIALLY SUPPORTED** — 0.7% overrun at 2 GiB but 14.5% at 4 GiB with a large window; approximate, unenforced, and must be described as a target |
+| `memory_limit` is a reliable bound on process RSS | **PARTIALLY SUPPORTED** — geometry-dependent: 0.7% overrun at 2 GiB on fish-like chunking, 14.5% at 4 GiB with a large window, and 40% on the fine-chunked DANDI:000223 layout; approximate, unenforced, and must be described as a target |
 | Users state resources and NeuroFlow chooses partitioning and concurrency without low-level knobs | **PARTIALLY SUPPORTED** — demonstrated locally on synthetic data (1→21 workers from the target alone); not yet demonstrated on the archive |
 | GPU execution is supported and reduces host memory and Cellpose time | **PARTIALLY SUPPORTED** — component-level measurement is strong (3.21→2.09 GB host, 66.14→2.03 s, 32.5x); no full GPU archive run exists |
 | Resource scaling behaviour across memory and worker configurations | **PARTIALLY SUPPORTED** — complete five-point local curve; no archive-scale curve |
 | Computation semantics are independent of transport (remfile vs LINDI) | **PARTIALLY SUPPORTED** — byte-identical remote projection (equal checksums, error 0.0, same workflow_id) on a small slice of the real asset; full fish workflow through LINDI awaits the publication run |
+| The execution engine is dataset-independent by construction and was validated on two real DANDI datasets with distinct imaging geometries, in addition to synthetic test fixtures | **SUPPORTED** for correctness and semantics — DANDI:000350 (4-D int16, plane-sized chunks, archive scale) and DANDI:000223 (3-D uint16, 32 KiB chunks, discovery by NWB type, exact agreement with an independent reference, verified output, correct axis inference). Planner resource-model *accuracy* on fine-chunked geometry is a separate, partially supported claim (see the RSS row). No broad validation across all NWB modalities is claimed |
 | NeuroFlow compares favourably to a PyNWB + LINDI + Dask baseline | **NOT YET SUPPORTED** — the baseline's numerical core is locally validated against NumPy and NeuroFlow, but the archive-scale baseline has never been run; no comparative wall-time/RSS/transfer numbers exist |
 | Segmented somata are biologically correct | **NOT YET SUPPORTED** — substantial false positives and missed somata; explicitly not claimed |
 | Results were produced from an immutable, clean, archived commit | **NOT YET SUPPORTED** — every retained record has `git.dirty: true` |

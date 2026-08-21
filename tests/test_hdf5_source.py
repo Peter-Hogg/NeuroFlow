@@ -138,6 +138,24 @@ def test_array_capability_check_accepts_non_h5py_dataset() -> None:
     )
 
 
+def test_array_capability_check_skips_partial_array_lookalikes() -> None:
+    """Container datasets missing array attributes are skipped, not fatal.
+
+    Real NWB files hold hdmf HDF5 object-reference wrappers that expose
+    ``shape`` and ``dtype`` but no ``ndim``. Discovery over DANDI:000223
+    crashed on one; such objects are not selectable science arrays and must
+    make ``_array_metadata`` answer ``None``.
+    """
+    value = SimpleNamespace(
+        shape=(5,),
+        dtype=np.dtype("object"),
+        # no ndim attribute, like ContainerH5ReferenceDataset
+        __getitem__=lambda key: key,
+    )
+
+    assert _array_metadata(value) is None
+
+
 def test_real_lindi_local_bridge_preserves_lazy_array_semantics(
     nwb_hdf5: tuple[Path, np.ndarray],
 ) -> None:

@@ -1,0 +1,260 @@
+{
+  "backend": "nwb-hdf5 remfile",
+  "baselines": [],
+  "benchmark_name": "dandi-second-dataset-smoke",
+  "benchmark_schema_version": "1",
+  "classification": "current",
+  "environment": {
+    "cpu": {
+      "logical_count": 32,
+      "model": "AMD Ryzen 9 9950X 16-Core Processor"
+    },
+    "dependencies": {
+      "cellpose": "4.2.1.1",
+      "dask": "2026.7.1",
+      "distributed": "2026.7.1",
+      "fsspec": "2026.7.0",
+      "h5py": "3.16.0",
+      "hdmf-zarr": "0.13.0",
+      "lindi": "0.4.6",
+      "neuroflow": "0.1.0",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "pyarrow": "25.0.0",
+      "pynapple": null,
+      "pynwb": "4.1.0",
+      "remfile": "0.1.14",
+      "s3fs": "2026.7.0",
+      "scipy": "1.15.3",
+      "xarray": "2025.6.1",
+      "zarr": "2.18.3"
+    },
+    "git": {
+      "commit": "460bbf67009860e86cb5abd33bcc7691719281ec",
+      "dirty": true,
+      "source": "git"
+    },
+    "neuroflow_version": "0.1.0",
+    "platform": {
+      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "release": "7.0.0-29-generic",
+      "system": "Linux"
+    },
+    "python": {
+      "executable": "python",
+      "implementation": "CPython",
+      "version": "3.10.19"
+    },
+    "schema_version": "1",
+    "total_ram_bytes": 132559962112
+  },
+  "execution": {
+    "bytes_read": 3422379957,
+    "bytes_read_status": "counted from HTTP Content-Length headers",
+    "cache_state": "cold; fresh process, no prior reads of this asset",
+    "engine_phase_peak_rss_bytes": 3004170240,
+    "estimated_total_bytes_read": 201326592,
+    "execution_metrics": {
+      "bytes_read": 3422379957,
+      "bytes_read_status": "measured",
+      "completed_task_count": 64,
+      "computed_task_count": 64,
+      "execution_finished": "2026-08-21T16:57:25.671517+00:00",
+      "execution_started": "2026-08-21T16:56:15.946709+00:00",
+      "integrity_verification": {
+        "checksums": "not-run-during-finalization",
+        "manifests": "valid",
+        "status": "measured"
+      },
+      "output_bytes": 4194304,
+      "partitions_completed": 64,
+      "peak_rss_bytes": 3003908096,
+      "resumed_task_count": 0,
+      "schema_version": "1",
+      "stages": [],
+      "wall_time_seconds": 69.724808
+    },
+    "http_responses": 475,
+    "memory_budget": "2 GiB",
+    "network_context": "public DANDI HTTPS; runner location is external",
+    "partition_configuration": {
+      "chosen_by": "planner, from the memory target alone; the command line sets no tile, chunk, block, cache, or worker parameters",
+      "processing_shape": [
+        96,
+        128,
+        128
+      ]
+    },
+    "peak_rss_bytes": 3303202816,
+    "peak_rss_note": "whole-process high-water mark including the harness's own direct-reference computation; engine_phase_peak_rss_bytes is the engine-attributable figure",
+    "persist_seconds": 69.76562921400182,
+    "plan": {
+      "bounded": {
+        "reasons": [
+          "every task has finite validated source slices",
+          "memory_per_task is derived before numerical I/O"
+        ],
+        "status": "estimated",
+        "value": true
+      },
+      "output": {
+        "axes": [
+          "y",
+          "x"
+        ],
+        "estimated_size_bytes": {
+          "status": "estimated",
+          "value": 4194304
+        },
+        "shape": [
+          1024,
+          1024
+        ]
+      },
+      "partitioning": {
+        "estimated_bytes_per_partition": {
+          "status": "estimated",
+          "value": 3407872
+        },
+        "estimated_logical_bytes_read": {
+          "status": "estimated",
+          "value": 201326592
+        },
+        "estimated_partitions": {
+          "status": "estimated",
+          "value": 64
+        },
+        "estimated_source_chunks_touched": {
+          "note": "counts repeated touches across logical partitions",
+          "status": "estimated",
+          "value": 6144
+        },
+        "estimated_total_bytes_read": {
+          "note": "uncompressed physical-chunk bytes; compression, caches, and HTTP transport can change actual transfer",
+          "status": "estimated",
+          "value": 201326592
+        },
+        "maximum_logical_partition_shape": [
+          96,
+          128,
+          128
+        ],
+        "read_amplification": {
+          "status": "estimated",
+          "value": 1.0
+        }
+      },
+      "resources": {
+        "cpu": 1,
+        "gpu": 0,
+        "local_scratch": null,
+        "memory": null
+      },
+      "schema_version": "1",
+      "selection": {
+        "dtype": "uint16",
+        "physical_chunks": [
+          1,
+          128,
+          128
+        ],
+        "shape": [
+          96,
+          1024,
+          1024
+        ]
+      },
+      "source": {
+        "size_bytes": {
+          "note": "archive object size when metadata provides it",
+          "status": "estimated",
+          "value": 4178403253
+        }
+      },
+      "stages": [],
+      "warnings": [],
+      "workflow_id": "fa3eb64e9b9f318df5015519d169226c01f165e8a9c7793d1d284c3cf1ed54b6"
+    },
+    "task_count": 64,
+    "wall_time_seconds": 75.92669100499188
+  },
+  "notes": [
+    "This is a generality smoke test: an unfamiliar real dataset with a different dimensionality, dtype, and native chunk geometry than the retained fish evidence, driven entirely through the public discovery and persistence API with no dataset-specific code.",
+    "Output chunking, partitioning, and concurrency are chosen by the planner from the memory target alone; the command line sets no tile, chunk, block, cache, or worker parameters.",
+    "The direct reference reads the same frames without NeuroFlow, so the comparison does not test the engine against itself.",
+    "Wall time includes remote metadata reads and is not a throughput measurement."
+  ],
+  "result": {
+    "checksum": "8a3759eca66e7666e6f04b066af405b5628065247c927280fb8933d68b17ee94",
+    "integrity_verified": true,
+    "numerical_validation": {
+      "atol": 1e-06,
+      "comparison": "plain h5py+remfile read of the same frames reduced with plain NumPy, sharing only the transport library",
+      "elementwise_equal": true,
+      "maximum_absolute_error": 0.0,
+      "maximum_relative_error": 0.0,
+      "rtol": 1e-06,
+      "valid": true
+    },
+    "output": "/tmp/claude-1000/-home-peter-Code-transfer/e2c6bd59-66e8-41a4-b4af-f6af918e4c0b/scratchpad/smoke/dandi-smoke-DANDI-000223-0.260528.0906-t96.zarr",
+    "output_bytes": 2731350,
+    "output_dtype": "float32",
+    "output_shape": [
+      1024,
+      1024
+    ],
+    "resume": {
+      "exercised": false,
+      "supported": true
+    }
+  },
+  "source": {
+    "asset": "sub-3112/sub-3112_ecephys+ophys.nwb",
+    "asset_count_in_dandiset": 20,
+    "asset_id": "cc499fe1-fe23-42aa-8db0-0e689970fb89",
+    "dataset_identifier": "DANDI:000223",
+    "dataset_version": "0.260528.0906",
+    "discovery": {
+      "asset": "cc499fe1-fe23-42aa-8db0-0e689970fb89",
+      "mechanism": "NWBQuery through the ordinary public select()",
+      "name": null,
+      "neurodata_type": "TwoPhotonSeries"
+    },
+    "dtype": "uint16",
+    "expected_axes": [
+      "time",
+      "y",
+      "x"
+    ],
+    "inferred_axes": [
+      "time",
+      "y",
+      "x"
+    ],
+    "neurodata_type": "TwoPhotonSeries",
+    "object_name": "TwoPhotonSeries",
+    "path": "/acquisition/TwoPhotonSeries",
+    "physical_chunk_shape": [
+      1,
+      128,
+      128
+    ],
+    "selected_bytes": 201326592,
+    "selected_shape": [
+      96,
+      1024,
+      1024
+    ],
+    "selection": {
+      "frames": 96
+    },
+    "shape": [
+      1800,
+      1024,
+      1024
+    ],
+    "total_logical_bytes": 3774873600
+  },
+  "timestamp": "2026-08-21T16:57:30.577278+00:00"
+}
