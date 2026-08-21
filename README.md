@@ -107,9 +107,11 @@ selected = fish.select(
 )
 movie = neuroflow.NeuroArray(fish, selected)
 
-projection = np.median(movie[:50], axis="time").astype("float32").persist(
-    "projection.zarr", memory_limit="2 GiB"
-)
+expression = np.median(movie[:50], axis="time").astype("float32")
+# Optional preflight: partitioning, task count, source-chunk and
+# transport-level read estimates, all before any numerical I/O.
+print(expression.plan("projection.zarr", memory_limit="2 GiB").summary())
+projection = expression.persist("projection.zarr", memory_limit="2 GiB")
 masks = projection.cellpose(
     pretrained_model="cpsam",
     output="fish-cellpose.zarr",
@@ -126,6 +128,15 @@ traces = movie.extract_traces(
 )
 assert neuroflow.open_result("fish-traces.zarr").verify().valid
 ```
+
+`memory_limit` is an approximate **total process-memory target** — the number a
+laptop user means by "stay under 2 GiB" — not a per-task allowance. The planner
+charges measured process overhead once, sizes partitions and concurrency from
+the remainder, and refuses work that cannot fit rather than overrunning
+silently. It is a planning target, not an OS-enforced cap; every run records
+planned and measured peak RSS side by side. See
+[the memory-semantics section](https://peter-hogg.github.io/NeuroFlow/High_Level_API.html)
+for the decomposition and its measured basis.
 
 Persisted arrays are composable inputs through `neuroflow.open_array()`, which
 requires a complete result and verifies partition checksums by default. Dense
