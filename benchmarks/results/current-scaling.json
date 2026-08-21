@@ -1,0 +1,1317 @@
+{
+  "environment": {
+    "cpu": {
+      "logical_count": 32,
+      "model": "AMD Ryzen 9 9950X 16-Core Processor"
+    },
+    "dependencies": {
+      "cellpose": "4.2.1.1",
+      "dask": "2026.7.1",
+      "distributed": "2026.7.1",
+      "fsspec": "2026.7.0",
+      "h5py": "3.16.0",
+      "hdmf-zarr": "0.13.0",
+      "lindi": "0.4.6",
+      "neuroflow": "0.1.0",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "pyarrow": "25.0.0",
+      "pynapple": null,
+      "pynwb": "4.1.0",
+      "remfile": "0.1.14",
+      "s3fs": "2026.7.0",
+      "scipy": "1.15.3",
+      "xarray": "2025.6.1",
+      "zarr": "2.18.3"
+    },
+    "git": {
+      "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+      "dirty": true,
+      "source": "git"
+    },
+    "neuroflow_version": "0.1.0",
+    "platform": {
+      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "release": "7.0.0-29-generic",
+      "system": "Linux"
+    },
+    "python": {
+      "executable": "python3",
+      "implementation": "CPython",
+      "version": "3.10.19"
+    },
+    "schema_version": "1",
+    "total_ram_bytes": 132559962112
+  },
+  "independent_process_per_record": true,
+  "notes": [
+    "Peak RSS is a process high-water mark and includes Python/import overhead.",
+    "Compare peak RSS against selected bytes and partition configuration; do not infer a hard operating-system memory cap."
+  ],
+  "records": [
+    {
+      "backend": "nwb-zarr",
+      "baselines": [
+        {
+          "cache_state": "in-memory-generated-input",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-numpy",
+          "version": "2.2.6",
+          "wall_time_seconds": 0.0030016439995961264
+        },
+        {
+          "cache_state": "local-temporary-source",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-dask",
+          "version": null,
+          "wall_time_seconds": 0.10243874599837
+        }
+      ],
+      "benchmark_name": "local-projection-correctness",
+      "benchmark_schema_version": "1",
+      "classification": "current",
+      "command": {
+        "frames": 16,
+        "height": 128,
+        "seed": 20260813,
+        "width": 128
+      },
+      "direct_dask_seconds": 0.10243874599837,
+      "direct_numpy_seconds": 0.0030016439995961264,
+      "environment": {
+        "cpu": {
+          "logical_count": 32,
+          "model": "AMD Ryzen 9 9950X 16-Core Processor"
+        },
+        "dependencies": {
+          "cellpose": "4.2.1.1",
+          "dask": "2026.7.1",
+          "distributed": "2026.7.1",
+          "fsspec": "2026.7.0",
+          "h5py": "3.16.0",
+          "hdmf-zarr": "0.13.0",
+          "lindi": "0.4.6",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pandas": "2.3.3",
+          "pyarrow": "25.0.0",
+          "pynapple": null,
+          "pynwb": "4.1.0",
+          "remfile": "0.1.14",
+          "s3fs": "2026.7.0",
+          "scipy": "1.15.3",
+          "xarray": "2025.6.1",
+          "zarr": "2.18.3"
+        },
+        "git": {
+          "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+          "dirty": true,
+          "source": "git"
+        },
+        "neuroflow_version": "0.1.0",
+        "platform": {
+          "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+          "machine": "x86_64",
+          "release": "7.0.0-29-generic",
+          "system": "Linux"
+        },
+        "python": {
+          "executable": "python3",
+          "implementation": "CPython",
+          "version": "3.10.19"
+        },
+        "schema_version": "1",
+        "total_ram_bytes": 132559962112
+      },
+      "execution": {
+        "bytes_read": null,
+        "cache_state": "local-temporary-source",
+        "memory_budget": "1 GiB",
+        "network_context": null,
+        "partition_configuration": {
+          "output_chunks": [
+            128,
+            128
+          ],
+          "processing_shape": [
+            16,
+            128,
+            128
+          ]
+        },
+        "peak_rss_bytes": 234569728,
+        "task_count": 1,
+        "wall_time_seconds": 0.03289652999956161
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.03289652999956161,
+      "notes": [
+        "Peak RSS is the process high-water mark across all three methods.",
+        "This small local run assesses correctness and overhead, not remote I/O."
+      ],
+      "result": {
+        "checksum": "4fbadade4b3e2f4dac929344e06810a24fbd1fc571e8889f1286a070818bcf6e",
+        "integrity_verified": true,
+        "numerical_validation": {
+          "atol": 0.0,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "repeatability": "deterministic seed; single run in this record",
+          "rtol": 0.0,
+          "valid": true
+        },
+        "output_bytes": 67510,
+        "resume": {
+          "exercised": false,
+          "resumed_partitions": 0
+        }
+      },
+      "schema_version": "2",
+      "source": {
+        "asset": "benchmark.nwb.zarr",
+        "dataset_identifier": "synthetic:normal-projection",
+        "dataset_version": "1",
+        "dtype": "float32",
+        "path": "/acquisition/movie",
+        "physical_chunk_shape": [
+          1,
+          128,
+          128
+        ],
+        "selected_bytes": 1048576,
+        "shape": [
+          16,
+          128,
+          128
+        ],
+        "total_logical_bytes": 1048576
+      },
+      "timestamp": "2026-08-20T20:47:15.458990+00:00",
+      "verified": true
+    },
+    {
+      "backend": "nwb-zarr",
+      "baselines": [
+        {
+          "cache_state": "in-memory-generated-input",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-numpy",
+          "version": "2.2.6",
+          "wall_time_seconds": 0.003030897998542059
+        },
+        {
+          "cache_state": "local-temporary-source",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-dask",
+          "version": null,
+          "wall_time_seconds": 0.10423965099471388
+        }
+      ],
+      "benchmark_name": "local-projection-correctness",
+      "benchmark_schema_version": "1",
+      "classification": "current",
+      "command": {
+        "frames": 16,
+        "height": 128,
+        "seed": 20260813,
+        "width": 128
+      },
+      "direct_dask_seconds": 0.10423965099471388,
+      "direct_numpy_seconds": 0.003030897998542059,
+      "environment": {
+        "cpu": {
+          "logical_count": 32,
+          "model": "AMD Ryzen 9 9950X 16-Core Processor"
+        },
+        "dependencies": {
+          "cellpose": "4.2.1.1",
+          "dask": "2026.7.1",
+          "distributed": "2026.7.1",
+          "fsspec": "2026.7.0",
+          "h5py": "3.16.0",
+          "hdmf-zarr": "0.13.0",
+          "lindi": "0.4.6",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pandas": "2.3.3",
+          "pyarrow": "25.0.0",
+          "pynapple": null,
+          "pynwb": "4.1.0",
+          "remfile": "0.1.14",
+          "s3fs": "2026.7.0",
+          "scipy": "1.15.3",
+          "xarray": "2025.6.1",
+          "zarr": "2.18.3"
+        },
+        "git": {
+          "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+          "dirty": true,
+          "source": "git"
+        },
+        "neuroflow_version": "0.1.0",
+        "platform": {
+          "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+          "machine": "x86_64",
+          "release": "7.0.0-29-generic",
+          "system": "Linux"
+        },
+        "python": {
+          "executable": "python3",
+          "implementation": "CPython",
+          "version": "3.10.19"
+        },
+        "schema_version": "1",
+        "total_ram_bytes": 132559962112
+      },
+      "execution": {
+        "bytes_read": null,
+        "cache_state": "local-temporary-source",
+        "memory_budget": "1 GiB",
+        "network_context": null,
+        "partition_configuration": {
+          "output_chunks": [
+            128,
+            128
+          ],
+          "processing_shape": [
+            16,
+            128,
+            128
+          ]
+        },
+        "peak_rss_bytes": 234201088,
+        "task_count": 1,
+        "wall_time_seconds": 0.032003895998059306
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.032003895998059306,
+      "notes": [
+        "Peak RSS is the process high-water mark across all three methods.",
+        "This small local run assesses correctness and overhead, not remote I/O."
+      ],
+      "result": {
+        "checksum": "4fbadade4b3e2f4dac929344e06810a24fbd1fc571e8889f1286a070818bcf6e",
+        "integrity_verified": true,
+        "numerical_validation": {
+          "atol": 0.0,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "repeatability": "deterministic seed; single run in this record",
+          "rtol": 0.0,
+          "valid": true
+        },
+        "output_bytes": 67510,
+        "resume": {
+          "exercised": false,
+          "resumed_partitions": 0
+        }
+      },
+      "schema_version": "2",
+      "source": {
+        "asset": "benchmark.nwb.zarr",
+        "dataset_identifier": "synthetic:normal-projection",
+        "dataset_version": "1",
+        "dtype": "float32",
+        "path": "/acquisition/movie",
+        "physical_chunk_shape": [
+          1,
+          128,
+          128
+        ],
+        "selected_bytes": 1048576,
+        "shape": [
+          16,
+          128,
+          128
+        ],
+        "total_logical_bytes": 1048576
+      },
+      "timestamp": "2026-08-20T20:47:16.344731+00:00",
+      "verified": true
+    },
+    {
+      "backend": "nwb-zarr",
+      "baselines": [
+        {
+          "cache_state": "in-memory-generated-input",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-numpy",
+          "version": "2.2.6",
+          "wall_time_seconds": 0.0030162909970385954
+        },
+        {
+          "cache_state": "local-temporary-source",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-dask",
+          "version": null,
+          "wall_time_seconds": 0.10822451599960914
+        }
+      ],
+      "benchmark_name": "local-projection-correctness",
+      "benchmark_schema_version": "1",
+      "classification": "current",
+      "command": {
+        "frames": 16,
+        "height": 128,
+        "seed": 20260813,
+        "width": 128
+      },
+      "direct_dask_seconds": 0.10822451599960914,
+      "direct_numpy_seconds": 0.0030162909970385954,
+      "environment": {
+        "cpu": {
+          "logical_count": 32,
+          "model": "AMD Ryzen 9 9950X 16-Core Processor"
+        },
+        "dependencies": {
+          "cellpose": "4.2.1.1",
+          "dask": "2026.7.1",
+          "distributed": "2026.7.1",
+          "fsspec": "2026.7.0",
+          "h5py": "3.16.0",
+          "hdmf-zarr": "0.13.0",
+          "lindi": "0.4.6",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pandas": "2.3.3",
+          "pyarrow": "25.0.0",
+          "pynapple": null,
+          "pynwb": "4.1.0",
+          "remfile": "0.1.14",
+          "s3fs": "2026.7.0",
+          "scipy": "1.15.3",
+          "xarray": "2025.6.1",
+          "zarr": "2.18.3"
+        },
+        "git": {
+          "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+          "dirty": true,
+          "source": "git"
+        },
+        "neuroflow_version": "0.1.0",
+        "platform": {
+          "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+          "machine": "x86_64",
+          "release": "7.0.0-29-generic",
+          "system": "Linux"
+        },
+        "python": {
+          "executable": "python3",
+          "implementation": "CPython",
+          "version": "3.10.19"
+        },
+        "schema_version": "1",
+        "total_ram_bytes": 132559962112
+      },
+      "execution": {
+        "bytes_read": null,
+        "cache_state": "local-temporary-source",
+        "memory_budget": "1 GiB",
+        "network_context": null,
+        "partition_configuration": {
+          "output_chunks": [
+            128,
+            128
+          ],
+          "processing_shape": [
+            16,
+            128,
+            128
+          ]
+        },
+        "peak_rss_bytes": 234795008,
+        "task_count": 1,
+        "wall_time_seconds": 0.0327716669999063
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.0327716669999063,
+      "notes": [
+        "Peak RSS is the process high-water mark across all three methods.",
+        "This small local run assesses correctness and overhead, not remote I/O."
+      ],
+      "result": {
+        "checksum": "4fbadade4b3e2f4dac929344e06810a24fbd1fc571e8889f1286a070818bcf6e",
+        "integrity_verified": true,
+        "numerical_validation": {
+          "atol": 0.0,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "repeatability": "deterministic seed; single run in this record",
+          "rtol": 0.0,
+          "valid": true
+        },
+        "output_bytes": 67510,
+        "resume": {
+          "exercised": false,
+          "resumed_partitions": 0
+        }
+      },
+      "schema_version": "2",
+      "source": {
+        "asset": "benchmark.nwb.zarr",
+        "dataset_identifier": "synthetic:normal-projection",
+        "dataset_version": "1",
+        "dtype": "float32",
+        "path": "/acquisition/movie",
+        "physical_chunk_shape": [
+          1,
+          128,
+          128
+        ],
+        "selected_bytes": 1048576,
+        "shape": [
+          16,
+          128,
+          128
+        ],
+        "total_logical_bytes": 1048576
+      },
+      "timestamp": "2026-08-20T20:47:17.239921+00:00",
+      "verified": true
+    },
+    {
+      "backend": "nwb-zarr",
+      "baselines": [
+        {
+          "cache_state": "in-memory-generated-input",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-numpy",
+          "version": "2.2.6",
+          "wall_time_seconds": 0.011475594001240097
+        },
+        {
+          "cache_state": "local-temporary-source",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-dask",
+          "version": null,
+          "wall_time_seconds": 0.13214821600558935
+        }
+      ],
+      "benchmark_name": "local-projection-correctness",
+      "benchmark_schema_version": "1",
+      "classification": "current",
+      "command": {
+        "frames": 16,
+        "height": 256,
+        "seed": 20260813,
+        "width": 256
+      },
+      "direct_dask_seconds": 0.13214821600558935,
+      "direct_numpy_seconds": 0.011475594001240097,
+      "environment": {
+        "cpu": {
+          "logical_count": 32,
+          "model": "AMD Ryzen 9 9950X 16-Core Processor"
+        },
+        "dependencies": {
+          "cellpose": "4.2.1.1",
+          "dask": "2026.7.1",
+          "distributed": "2026.7.1",
+          "fsspec": "2026.7.0",
+          "h5py": "3.16.0",
+          "hdmf-zarr": "0.13.0",
+          "lindi": "0.4.6",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pandas": "2.3.3",
+          "pyarrow": "25.0.0",
+          "pynapple": null,
+          "pynwb": "4.1.0",
+          "remfile": "0.1.14",
+          "s3fs": "2026.7.0",
+          "scipy": "1.15.3",
+          "xarray": "2025.6.1",
+          "zarr": "2.18.3"
+        },
+        "git": {
+          "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+          "dirty": true,
+          "source": "git"
+        },
+        "neuroflow_version": "0.1.0",
+        "platform": {
+          "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+          "machine": "x86_64",
+          "release": "7.0.0-29-generic",
+          "system": "Linux"
+        },
+        "python": {
+          "executable": "python3",
+          "implementation": "CPython",
+          "version": "3.10.19"
+        },
+        "schema_version": "1",
+        "total_ram_bytes": 132559962112
+      },
+      "execution": {
+        "bytes_read": null,
+        "cache_state": "local-temporary-source",
+        "memory_budget": "1 GiB",
+        "network_context": null,
+        "partition_configuration": {
+          "output_chunks": [
+            128,
+            128
+          ],
+          "processing_shape": [
+            16,
+            256,
+            256
+          ]
+        },
+        "peak_rss_bytes": 261500928,
+        "task_count": 1,
+        "wall_time_seconds": 0.046874906998709776
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.046874906998709776,
+      "notes": [
+        "Peak RSS is the process high-water mark across all three methods.",
+        "This small local run assesses correctness and overhead, not remote I/O."
+      ],
+      "result": {
+        "checksum": "b803bf0f8bece28ba0591e80f8ab8967ddc060189a19bb1575f318084c3c2bc4",
+        "integrity_verified": true,
+        "numerical_validation": {
+          "atol": 0.0,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "repeatability": "deterministic seed; single run in this record",
+          "rtol": 0.0,
+          "valid": true
+        },
+        "output_bytes": 253067,
+        "resume": {
+          "exercised": false,
+          "resumed_partitions": 0
+        }
+      },
+      "schema_version": "2",
+      "source": {
+        "asset": "benchmark.nwb.zarr",
+        "dataset_identifier": "synthetic:normal-projection",
+        "dataset_version": "1",
+        "dtype": "float32",
+        "path": "/acquisition/movie",
+        "physical_chunk_shape": [
+          1,
+          256,
+          256
+        ],
+        "selected_bytes": 4194304,
+        "shape": [
+          16,
+          256,
+          256
+        ],
+        "total_logical_bytes": 4194304
+      },
+      "timestamp": "2026-08-20T20:47:18.213866+00:00",
+      "verified": true
+    },
+    {
+      "backend": "nwb-zarr",
+      "baselines": [
+        {
+          "cache_state": "in-memory-generated-input",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-numpy",
+          "version": "2.2.6",
+          "wall_time_seconds": 0.011740486996131949
+        },
+        {
+          "cache_state": "local-temporary-source",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-dask",
+          "version": null,
+          "wall_time_seconds": 0.11329682799987495
+        }
+      ],
+      "benchmark_name": "local-projection-correctness",
+      "benchmark_schema_version": "1",
+      "classification": "current",
+      "command": {
+        "frames": 16,
+        "height": 256,
+        "seed": 20260813,
+        "width": 256
+      },
+      "direct_dask_seconds": 0.11329682799987495,
+      "direct_numpy_seconds": 0.011740486996131949,
+      "environment": {
+        "cpu": {
+          "logical_count": 32,
+          "model": "AMD Ryzen 9 9950X 16-Core Processor"
+        },
+        "dependencies": {
+          "cellpose": "4.2.1.1",
+          "dask": "2026.7.1",
+          "distributed": "2026.7.1",
+          "fsspec": "2026.7.0",
+          "h5py": "3.16.0",
+          "hdmf-zarr": "0.13.0",
+          "lindi": "0.4.6",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pandas": "2.3.3",
+          "pyarrow": "25.0.0",
+          "pynapple": null,
+          "pynwb": "4.1.0",
+          "remfile": "0.1.14",
+          "s3fs": "2026.7.0",
+          "scipy": "1.15.3",
+          "xarray": "2025.6.1",
+          "zarr": "2.18.3"
+        },
+        "git": {
+          "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+          "dirty": true,
+          "source": "git"
+        },
+        "neuroflow_version": "0.1.0",
+        "platform": {
+          "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+          "machine": "x86_64",
+          "release": "7.0.0-29-generic",
+          "system": "Linux"
+        },
+        "python": {
+          "executable": "python3",
+          "implementation": "CPython",
+          "version": "3.10.19"
+        },
+        "schema_version": "1",
+        "total_ram_bytes": 132559962112
+      },
+      "execution": {
+        "bytes_read": null,
+        "cache_state": "local-temporary-source",
+        "memory_budget": "1 GiB",
+        "network_context": null,
+        "partition_configuration": {
+          "output_chunks": [
+            128,
+            128
+          ],
+          "processing_shape": [
+            16,
+            256,
+            256
+          ]
+        },
+        "peak_rss_bytes": 259932160,
+        "task_count": 1,
+        "wall_time_seconds": 0.042951085000822786
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.042951085000822786,
+      "notes": [
+        "Peak RSS is the process high-water mark across all three methods.",
+        "This small local run assesses correctness and overhead, not remote I/O."
+      ],
+      "result": {
+        "checksum": "b803bf0f8bece28ba0591e80f8ab8967ddc060189a19bb1575f318084c3c2bc4",
+        "integrity_verified": true,
+        "numerical_validation": {
+          "atol": 0.0,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "repeatability": "deterministic seed; single run in this record",
+          "rtol": 0.0,
+          "valid": true
+        },
+        "output_bytes": 253067,
+        "resume": {
+          "exercised": false,
+          "resumed_partitions": 0
+        }
+      },
+      "schema_version": "2",
+      "source": {
+        "asset": "benchmark.nwb.zarr",
+        "dataset_identifier": "synthetic:normal-projection",
+        "dataset_version": "1",
+        "dtype": "float32",
+        "path": "/acquisition/movie",
+        "physical_chunk_shape": [
+          1,
+          256,
+          256
+        ],
+        "selected_bytes": 4194304,
+        "shape": [
+          16,
+          256,
+          256
+        ],
+        "total_logical_bytes": 4194304
+      },
+      "timestamp": "2026-08-20T20:47:19.167357+00:00",
+      "verified": true
+    },
+    {
+      "backend": "nwb-zarr",
+      "baselines": [
+        {
+          "cache_state": "in-memory-generated-input",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-numpy",
+          "version": "2.2.6",
+          "wall_time_seconds": 0.011471296005765907
+        },
+        {
+          "cache_state": "local-temporary-source",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-dask",
+          "version": null,
+          "wall_time_seconds": 0.11286282999935793
+        }
+      ],
+      "benchmark_name": "local-projection-correctness",
+      "benchmark_schema_version": "1",
+      "classification": "current",
+      "command": {
+        "frames": 16,
+        "height": 256,
+        "seed": 20260813,
+        "width": 256
+      },
+      "direct_dask_seconds": 0.11286282999935793,
+      "direct_numpy_seconds": 0.011471296005765907,
+      "environment": {
+        "cpu": {
+          "logical_count": 32,
+          "model": "AMD Ryzen 9 9950X 16-Core Processor"
+        },
+        "dependencies": {
+          "cellpose": "4.2.1.1",
+          "dask": "2026.7.1",
+          "distributed": "2026.7.1",
+          "fsspec": "2026.7.0",
+          "h5py": "3.16.0",
+          "hdmf-zarr": "0.13.0",
+          "lindi": "0.4.6",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pandas": "2.3.3",
+          "pyarrow": "25.0.0",
+          "pynapple": null,
+          "pynwb": "4.1.0",
+          "remfile": "0.1.14",
+          "s3fs": "2026.7.0",
+          "scipy": "1.15.3",
+          "xarray": "2025.6.1",
+          "zarr": "2.18.3"
+        },
+        "git": {
+          "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+          "dirty": true,
+          "source": "git"
+        },
+        "neuroflow_version": "0.1.0",
+        "platform": {
+          "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+          "machine": "x86_64",
+          "release": "7.0.0-29-generic",
+          "system": "Linux"
+        },
+        "python": {
+          "executable": "python3",
+          "implementation": "CPython",
+          "version": "3.10.19"
+        },
+        "schema_version": "1",
+        "total_ram_bytes": 132559962112
+      },
+      "execution": {
+        "bytes_read": null,
+        "cache_state": "local-temporary-source",
+        "memory_budget": "1 GiB",
+        "network_context": null,
+        "partition_configuration": {
+          "output_chunks": [
+            128,
+            128
+          ],
+          "processing_shape": [
+            16,
+            256,
+            256
+          ]
+        },
+        "peak_rss_bytes": 261496832,
+        "task_count": 1,
+        "wall_time_seconds": 0.04415840500587365
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.04415840500587365,
+      "notes": [
+        "Peak RSS is the process high-water mark across all three methods.",
+        "This small local run assesses correctness and overhead, not remote I/O."
+      ],
+      "result": {
+        "checksum": "b803bf0f8bece28ba0591e80f8ab8967ddc060189a19bb1575f318084c3c2bc4",
+        "integrity_verified": true,
+        "numerical_validation": {
+          "atol": 0.0,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "repeatability": "deterministic seed; single run in this record",
+          "rtol": 0.0,
+          "valid": true
+        },
+        "output_bytes": 253067,
+        "resume": {
+          "exercised": false,
+          "resumed_partitions": 0
+        }
+      },
+      "schema_version": "2",
+      "source": {
+        "asset": "benchmark.nwb.zarr",
+        "dataset_identifier": "synthetic:normal-projection",
+        "dataset_version": "1",
+        "dtype": "float32",
+        "path": "/acquisition/movie",
+        "physical_chunk_shape": [
+          1,
+          256,
+          256
+        ],
+        "selected_bytes": 4194304,
+        "shape": [
+          16,
+          256,
+          256
+        ],
+        "total_logical_bytes": 4194304
+      },
+      "timestamp": "2026-08-20T20:47:20.087776+00:00",
+      "verified": true
+    },
+    {
+      "backend": "nwb-zarr",
+      "baselines": [
+        {
+          "cache_state": "in-memory-generated-input",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-numpy",
+          "version": "2.2.6",
+          "wall_time_seconds": 0.04704602599667851
+        },
+        {
+          "cache_state": "local-temporary-source",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-dask",
+          "version": null,
+          "wall_time_seconds": 0.15236168199771782
+        }
+      ],
+      "benchmark_name": "local-projection-correctness",
+      "benchmark_schema_version": "1",
+      "classification": "current",
+      "command": {
+        "frames": 16,
+        "height": 512,
+        "seed": 20260813,
+        "width": 512
+      },
+      "direct_dask_seconds": 0.15236168199771782,
+      "direct_numpy_seconds": 0.04704602599667851,
+      "environment": {
+        "cpu": {
+          "logical_count": 32,
+          "model": "AMD Ryzen 9 9950X 16-Core Processor"
+        },
+        "dependencies": {
+          "cellpose": "4.2.1.1",
+          "dask": "2026.7.1",
+          "distributed": "2026.7.1",
+          "fsspec": "2026.7.0",
+          "h5py": "3.16.0",
+          "hdmf-zarr": "0.13.0",
+          "lindi": "0.4.6",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pandas": "2.3.3",
+          "pyarrow": "25.0.0",
+          "pynapple": null,
+          "pynwb": "4.1.0",
+          "remfile": "0.1.14",
+          "s3fs": "2026.7.0",
+          "scipy": "1.15.3",
+          "xarray": "2025.6.1",
+          "zarr": "2.18.3"
+        },
+        "git": {
+          "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+          "dirty": true,
+          "source": "git"
+        },
+        "neuroflow_version": "0.1.0",
+        "platform": {
+          "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+          "machine": "x86_64",
+          "release": "7.0.0-29-generic",
+          "system": "Linux"
+        },
+        "python": {
+          "executable": "python3",
+          "implementation": "CPython",
+          "version": "3.10.19"
+        },
+        "schema_version": "1",
+        "total_ram_bytes": 132559962112
+      },
+      "execution": {
+        "bytes_read": null,
+        "cache_state": "local-temporary-source",
+        "memory_budget": "1 GiB",
+        "network_context": null,
+        "partition_configuration": {
+          "output_chunks": [
+            128,
+            128
+          ],
+          "processing_shape": [
+            16,
+            512,
+            512
+          ]
+        },
+        "peak_rss_bytes": 384413696,
+        "task_count": 1,
+        "wall_time_seconds": 0.09048141299717827
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.09048141299717827,
+      "notes": [
+        "Peak RSS is the process high-water mark across all three methods.",
+        "This small local run assesses correctness and overhead, not remote I/O."
+      ],
+      "result": {
+        "checksum": "515f2b296f947ddb50e69a1a834e68f82156e2950aca12140b0c6bda6480b225",
+        "integrity_verified": true,
+        "numerical_validation": {
+          "atol": 0.0,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "repeatability": "deterministic seed; single run in this record",
+          "rtol": 0.0,
+          "valid": true
+        },
+        "output_bytes": 995861,
+        "resume": {
+          "exercised": false,
+          "resumed_partitions": 0
+        }
+      },
+      "schema_version": "2",
+      "source": {
+        "asset": "benchmark.nwb.zarr",
+        "dataset_identifier": "synthetic:normal-projection",
+        "dataset_version": "1",
+        "dtype": "float32",
+        "path": "/acquisition/movie",
+        "physical_chunk_shape": [
+          1,
+          512,
+          512
+        ],
+        "selected_bytes": 16777216,
+        "shape": [
+          16,
+          512,
+          512
+        ],
+        "total_logical_bytes": 16777216
+      },
+      "timestamp": "2026-08-20T20:47:21.177651+00:00",
+      "verified": true
+    },
+    {
+      "backend": "nwb-zarr",
+      "baselines": [
+        {
+          "cache_state": "in-memory-generated-input",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-numpy",
+          "version": "2.2.6",
+          "wall_time_seconds": 0.04678086200146936
+        },
+        {
+          "cache_state": "local-temporary-source",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-dask",
+          "version": null,
+          "wall_time_seconds": 0.1520472560005146
+        }
+      ],
+      "benchmark_name": "local-projection-correctness",
+      "benchmark_schema_version": "1",
+      "classification": "current",
+      "command": {
+        "frames": 16,
+        "height": 512,
+        "seed": 20260813,
+        "width": 512
+      },
+      "direct_dask_seconds": 0.1520472560005146,
+      "direct_numpy_seconds": 0.04678086200146936,
+      "environment": {
+        "cpu": {
+          "logical_count": 32,
+          "model": "AMD Ryzen 9 9950X 16-Core Processor"
+        },
+        "dependencies": {
+          "cellpose": "4.2.1.1",
+          "dask": "2026.7.1",
+          "distributed": "2026.7.1",
+          "fsspec": "2026.7.0",
+          "h5py": "3.16.0",
+          "hdmf-zarr": "0.13.0",
+          "lindi": "0.4.6",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pandas": "2.3.3",
+          "pyarrow": "25.0.0",
+          "pynapple": null,
+          "pynwb": "4.1.0",
+          "remfile": "0.1.14",
+          "s3fs": "2026.7.0",
+          "scipy": "1.15.3",
+          "xarray": "2025.6.1",
+          "zarr": "2.18.3"
+        },
+        "git": {
+          "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+          "dirty": true,
+          "source": "git"
+        },
+        "neuroflow_version": "0.1.0",
+        "platform": {
+          "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+          "machine": "x86_64",
+          "release": "7.0.0-29-generic",
+          "system": "Linux"
+        },
+        "python": {
+          "executable": "python3",
+          "implementation": "CPython",
+          "version": "3.10.19"
+        },
+        "schema_version": "1",
+        "total_ram_bytes": 132559962112
+      },
+      "execution": {
+        "bytes_read": null,
+        "cache_state": "local-temporary-source",
+        "memory_budget": "1 GiB",
+        "network_context": null,
+        "partition_configuration": {
+          "output_chunks": [
+            128,
+            128
+          ],
+          "processing_shape": [
+            16,
+            512,
+            512
+          ]
+        },
+        "peak_rss_bytes": 383164416,
+        "task_count": 1,
+        "wall_time_seconds": 0.0891790769965155
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.0891790769965155,
+      "notes": [
+        "Peak RSS is the process high-water mark across all three methods.",
+        "This small local run assesses correctness and overhead, not remote I/O."
+      ],
+      "result": {
+        "checksum": "515f2b296f947ddb50e69a1a834e68f82156e2950aca12140b0c6bda6480b225",
+        "integrity_verified": true,
+        "numerical_validation": {
+          "atol": 0.0,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "repeatability": "deterministic seed; single run in this record",
+          "rtol": 0.0,
+          "valid": true
+        },
+        "output_bytes": 995861,
+        "resume": {
+          "exercised": false,
+          "resumed_partitions": 0
+        }
+      },
+      "schema_version": "2",
+      "source": {
+        "asset": "benchmark.nwb.zarr",
+        "dataset_identifier": "synthetic:normal-projection",
+        "dataset_version": "1",
+        "dtype": "float32",
+        "path": "/acquisition/movie",
+        "physical_chunk_shape": [
+          1,
+          512,
+          512
+        ],
+        "selected_bytes": 16777216,
+        "shape": [
+          16,
+          512,
+          512
+        ],
+        "total_logical_bytes": 16777216
+      },
+      "timestamp": "2026-08-20T20:47:22.257281+00:00",
+      "verified": true
+    },
+    {
+      "backend": "nwb-zarr",
+      "baselines": [
+        {
+          "cache_state": "in-memory-generated-input",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-numpy",
+          "version": "2.2.6",
+          "wall_time_seconds": 0.047360461998323444
+        },
+        {
+          "cache_state": "local-temporary-source",
+          "maximum_absolute_error": 0.0,
+          "name": "direct-dask",
+          "version": null,
+          "wall_time_seconds": 0.1534373559989035
+        }
+      ],
+      "benchmark_name": "local-projection-correctness",
+      "benchmark_schema_version": "1",
+      "classification": "current",
+      "command": {
+        "frames": 16,
+        "height": 512,
+        "seed": 20260813,
+        "width": 512
+      },
+      "direct_dask_seconds": 0.1534373559989035,
+      "direct_numpy_seconds": 0.047360461998323444,
+      "environment": {
+        "cpu": {
+          "logical_count": 32,
+          "model": "AMD Ryzen 9 9950X 16-Core Processor"
+        },
+        "dependencies": {
+          "cellpose": "4.2.1.1",
+          "dask": "2026.7.1",
+          "distributed": "2026.7.1",
+          "fsspec": "2026.7.0",
+          "h5py": "3.16.0",
+          "hdmf-zarr": "0.13.0",
+          "lindi": "0.4.6",
+          "neuroflow": "0.1.0",
+          "numpy": "2.2.6",
+          "pandas": "2.3.3",
+          "pyarrow": "25.0.0",
+          "pynapple": null,
+          "pynwb": "4.1.0",
+          "remfile": "0.1.14",
+          "s3fs": "2026.7.0",
+          "scipy": "1.15.3",
+          "xarray": "2025.6.1",
+          "zarr": "2.18.3"
+        },
+        "git": {
+          "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+          "dirty": true,
+          "source": "git"
+        },
+        "neuroflow_version": "0.1.0",
+        "platform": {
+          "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+          "machine": "x86_64",
+          "release": "7.0.0-29-generic",
+          "system": "Linux"
+        },
+        "python": {
+          "executable": "python3",
+          "implementation": "CPython",
+          "version": "3.10.19"
+        },
+        "schema_version": "1",
+        "total_ram_bytes": 132559962112
+      },
+      "execution": {
+        "bytes_read": null,
+        "cache_state": "local-temporary-source",
+        "memory_budget": "1 GiB",
+        "network_context": null,
+        "partition_configuration": {
+          "output_chunks": [
+            128,
+            128
+          ],
+          "processing_shape": [
+            16,
+            512,
+            512
+          ]
+        },
+        "peak_rss_bytes": 382156800,
+        "task_count": 1,
+        "wall_time_seconds": 0.08756865599571029
+      },
+      "maximum_absolute_error": 0.0,
+      "neuroflow_seconds": 0.08756865599571029,
+      "notes": [
+        "Peak RSS is the process high-water mark across all three methods.",
+        "This small local run assesses correctness and overhead, not remote I/O."
+      ],
+      "result": {
+        "checksum": "515f2b296f947ddb50e69a1a834e68f82156e2950aca12140b0c6bda6480b225",
+        "integrity_verified": true,
+        "numerical_validation": {
+          "atol": 0.0,
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "repeatability": "deterministic seed; single run in this record",
+          "rtol": 0.0,
+          "valid": true
+        },
+        "output_bytes": 995861,
+        "resume": {
+          "exercised": false,
+          "resumed_partitions": 0
+        }
+      },
+      "schema_version": "2",
+      "source": {
+        "asset": "benchmark.nwb.zarr",
+        "dataset_identifier": "synthetic:normal-projection",
+        "dataset_version": "1",
+        "dtype": "float32",
+        "path": "/acquisition/movie",
+        "physical_chunk_shape": [
+          1,
+          512,
+          512
+        ],
+        "selected_bytes": 16777216,
+        "shape": [
+          16,
+          512,
+          512
+        ],
+        "total_logical_bytes": 16777216
+      },
+      "timestamp": "2026-08-20T20:47:23.372196+00:00",
+      "verified": true
+    }
+  ],
+  "suite_name": "synthetic-bounded-memory-scaling",
+  "suite_schema_version": "1",
+  "timestamp": "2026-08-20T20:47:23.547005+00:00"
+}

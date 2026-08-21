@@ -67,6 +67,22 @@ traces, a direct NumPy reference subset, integrity, and completed-result resume.
 trace workflow over the exact same masks. Both publication runners reject a
 dirty Git tree.
 
+`benchmark_lindi_equivalence` is the cheap transport-independence check. It
+persists the same NumPy temporal median over the same few frames and z-planes of
+the same asset through remfile and through LINDI, then compares the two reopened
+Zarr outputs for exact equality:
+
+```bash
+uv run python -m benchmarks.benchmark_lindi_equivalence \
+  --output-root /tmp/lindi-equivalence \
+  --record benchmarks/results/current-lindi-equivalence.json
+```
+
+Each backend gets its own subprocess so the peak RSS values are independent.
+`bytes_read` is measured for remfile and stays `null` for LINDI, which exposes
+no transport counter. The slice is small on purpose: this is an equivalence
+claim, not a throughput claim.
+
 `results/fish-case-study-2026-08-13.json` is explicitly historical because it
 predates the current engine. `results/local-summary.json` uses a legacy summary
 format. Neither is silently converted into publication evidence.

@@ -10,7 +10,7 @@
       "model": "AMD Ryzen 9 9950X 16-Core Processor"
     },
     "dependencies": {
-      "cellpose": null,
+      "cellpose": "4.2.1.1",
       "dask": "2026.7.1",
       "distributed": "2026.7.1",
       "fsspec": "2026.7.0",
@@ -18,19 +18,19 @@
       "hdmf-zarr": "0.13.0",
       "lindi": "0.4.6",
       "neuroflow": "0.1.0",
-      "numpy": "2.4.6",
-      "pandas": "3.0.5",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
       "pyarrow": "25.0.0",
       "pynapple": null,
       "pynwb": "4.1.0",
       "remfile": "0.1.14",
       "s3fs": "2026.7.0",
-      "scipy": "1.18.0",
-      "xarray": "2026.7.0",
-      "zarr": "2.18.7"
+      "scipy": "1.15.3",
+      "xarray": "2025.6.1",
+      "zarr": "2.18.3"
     },
     "git": {
-      "commit": "4b2a563fb3330521cae595e86e2844c654582011",
+      "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
       "dirty": true,
       "source": "git"
     },
@@ -42,9 +42,9 @@
       "system": "Linux"
     },
     "python": {
-      "executable": "python",
+      "executable": "python3",
       "implementation": "CPython",
-      "version": "3.12.3"
+      "version": "3.10.19"
     },
     "schema_version": "1",
     "total_ram_bytes": 132559962112
@@ -57,9 +57,9 @@
     "partition_configuration": {
       "time_window": 4
     },
-    "peak_rss_bytes": 231075840,
+    "peak_rss_bytes": 226373632,
     "task_count": 3,
-    "wall_time_seconds": 0.1037402750007459
+    "wall_time_seconds": 0.1466166259997408
   },
   "notes": [
     "The adapter intentionally raises on its second bounded call.",
@@ -74,7 +74,7 @@
       "rtol": 0.0,
       "valid": true
     },
-    "output_bytes": 10041,
+    "output_bytes": 10069,
     "resume": {
       "calls_during_resume": 2,
       "completed_before_interruption": 1,
@@ -103,5 +103,5 @@
     ],
     "total_logical_bytes": 3072
   },
-  "timestamp": "2026-08-20T19:21:23.897004+00:00"
+  "timestamp": "2026-08-20T20:47:29.749741+00:00"
 }

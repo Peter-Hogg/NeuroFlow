@@ -113,7 +113,10 @@ projection = np.median(movie[:50], axis="time").astype("float32").persist(
 masks = projection.cellpose(
     pretrained_model="cpsam",
     output="fish-cellpose.zarr",
-    memory_limit="2 GiB",
+    # Segmentation asks for more than the other stages because `memory_limit`
+    # is a total process target and one loaded `cpsam` network is ~1.9 GiB
+    # resident on CPU. Pass `gpu=True` to move the weights into VRAM instead.
+    memory_limit="4 GiB",
 )
 print(movie.plan_traces(masks, memory_limit="2 GiB").summary())
 traces = movie.extract_traces(
@@ -282,7 +285,7 @@ uv sync --extra cellpose
 labels = projection.cellpose(
     pretrained_model="cpsam",
     output="labels.zarr",
-    memory_limit="2 GiB",
+    memory_limit="4 GiB",
 )
 ```
 

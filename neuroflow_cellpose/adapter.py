@@ -21,6 +21,22 @@ from neuroflow.execution.resources import ResourceSpec
 
 _THREAD_STATE = threading.local()
 
+# Host resident-set cost of one loaded network, keyed by pretrained model and
+# then by whether it runs on GPU. Measured with
+# ``benchmarks/memory_attribution.py`` on this repository's pinned Cellpose
+# 4.2.1.1 / PyTorch 2.13 stack. For ``cpsam`` the CPU figure is steady-state
+# residency after construction (1872 MiB observed, rounded up); transient
+# checkpoint deserialisation peaks near 3 GiB. On CUDA the weights live in VRAM
+# and the host keeps a smaller staging copy (819 MiB observed).
+#
+# Figures are declared rather than measured at plan time because planning must
+# not require loading a model, and only models that have actually been measured
+# appear here. They are host-memory figures only: GPU VRAM is a separate
+# resource and is never folded into the host memory budget.
+MEASURED_MODEL_HOST_RESERVE_BYTES: dict[str, dict[bool, int]] = {
+    "cpsam": {False: 2048 * 1024 * 1024, True: 1024 * 1024 * 1024},
+}
+
 
 class _CellposeModel(Protocol):
     def eval(self, value: np.ndarray, **kwargs: object) -> object: ...
@@ -62,7 +78,9 @@ class CellposeAdapter:
     deterministic: bool = True
     random_seed: int | None = None
     cpu: int = 4
-    memory: str = "16 GiB"
+    # Per-task working set is derived from the tile geometry by
+    # ``estimate_task_memory``; no flat declaration is made here.
+    memory: str | None = None
 
     external_packages: tuple[str, ...] = ("cellpose",)
 
@@ -91,6 +109,34 @@ class CellposeAdapter:
             ),
             deterministic=self.deterministic,
         )
+
+    def estimate_task_memory(self, shape: tuple[int, ...]) -> int:
+        """Working-set bytes for one tile, excluding the loaded network.
+
+        Cellpose normalises the tile to float32 and holds flow, probability and
+        intermediate activation buffers alongside it. Evaluating one 888x2048
+        plane was measured to add roughly 105 MB on top of the loaded model, so
+        the activation allowance is set to 16x the float32 tile with a 64 MiB
+        floor for small tiles and fixed per-call overhead.
+        """
+        elements = 1
+        for size in shape:
+            elements *= max(1, int(size))
+        tile_bytes = elements * np.dtype("float32").itemsize
+        return 16 * tile_bytes + 64 * 1024 * 1024
+
+    def external_memory_reserve_bytes(self) -> int:
+        """Host bytes the loaded network occupies outside partition working sets.
+
+        Reported so a total process-memory target accounts for the model. VRAM
+        is deliberately excluded: it is a different resource and counting it
+        here would let a large GPU silently inflate a host-memory budget.
+
+        Models with no measurement in this repository report zero rather than a
+        guess, so their budgets cover only what NeuroFlow can actually estimate.
+        """
+        by_device = MEASURED_MODEL_HOST_RESERVE_BYTES.get(self.pretrained_model, {})
+        return by_device.get(bool(self.gpu), 0)
 
     def identity_parameters(self) -> Mapping[str, object]:
         return {

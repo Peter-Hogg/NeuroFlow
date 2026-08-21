@@ -10,6 +10,7 @@ import zarr
 import neuroflow
 from benchmarks import benchmark_fish_pipeline
 from neuroflow.source.array import ArraySource
+from neuroflow_cellpose import resolve_cellpose_device
 
 
 def _array(
@@ -108,6 +109,9 @@ def test_direct_cellpose_comparison_removes_partition_namespace(
             del kwargs
             return ((value > 0).astype(np.int32),)
 
+    # Resolve the device before faking importlib: the fake intercepts every
+    # import_module call, including the one that probes for torch.
+    device = resolve_cellpose_device("cpu")
     monkeypatch.setattr(
         benchmark_fish_pipeline.importlib,
         "import_module",
@@ -123,10 +127,14 @@ def test_direct_cellpose_comparison_removes_partition_namespace(
         projection,
         labels,
         model_name="test-model",
+        device=device,
     )
 
     assert result["valid"] is True
     assert result["mismatched_voxels"] == 0
     assert result["direct_object_count"] == 2
+    # The device the comparison ran on must be recorded, otherwise an
+    # equivalence claim cannot be tied to a specific execution path.
+    assert result["device"] == device.to_dict()
     labels.close()
     projection.close()

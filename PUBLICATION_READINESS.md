@@ -1,74 +1,392 @@
 # Publication readiness status
 
-Status date: 2026-08-20. This is an evidence ledger, not a claim that the
-release or manuscript is complete.
+Status date: 2026-08-21. This is an evidence ledger, not a claim that the
+release or manuscript is complete. Every number below is either quoted from a
+retained JSON record under `benchmarks/results/` or marked as not yet measured.
 
 ## Engineering outcome
 
-The release-candidate implementation now supports the intended north-star path:
+The release-candidate implementation supports the intended north-star path:
 
 ```text
 versioned remote DANDI NWB-HDF5
         → bounded NumPy temporal projection
-        → actual plane-wise Cellpose
+        → actual plane-wise Cellpose (CPU or CUDA)
         → source-chunk-aware whole-movie mean traces
         → verified, resumable (time, cell) Zarr output
 ```
 
-The same analysis semantics can run above remfile or the optional LINDI/PyNWB
-bridge. Trace planning reads only the compact labels, indexes masks by physical
-movie chunks, skips empty chunks, chooses a time window from a 2 GiB default
-policy, and reports estimated versus unknown quantities explicitly. Each time
-partition has a checksum manifest; execution attempts preserve their own wall
-time, transfer, RSS, computed, and resumed task counts.
+## What changed in this validation pass
 
-The repository also contains:
+### Memory-budget semantics (Priority 1)
 
-- an opt-in actual-Cellpose test comparing exact direct and NeuroFlow-mediated
-  labels on the same deterministic reference projection;
-- a flagship DANDI runner that repeats that direct comparison on every fish
-  projection plane, validates leading traces with direct NumPy, and exercises a
-  zero-recomputation completed-result resume;
-- a manual PyNWB + remfile/LINDI + Dask source-chunk trace baseline over the
-  exact same masks, with its missing resume/integrity/provenance features
-  represented honestly;
-- manual-only publication CI so large archive reads never run on pull requests.
+The development fish run was requested with `memory_limit="2 GiB"` and peaked at
+6,097,367,040 bytes of process RSS. The discrepancy was investigated rather than
+renamed.
 
-## Retained evidence
+- Added `benchmarks/memory_attribution.py`, which attributes resident set to
+  named components. Each component runs in a *fresh interpreter* so its cost is
+  isolated, and RSS is sampled before the probe releases anything.
+- `memory_limit` now means an **approximate total process-memory target** and
+  decomposes exactly as `total = process_overhead + task_working_set`. Process
+  overhead is charged **once**, not per task.
+- `neuroflow/array.py::compute()` previously compared its estimate against the
+  raw parsed limit, so the same keyword meant "total process target" on
+  `persist()` and "array data allowance" on `compute()`. It now uses the same
+  interpretation as `persist()`.
+- Third-party residency the planner does not itself allocate — a loaded
+  Cellpose/PyTorch network — is declared as an external reserve and charged
+  **per worker**, because adapters cache one model per worker thread.
+- `max_workers` is now treated as an **availability ceiling, not a demand.**
+  Concurrency is clamped to what the target affords, and the granted count is
+  recorded as `execution_policy.max_workers`. It previously raised
+  `max_workers=N exceeds the memory-safe limit of M`, which forced the caller to
+  hand-tune the very number the planner had already computed.
+- `cellpose()` gained its own default target (`DEFAULT_SEGMENT_MEMORY_LIMIT`,
+  4 GiB). Under the corrected accounting the inherited 2 GiB persist default was
+  consumed entirely by `cpsam` weights, so **the default segmentation call
+  refused itself before reading a pixel.** A single fish plane costs only
+  ~175 MiB to segment; the extra headroom is model residency, not partition size.
+- `docs/High_Level_API.md` said "per-task memory limit". It now documents the
+  total-process interpretation, the absence of an OS-level cap, and the
+  per-worker model reserve. `README.md` examples that requested 2 GiB for
+  `cpsam` segmentation were corrected to 4 GiB, because they would now raise.
 
-- The current-engine projection development run used
-  `DANDI:000350@0.240822.1759`, selected 50 frames (5,274,009,600 logical
-  bytes) from a 323,296,788,480-byte logical movie, transferred 2,594,344,287
-  observed response bytes, reached 1,648,193,536 bytes peak RSS, completed in
-  218.416 seconds, wrote 54,755,424 bytes, and passed integrity verification.
-- That record is deliberately classified `current`, not `publication`, because
-  its captured Git state is dirty and it lacks an independent numerical
-  reference.
-- Deterministic local trace tests compare exact results with direct NumPy,
-  including labels spanning chunks, empty-chunk skipping, resume, corruption
-  detection, and repair.
-- Fresh dirty-tree `current` records retain exact local projection agreement
-  with direct NumPy/Dask and a three-partition interruption/repair run in which
-  one completed partition survived interruption and one deliberately corrupted
-  partition alone was recomputed.
-- A real local LINDI 0.4.6 → PyNWB → lazy dataset slice test passes in the uv
-  environment. LINDI transfer counters remain unknown through this bridge.
+No OS-kill mechanism was added. The budget is a planning target; overrun is
+reported as a number rather than enforced by killing the process.
 
-## Gates still open
+### GPU-aware Cellpose (Priority 2)
 
-- Run the real Cellpose test with downloaded model weights and retain the clean
-  release-candidate job evidence.
-- Run the complete fish pipeline from a clean immutable commit. No full-movie
-  trace timing, transfer, peak RSS, object count, or biological result is
-  claimed until its JSON exists.
-- Run the LINDI/Dask baseline, and the remfile baseline if included in the paper.
-- Complete expert/manual soma-quality assessment or explicitly limit the paper
-  to software-path equivalence and fluorescence-trace production.
-- Select an OSI-approved license. BSD-3-Clause is documented as the current
-  recommendation, but this legal choice remains with the maintainer.
-- Confirm public CI and Docker, tag the exact experiment commit, archive it, and
-  add the assigned DOI/release date to metadata.
+`--cellpose-device {auto,cpu,cuda}` selects the device for the fish benchmark.
+`auto` uses CUDA when available and CPU otherwise, `cuda` fails loudly rather
+than degrading silently, and `cpu` is honoured even when a GPU is present. The
+device is resolved **once, before any download or segmentation**, and the same
+resolved object drives both the NeuroFlow-mediated run and the direct-Cellpose
+equivalence run. Selected device, GPU model, VRAM, CUDA version, PyTorch
+version, and Cellpose wall time are recorded.
+
+Note on provenance strength: the recorded `same_device_for_direct_comparison`
+flag compares the resolved device object with itself, so identical devices are
+*structurally guaranteed* by construction rather than independently verified.
+The guarantee is real; the flag is not an additional check.
+
+GPU VRAM is reported separately and is never counted against the host
+`memory_limit`.
+
+## Measured memory attribution
+
+From `benchmarks/results/current-memory-attribution.json`, on the fish geometry
+(888x2048 planes, 29 planes, 5,557 cells, 106-frame window). `rss_delta_bytes`
+is the increase caused by that component alone.
+
+| Component | Δ RSS (MiB) | Notes |
+| --- | --- | --- |
+| interpreter + numpy baseline | 0.0 (31.1 MiB peak) | floor of any CPython process |
+| `neuroflow` import chain | 164.9 | pulls dask, zarr, h5py, fsspec, pynwb |
+| dask runtime | 111.8 | lazy graph for 1,115 stacked keys, never computed |
+| remfile cache | 35.8 | 64 MiB configured ceiling; one native chunk read |
+| source partition array | 367.7 | one int16 (106, 888, 2048) window |
+| **temporary NumPy arrays** | **1,103.1** | int16 window + float32 cast + contiguous reshape copy |
+| ROI index / lookup state | 2.2 | 5,558 distinct labels, 29 ROI chunks |
+| trace accumulators | 6.9 | float64 sums + float32 output block |
+| output buffers | 12.0 | zarr group, one written window, one verification read |
+| torch import | 453.9 | before any model is constructed |
+| **Cellpose `cpsam` on CPU** | **1,874.2** | 3,212.6 MiB process peak; 1,218.5 MiB parameters |
+| Cellpose `cpsam` on CUDA | 818.8 host | 2,089.3 MiB process peak; 1,218.5 MiB moved to VRAM |
+
+Where the 6.1 GB came from: the planner's 2,129,931,384-byte per-task estimate
+was accurate **for the trace task in isolation**, but the benchmark runs
+projection, Cellpose, and traces in a *single process*. The trace working set
+therefore lands on top of a Cellpose-warm floor of roughly 3.2 GB, and torch
+plus the model stay resident after segmentation finishes. The un-modelled term
+was third-party model residency, which is exactly what the external reserve now
+charges. The declared overhead envelope is confirmed to be conservative against
+these measurements by a regression test.
+
+Declared reserves are honest envelopes over measurement, not round numbers:
+`cpsam` CPU declares 2,048 MiB against 1,874 MiB measured; CUDA declares
+1,024 MiB against 819 MiB measured.
+
+### Consequence for a laptop-scale target
+
+`memory_limit="2 GiB"` with `cpsam` on **CPU is now refused with guidance**,
+because one loaded network alone measures ~1.9 GiB resident and the target
+cannot be met by any process that has loaded it. The same target is accepted on
+**CUDA**, where ~1.2 GiB of weights live in VRAM instead of host RAM. This is a
+deliberate, reported refusal rather than a silent overrun.
+
+CUDA is also dramatically faster for this model: one 888x2048 `cpsam` evaluation
+took **66.14 s on CPU versus 2.03 s on CUDA (32.5x)**, at a measured VRAM peak
+of 2,452,524,032 bytes.
+
+## Resource scaling (Priority 5)
+
+Local synthetic movie, plane geometry matching the fish asset
+(888x2048 int16, one plane per source chunk). A local fixture is used
+deliberately: re-reading a 323 GB archive per scaling point would cost hours and
+add network variance to a measurement about memory. Each configuration runs in a
+fresh subprocess, because peak RSS is a high-water mark that cannot be reset
+in-process.
+
+### 192 frames — `benchmarks/results/current-resource-scaling-fits-2gib.json`
+
+All five requested configurations complete.
+
+| Target / workers | Granted | Window | Tasks | Planned task | Planned peak | **Measured peak** | vs target | Wall |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2 GiB / 1 | 1 | 88 | 3 | 1,584 MiB | 2,032 MiB | **2,062 MiB** | +14 MiB | 7.1 s |
+| 4 GiB / 1 | 1 | 192 | 1 | 3,388 MiB | 3,836 MiB | **2,908 MiB** | −1,188 MiB | 6.1 s |
+| 4 GiB / 2 | 2 | 192 | 1 | 3,388 MiB | 3,836 MiB | **2,294 MiB** | −1,802 MiB | 6.2 s |
+| 8 GiB / 2 | 2 | 192 | 1 | 3,388 MiB | 3,836 MiB | **2,294 MiB** | −5,898 MiB | 6.2 s |
+| 8 GiB / 4 | 4 | 192 | 1 | 3,388 MiB | 3,836 MiB | **2,294 MiB** | −5,898 MiB | 6.2 s |
+
+The headline result for Priority 1: a 2 GiB request produced a **2,062 MiB
+measured process peak, 0.7% above the stated target** — against 6,097 MiB for
+the same nominal request before this pass.
+
+### 384 frames — `benchmarks/results/current-resource-scaling.json`
+
+| Target / workers | Granted | Window | Tasks | Planned peak | **Measured peak** | vs target |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2 GiB / 1 | — | — | — | — | **refused** | one task needs 2,822,504,448 B > 1,677,721,600 B available |
+| 4 GiB / 1 | 1 | 206 | 2 | 4,079 MiB | **4,690 MiB** | **+594 MiB** |
+| 4 GiB / 2 | 1 | 206 | 2 | 4,079 MiB | **4,691 MiB** | **+595 MiB** |
+| 8 GiB / 2 | 2 | 384 | 1 | 7,168 MiB | **5,453 MiB** | −2,739 MiB |
+| 8 GiB / 4 | 2 | 384 | 1 | 7,168 MiB | **5,453 MiB** | −2,739 MiB |
+
+Two findings must be stated plainly rather than smoothed over:
+
+1. **The target is approximate and can be overrun.** At 4 GiB with a
+   budget-bound 206-frame window the process peaked 594 MiB (14.5%) *above* the
+   requested total. The overrun grows with window size, so the planner
+   under-models large transient allocations — plausibly the internal copy an
+   exact median requires. A 2 GiB request overran by only 0.7%. The target is
+   therefore honest at laptop scale and optimistic at large windows.
+2. **A 384-frame exact median cannot fit 2 GiB at this plane geometry**, and is
+   refused rather than attempted. With one native chunk per 888x2048 plane there
+   is no smaller spatial tile available, so the reduction axis cannot be
+   subdivided further. This is an algorithmic constraint of exact median on this
+   chunking, not a planner defect.
+
+Concurrency behaves as intended: with 64 workers declared available and only the
+target varied, granted concurrency rose 1 → 2 → 5 → 10 → 21 across 8 MiB →
+128 MiB, and no request was refused. Users state resources; the planner chooses.
+
+## Retained remfile evidence (Priority 6)
+
+`benchmarks/results/current-fish-soma-traces-remfile.json` is preserved and
+classified `current`, not `publication`, because it was produced from a dirty
+tree. It records `DANDI:000350@0.240822.1759`, the complete 323,296,788,480-byte
+logical movie, 230,300,224,863 observed response bytes, 29 projection and 29
+Cellpose tasks, 5,557 plane-local ROIs, a `(3065, 5557)` trace array,
+6,097,367,040 bytes peak RSS, 19,286.26 s wall time, verified output integrity,
+a zero-read resume (29 resumed, 0 computed tasks), and exact agreement with a
+direct plane-wise NumPy reference (maximum absolute and relative error 0.0).
+
+Direct Cellpose equivalence on that run was exact: 0 mismatched voxels across
+all 29 planes, 5,557 objects both ways, on CPU (`gpu: false`) in 1,917.80 s.
+
+The three Zarr stores plus that JSON are additionally copied to
+`publication/runs/_retained-remfile-dev-20260821/`, because
+`benchmark_fish_pipeline.py` writes `fish-projection.zarr`,
+`fish-cellpose.zarr`, and `fish-traces.zarr` under `--output-root` by default
+and any rerun would otherwise land on the retained development evidence. Large
+Zarr stores remain gitignored; the compact JSON records are tracked.
+
+## LINDI backend (Priority 3)
+
+Code path: `open_dandi(backend="lindi")` → `DandiNWBSource` → `NWBHDF5Source` →
+`_open_remote_file()` → `lindi.LindiH5pyFile.from_hdf5_file()`. Trace execution,
+adapters, storage, validation, and resume contain no transport-specific
+branches, and `neuroflow/workflow.py` restores the backend on resume. A real
+local LINDI 0.4.6 → PyNWB → lazy-slice test passes.
+
+**Remote transport equivalence measured** —
+`benchmarks/results/current-lindi-equivalence.json`
+(`benchmarks/benchmark_lindi_equivalence.py`). The same 8-frame, 2-plane slice
+of the real fish asset (z=14..15 of `DANDI:000350@0.240822.1759`) ran the same
+median projection once per transport, each in its own cold subprocess. **No
+source changes were required: LINDI worked through the existing backend
+abstraction as written.**
+
+- Outputs are **byte-identical**: equal SHA-256 checksums, elementwise equal,
+  maximum absolute and relative error 0.0, compared after reopening both stores
+  with partition-checksum verification rather than from in-process arrays.
+- Both transports produced the **same `workflow_id`**
+  (`594f8284…c17a77c0`), the same 2-task partitioning, the same output chunking,
+  and verified integrity — workflow identity is transport-independent by
+  construction.
+- remfile: 5.17 s wall (2.16 s open), 389 MiB peak RSS, 38,702,431 response
+  bytes over 37 HTTP responses.
+- LINDI: 18.94 s wall (**14.00 s of that opening the file**), 1,469 MiB peak
+  RSS, transferred bytes **unknown** — `LindiH5pyFile` exposes no byte counter,
+  and the record stores null rather than a false zero.
+- These numbers are per-transport overhead observations on a few native chunks,
+  not a throughput comparison; LINDI's higher open cost and resident set come
+  from building its reference index over a 323 GB remote HDF5 file.
+
+What this does **not** show: the full fish workflow (Cellpose + whole-movie
+traces) has not been run through LINDI. Transport independence is demonstrated
+for the projection stage on the real remote asset, not yet end to end.
+
+## Dask/LINDI baseline (Priority 4)
+
+`benchmarks/benchmark_fish_trace_baseline.py` implements the fair baseline:
+PyNWB + LINDI or remfile + Dask, consuming the **same retained Cellpose masks**
+via `--labels` rather than re-segmenting, and reporting its missing features
+honestly (`integrity_verified: false`, `resume.supported: false`, no manifests
+or provenance). Transfer counters are available for remfile via an HTTP byte
+counter and are recorded as unavailable for LINDI rather than as zero.
+
+The baseline's numerical core is now itself validated:
+`tests/test_benchmark_baselines.py::test_dask_trace_baseline_agrees_with_numpy_and_neuroflow`
+requires three independent computations of the same per-cell means to agree
+exactly — plain NumPy, the baseline's manual Dask chunk loop, and NeuroFlow's
+planned extraction — over identical labels on fish-like chunking, including a
+cell spanning two source chunks and an empty plane whose skip both sides must
+account for. Without this, the publication comparison could be measuring a
+baseline bug instead of a design difference.
+
+**The archive-scale baseline run has not been performed:** see "Open gates".
+
+## Cellpose biological quality
+
+Two claims must not be conflated:
+
+- **NeuroFlow ↔ direct Cellpose software equivalence: demonstrated.** Identical
+  masks, 0 mismatched voxels, same model, same settings, same device.
+- **Biological correctness of the masks: not demonstrated.** The retained
+  segmentation contains substantial false positives and missed somata. This is a
+  limitation of the segmentation model as applied, not of NeuroFlow's execution.
+  No biological validation is claimed.
+
+## Verification gates run in this pass
+
+Command | Result
+--- | ---
+`.venv/bin/python -m pytest -q` | **223 passed, 1 skipped**
+`.venv/bin/python -m ruff check .` | **All checks passed**
+`.venv/bin/python -m basedpyright` | **0 errors, 0 warnings, 0 notes**
+
+New regression tests added for the memory semantics: exact budget
+decomposition; monotonicity of task bytes in the target; unattainable-target
+reporting; per-worker model reserve; refusal with guidance when reserves consume
+the target; planned-versus-measured reporting; that the per-task estimate no
+longer double-counts process overhead; that `cpsam` on CPU cannot fit 2 GiB but
+can on GPU; that stated worker availability is **clamped and not refused**; that
+`compute()` bounds array data by task bytes rather than the headline total; that
+the declared overhead envelope still covers the recorded attribution
+measurements; and that the default segmentation limit admits the default model.
+A further test pins the fair baseline itself: its manual Dask chunk loop, plain
+NumPy, and NeuroFlow's extraction must produce exactly equal traces over
+identical labels.
+
+## Open gates
+
+1. **LINDI equivalence is measured for the projection stage only.** The remote
+   small-slice comparison is exact (see above), but no LINDI trace extraction or
+   full fish workflow has been compared against the remfile result. The
+   publication LINDI run in the command list below closes this.
+2. **The Dask/LINDI baseline has never been run.** The script exists; no record
+   exists. Numerical output, wall time, peak RSS, and bytes transferred are all
+   unmeasured, so no comparative performance claim is available.
+3. **The 4 GiB / 206-frame overrun is unexplained in detail.** The direction and
+   magnitude are measured; the specific unmodelled allocation is hypothesised,
+   not confirmed.
+4. **No clean-tree publication record exists** for any stage. Every retained
+   record is `current` with `git.dirty: true`.
+5. Naming caution, not an error: `benchmarks/results/current-scaling.json` is
+   the output of `benchmark_scaling.py` (suite
+   `synthetic-bounded-memory-scaling`, problem-size scaling), while the
+   resource matrix lives in `current-resource-scaling*.json` from
+   `benchmark_resource_scaling.py`. Cite the right file for each claim.
+6. Expert/manual soma-quality assessment is outstanding, or the paper must be
+   explicitly limited to software-path equivalence and trace production.
+7. An OSI-approved license must be selected. BSD-3-Clause remains the documented
+   recommendation; the choice is the maintainer's.
+8. Public CI and Docker confirmation, the tagged experiment commit, the archive,
+   and the assigned DOI/release date are outstanding.
 
 `python tools/check_release.py` checks automated repository invariants and
-prints these manual gates. `python tools/check_release.py --strict` remains
-nonzero until all externally controlled release gates are satisfied.
+prints the manual gates. `--strict` remains nonzero until the externally
+controlled gates are satisfied.
+
+## Exact commands for the clean final benchmark
+
+The publication benchmarks already refuse a dirty tree
+(`benchmark_fish_pipeline.py`, `benchmark_resource_scaling.py`, and
+`tools/check_release.py` all gate on `git.dirty is not False`). Run in order:
+
+```bash
+# 0. Gates must be green and the tree must be committed first.
+.venv/bin/python -m pytest -q
+.venv/bin/python -m ruff check .
+.venv/bin/python -m basedpyright
+git status --porcelain          # must print nothing
+git rev-parse HEAD              # record this commit in the manuscript
+
+# 1. Local correctness, resume, and integrity.
+.venv/bin/python benchmarks/benchmark_projection.py \
+    --record benchmarks/results/publication-local-projection.json \
+    --classification publication
+.venv/bin/python benchmarks/benchmark_resume_integrity.py \
+    --record benchmarks/results/publication-resume-integrity.json \
+    --classification publication
+
+# 2. Component memory attribution (add cuda probes on a GPU host).
+.venv/bin/python benchmarks/memory_attribution.py \
+    --record benchmarks/results/publication-memory-attribution.json
+
+# 3. Resource scaling, local fixture.
+.venv/bin/python benchmarks/benchmark_resource_scaling.py \
+    --fixture-root /tmp/nf-scaling --output-root /tmp/nf-scaling-out \
+    --frames 192 \
+    --record benchmarks/results/publication-resource-scaling.json \
+    --classification publication
+
+# 4. Archive-scale fish pipeline. THE EXPENSIVE RUN — hours, ~230 GB read.
+#    --output-root MUST NOT be publication/runs, which holds retained evidence.
+.venv/bin/python benchmarks/benchmark_fish_pipeline.py \
+    --output-root publication/runs-publication \
+    --record benchmarks/results/publication-fish-soma-traces-remfile.json \
+    --backend remfile --memory-limit "4 GiB" --cellpose-device auto \
+    --classification publication
+
+# 5. Same workflow over LINDI, for transport independence.
+.venv/bin/python benchmarks/benchmark_fish_pipeline.py \
+    --output-root publication/runs-publication-lindi \
+    --record benchmarks/results/publication-fish-soma-traces-lindi.json \
+    --backend lindi --memory-limit "4 GiB" --cellpose-device auto \
+    --classification publication
+
+# 6. Fair baseline over the retained masks from step 4.
+.venv/bin/python benchmarks/benchmark_fish_trace_baseline.py \
+    --labels publication/runs-publication/fish-cellpose.zarr \
+    --reference-traces publication/runs-publication/fish-traces.zarr \
+    --output /tmp/nf-baseline-traces.zarr \
+    --record benchmarks/results/publication-fish-lindi-dask-traces.json \
+    --backend lindi --classification publication
+```
+
+Note the memory limit in steps 4-5: `--memory-limit "2 GiB"` will be **refused**
+when segmentation runs `cpsam` on CPU, by design. Use 4 GiB, or keep 2 GiB with
+`--cellpose-device cuda` on a GPU host.
+
+## Manuscript claim classification
+
+| Claim | Status |
+| --- | --- |
+| Bounded, resumable, integrity-verified trace extraction from a versioned remote DANDI NWB-HDF5 asset without materializing the movie | **SUPPORTED** — retained fish record; verified checksum; 29-task zero-read resume |
+| NeuroFlow-mediated Cellpose is exactly equivalent to direct Cellpose on the same input, model, settings, and device | **SUPPORTED** — 0 mismatched voxels over 29 planes, 5,557 objects both ways |
+| Extracted traces match a direct NumPy reference | **SUPPORTED** — maximum absolute and relative error 0.0 on the validated frames |
+| Whole-process memory cost is attributable to named, separately measured components | **SUPPORTED** — twelve isolated component probes retained |
+| `memory_limit` is an approximate total process-memory target, not a per-task allowance | **SUPPORTED** — exact decomposition, documented, regression-tested |
+| A 2 GiB target yields substantially lower process RSS than before | **SUPPORTED** — 2,062 MiB measured versus 6,097 MiB for the same nominal request |
+| `memory_limit` is a reliable bound on process RSS | **PARTIALLY SUPPORTED** — 0.7% overrun at 2 GiB but 14.5% at 4 GiB with a large window; approximate, unenforced, and must be described as a target |
+| Users state resources and NeuroFlow chooses partitioning and concurrency without low-level knobs | **PARTIALLY SUPPORTED** — demonstrated locally on synthetic data (1→21 workers from the target alone); not yet demonstrated on the archive |
+| GPU execution is supported and reduces host memory and Cellpose time | **PARTIALLY SUPPORTED** — component-level measurement is strong (3.21→2.09 GB host, 66.14→2.03 s, 32.5x); no full GPU archive run exists |
+| Resource scaling behaviour across memory and worker configurations | **PARTIALLY SUPPORTED** — complete five-point local curve; no archive-scale curve |
+| Computation semantics are independent of transport (remfile vs LINDI) | **PARTIALLY SUPPORTED** — byte-identical remote projection (equal checksums, error 0.0, same workflow_id) on a small slice of the real asset; full fish workflow through LINDI awaits the publication run |
+| NeuroFlow compares favourably to a PyNWB + LINDI + Dask baseline | **NOT YET SUPPORTED** — the baseline's numerical core is locally validated against NumPy and NeuroFlow, but the archive-scale baseline has never been run; no comparative wall-time/RSS/transfer numbers exist |
+| Segmented somata are biologically correct | **NOT YET SUPPORTED** — substantial false positives and missed somata; explicitly not claimed |
+| Results were produced from an immutable, clean, archived commit | **NOT YET SUPPORTED** — every retained record has `git.dirty: true` |

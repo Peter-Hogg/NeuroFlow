@@ -81,7 +81,7 @@ remote array and pretend either behavior is equivalent to NumPy.
 ## Explicit execution boundaries
 
 `compute()` materializes an in-memory NumPy array and defaults to a conservative
-1 GiB working-memory estimate:
+1 GiB total process-memory target:
 
 ```python
 small = movie[:5, :128, :128].mean("time").compute()
@@ -91,15 +91,50 @@ Pass a different `memory_limit` explicitly when appropriate. The check happens
 before numerical I/O. `compute()` uses Dask's threaded scheduler so open HDF5
 handles are not sent to processes.
 
+### What `memory_limit` means
+
+`memory_limit` is an **approximate total process-memory target**, not a per-task
+allowance for array data. It is the number a laptop user means when they say
+"stay under 2 GiB". It decomposes as:
+
+```text
+memory_limit = process overhead + task working set
+```
+
+Process overhead is charged once, not per task. Its components are measured by
+`benchmarks/memory_attribution.py` and recorded in
+`benchmarks/results/current-memory-attribution.json`; the planner uses a
+rounded-up envelope over those measurements (448 MiB by default: interpreter and
+libraries, dask runtime, source read cache, output write buffers). Only the
+remainder bounds partition working sets, and concurrency is derived by dividing
+that remainder by the per-worker cost.
+
+Two consequences are worth stating plainly:
+
+- This is a **planning target, not an enforced ceiling.** NeuroFlow installs no
+  OS-level memory cap, because exceeding a target should surface as a reported
+  number rather than a killed process. Every run reports planned task memory
+  *and* measured process peak RSS so the two can be compared instead of
+  conflated.
+- Third-party residency the planner does not itself allocate — most importantly
+  a loaded Cellpose/PyTorch network — is declared through an external reserve
+  and charged **per worker**, since each worker holds its own cached copy. A
+  request that leaves nothing for partition data is refused with guidance rather
+  than silently overrunning. Segmenting with `cpsam` on CPU inside a 2 GiB total
+  target is refused for exactly this reason: the model alone measures ~1.9 GiB
+  resident. Running the same model on CUDA moves ~1.2 GiB of weights into VRAM
+  and makes the target feasible. GPU VRAM is reported separately and is never
+  counted against the host `memory_limit`.
+
 `persist()` is the normal boundary for large expressions and defaults to a
-conservative 2 GiB per-task memory limit. Pass `memory_limit=` explicitly when
-the workload needs a different bound. It:
+conservative 2 GiB total process-memory target. Pass `memory_limit=` explicitly
+when the workload needs a different bound. It:
 
 - keeps every reduction axis whole inside a task;
 - tiles retained axes using native chunks and requested output-chunk alignment;
 - fuses compatible elementwise work with the reduction;
 - rejects a task whose estimated input, outputs, intermediates, and exact
-  quantile workspace exceed the declared memory limit;
+  quantile workspace exceed the task working set the target allows;
 - writes each partition directly to Zarr;
 - prevents parallel partitions from sharing a writable Zarr chunk;
 - records the canonical expression, selected asset, absolute bounds, NumPy

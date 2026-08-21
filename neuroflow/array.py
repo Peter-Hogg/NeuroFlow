@@ -12,7 +12,7 @@ from numpy.lib.mixins import NDArrayOperatorsMixin
 
 from neuroflow.adapters import ArrayOutput, ExpressionAdapter
 from neuroflow.api import open_array, open_source, run
-from neuroflow.execution.resources import parse_bytes
+from neuroflow.execution.resources import resolve_memory_budget
 from neuroflow.expression import (
     SUPPORTED_UFUNCS,
     Casting,
@@ -41,6 +41,15 @@ if TYPE_CHECKING:
 
 DEFAULT_COMPUTE_MEMORY_LIMIT = "1 GiB"
 DEFAULT_PERSIST_MEMORY_LIMIT = "2 GiB"
+# Segmentation needs its own default because ``memory_limit`` is a *total*
+# process target and one loaded ``cpsam`` network measures ~1.9 GiB resident on
+# CPU (``benchmarks/results/current-memory-attribution.json``). The 2 GiB
+# persist default is therefore consumed entirely by model weights before any
+# image data is charged, and the default call would be refused. A single fish
+# plane costs only ~175 MiB to segment, so the extra headroom here is model
+# residency rather than partition size. Running on CUDA moves ~1.2 GiB into
+# VRAM and makes a smaller host target viable.
+DEFAULT_SEGMENT_MEMORY_LIMIT = "4 GiB"
 _UNSET = object()
 
 
@@ -510,12 +519,21 @@ class NeuroArray(NDArrayOperatorsMixin):
         """Explicitly materialize the expression after a conservative size check."""
         estimate = estimate_working_memory(self.expression)
         if memory_limit is not None:
-            budget = parse_bytes(memory_limit)
-            if estimate > budget:
+            # ``memory_limit`` means the same thing here as on ``persist()``: a
+            # total process-memory target, not an allowance for array data
+            # alone. The materialized result has to share the target with the
+            # interpreter, the imported library stack and the read cache, so the
+            # expression is checked against ``task_bytes`` rather than the
+            # headline total. Comparing against the total would let a 1 GiB
+            # request peak near 1.5 GiB of resident set.
+            budget = resolve_memory_budget(memory_limit)
+            if estimate > budget.task_bytes:
                 raise ValueError(
                     f"expression requires an estimated {estimate} bytes, exceeding "
-                    f"the {budget}-byte compute memory limit; use .persist() for a "
-                    "bounded durable result"
+                    f"the {budget.task_bytes} bytes available for array data under "
+                    f"a {budget.total_bytes}-byte total process-memory target "
+                    f"({budget.reserved_bytes} bytes are committed to process "
+                    "overhead); use .persist() for a bounded durable result"
                 )
         if max_workers is not None and max_workers < 1:
             raise ValueError("max_workers must be positive")
@@ -720,7 +738,7 @@ class NeuroArray(NDArrayOperatorsMixin):
         *,
         output: str | Path,
         pretrained_model: str = "cpsam",
-        memory_limit: int | str = DEFAULT_PERSIST_MEMORY_LIMIT,
+        memory_limit: int | str = DEFAULT_SEGMENT_MEMORY_LIMIT,
         max_workers: int = 1,
         **model_settings: object,
     ) -> NeuroArray:
@@ -735,10 +753,11 @@ class NeuroArray(NDArrayOperatorsMixin):
         if not isinstance(self.expression, InputExpr):
             raise ValueError("persist the projection before Cellpose segmentation")
         settings = dict(model_settings)
-        settings.setdefault(
-            "memory",
-            memory_limit if isinstance(memory_limit, str) else f"{memory_limit} B",
-        )
+        # The adapter's declared per-task memory is deliberately *not* set from
+        # ``memory_limit``. Echoing the user's own number back would make the
+        # budget check circular: any limit would appear to be satisfied. The
+        # adapter declares its real per-plane cost, and its model residency is
+        # reported separately via ``external_memory_reserve_bytes()``.
         if "z" in self.axes:
             z_axis = self.axes.index("z")
             settings.setdefault("squeeze_singleton_axis", z_axis)

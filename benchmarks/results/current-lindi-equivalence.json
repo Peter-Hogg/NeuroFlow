@@ -1,0 +1,327 @@
+{
+  "backend": "nwb-hdf5 remfile vs lindi",
+  "baselines": [],
+  "benchmark_name": "dandi-fish-transport-equivalence",
+  "benchmark_schema_version": "1",
+  "classification": "current",
+  "environment": {
+    "cpu": {
+      "logical_count": 32,
+      "model": "AMD Ryzen 9 9950X 16-Core Processor"
+    },
+    "dependencies": {
+      "cellpose": "4.2.1.1",
+      "dask": "2026.7.1",
+      "distributed": "2026.7.1",
+      "fsspec": "2026.7.0",
+      "h5py": "3.16.0",
+      "hdmf-zarr": "0.13.0",
+      "lindi": "0.4.6",
+      "neuroflow": "0.1.0",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "pyarrow": "25.0.0",
+      "pynapple": null,
+      "pynwb": "4.1.0",
+      "remfile": "0.1.14",
+      "s3fs": "2026.7.0",
+      "scipy": "1.15.3",
+      "xarray": "2025.6.1",
+      "zarr": "2.18.3"
+    },
+    "git": {
+      "commit": "20d7e752a754f032192ded00c6d787e935eb906d",
+      "dirty": true,
+      "source": "git"
+    },
+    "neuroflow_version": "0.1.0",
+    "platform": {
+      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "release": "7.0.0-29-generic",
+      "system": "Linux"
+    },
+    "python": {
+      "executable": "python",
+      "implementation": "CPython",
+      "version": "3.10.19"
+    },
+    "schema_version": "1",
+    "total_ram_bytes": 132559962112
+  },
+  "execution": {
+    "bytes_read": null,
+    "cache_state": "cold per backend, fresh subprocess each; remfile block 262144 B, cache 64 MiB; LINDI manages its own remote access",
+    "independent_process_per_backend": true,
+    "memory_budget": "2 GiB",
+    "network_context": "public DANDI HTTPS; runner location is external",
+    "partition_configuration": {
+      "identical_across_backends": {
+        "dtype": true,
+        "native_chunks": true,
+        "output_axes": true,
+        "output_shape": true,
+        "processing_partition_shape": true,
+        "selected_shape": true,
+        "task_count": true
+      },
+      "output_chunks": [
+        256,
+        256,
+        1
+      ],
+      "processing_shape": [
+        8,
+        888,
+        2048,
+        1
+      ]
+    },
+    "peak_rss_bytes": 1468796928,
+    "per_backend": [
+      {
+        "backend": "remfile",
+        "bytes_read": 38702431,
+        "bytes_read_status": "counted from HTTP Content-Length headers",
+        "dtype": "int16",
+        "estimated_total_bytes_read": 58195968,
+        "execution_metrics": {
+          "bytes_read": 38702431,
+          "bytes_read_status": "measured",
+          "completed_task_count": 2,
+          "computed_task_count": 2,
+          "execution_finished": "2026-08-21T16:07:13.019230+00:00",
+          "execution_started": "2026-08-21T16:07:10.029756+00:00",
+          "integrity_verification": {
+            "checksums": "not-run-during-finalization",
+            "manifests": "valid",
+            "status": "measured"
+          },
+          "output_bytes": 14548992,
+          "partitions_completed": 2,
+          "peak_rss_bytes": 389238784,
+          "resumed_task_count": 0,
+          "schema_version": "1",
+          "stages": [],
+          "wall_time_seconds": 2.989474
+        },
+        "http_responses": 37,
+        "integrity_verified": true,
+        "io_stats": {
+          "backend": "remfile",
+          "http_responses": 37,
+          "response_content_bytes": 38702431
+        },
+        "native_chunks": [
+          1,
+          888,
+          2048,
+          1
+        ],
+        "open_seconds": 2.1603210409957683,
+        "output": "/tmp/claude-1000/-home-peter-Code-transfer/e2c6bd59-66e8-41a4-b4af-f6af918e4c0b/scratchpad/lindi/run/lindi-equivalence-remfile-t8-z14n2.zarr",
+        "output_axes": [
+          "y",
+          "x",
+          "z"
+        ],
+        "output_bytes": 4507084,
+        "output_chunks": [
+          256,
+          256,
+          1
+        ],
+        "output_shape": [
+          888,
+          2048,
+          2
+        ],
+        "peak_rss_bytes": 389238784,
+        "persist_seconds": 2.993550890998449,
+        "processing_partition_shape": [
+          8,
+          888,
+          2048,
+          1
+        ],
+        "selected_bytes": 58195968,
+        "selected_dtype": "int16",
+        "selected_shape": [
+          8,
+          888,
+          2048,
+          2
+        ],
+        "status": "measured",
+        "task_count": 2,
+        "transport": "remfile",
+        "wall_time_seconds": 5.167447468993487,
+        "workflow_id": "594f82843a137fd87f794d2a8699aa7d3b74352cab36873fbe193282c17a77c0"
+      },
+      {
+        "backend": "lindi",
+        "bytes_read": null,
+        "bytes_read_status": "unknown: this transport exposes no byte counter",
+        "dtype": "int16",
+        "estimated_total_bytes_read": 58195968,
+        "execution_metrics": {
+          "bytes_read": null,
+          "bytes_read_status": "unknown",
+          "completed_task_count": 2,
+          "computed_task_count": 2,
+          "execution_finished": "2026-08-21T16:07:32.677629+00:00",
+          "execution_started": "2026-08-21T16:07:27.755571+00:00",
+          "integrity_verification": {
+            "checksums": "not-run-during-finalization",
+            "manifests": "valid",
+            "status": "measured"
+          },
+          "output_bytes": 14548992,
+          "partitions_completed": 2,
+          "peak_rss_bytes": 1468796928,
+          "resumed_task_count": 0,
+          "schema_version": "1",
+          "stages": [],
+          "wall_time_seconds": 4.922058
+        },
+        "http_responses": null,
+        "integrity_verified": true,
+        "io_stats": {
+          "backend": "lindi",
+          "http_responses": null,
+          "response_content_bytes": null
+        },
+        "native_chunks": [
+          1,
+          888,
+          2048,
+          1
+        ],
+        "open_seconds": 13.998280593004893,
+        "output": "/tmp/claude-1000/-home-peter-Code-transfer/e2c6bd59-66e8-41a4-b4af-f6af918e4c0b/scratchpad/lindi/run/lindi-equivalence-lindi-t8-z14n2.zarr",
+        "output_axes": [
+          "y",
+          "x",
+          "z"
+        ],
+        "output_bytes": 4507066,
+        "output_chunks": [
+          256,
+          256,
+          1
+        ],
+        "output_shape": [
+          888,
+          2048,
+          2
+        ],
+        "peak_rss_bytes": 1468796928,
+        "persist_seconds": 4.925827769009629,
+        "processing_partition_shape": [
+          8,
+          888,
+          2048,
+          1
+        ],
+        "selected_bytes": 58195968,
+        "selected_dtype": "int16",
+        "selected_shape": [
+          8,
+          888,
+          2048,
+          2
+        ],
+        "status": "measured",
+        "task_count": 2,
+        "transport": "lindi",
+        "wall_time_seconds": 18.941641072000493,
+        "workflow_id": "594f82843a137fd87f794d2a8699aa7d3b74352cab36873fbe193282c17a77c0"
+      }
+    ],
+    "task_count": 2,
+    "wall_time_seconds": 25.81555849198776
+  },
+  "notes": [
+    "Only the HDF5 transport differs; the selection, the NumPy expression, the output chunking, and the memory budget are shared.",
+    "Outputs are compared after reopening them with partition-checksum verification, not from in-process arrays.",
+    "bytes_read is measured for remfile from HTTP Content-Length headers and is null for LINDI, which exposes no transport counter through LindiH5pyFile; a zero there would be a false measurement.",
+    "Peak RSS is a whole-process high-water mark for each backend's own subprocess, so the two values are independent.",
+    "Wall time here is dominated by remote latency on a few native chunks and is not a throughput comparison.",
+    "The outputs live under a scratch directory; publication run stores are never written by this benchmark."
+  ],
+  "result": {
+    "checksum": {
+      "lindi": "9e40331ff70688952f7c18ef7be75fe9e35d6527e873cf3052c792c3cb4ce9c8",
+      "remfile": "9e40331ff70688952f7c18ef7be75fe9e35d6527e873cf3052c792c3cb4ce9c8"
+    },
+    "integrity_verified": true,
+    "numerical_validation": {
+      "atol": 0.0,
+      "checksums": {
+        "lindi": "9e40331ff70688952f7c18ef7be75fe9e35d6527e873cf3052c792c3cb4ce9c8",
+        "remfile": "9e40331ff70688952f7c18ef7be75fe9e35d6527e873cf3052c792c3cb4ce9c8"
+      },
+      "comparison": "identical slice, identical expression, differing transport",
+      "dtype": "float32",
+      "pairs": [
+        {
+          "checksums_equal": true,
+          "dtype_agreement": true,
+          "elementwise_equal": true,
+          "left": "lindi",
+          "maximum_absolute_error": 0.0,
+          "maximum_relative_error": 0.0,
+          "right": "remfile",
+          "shape_agreement": true
+        }
+      ],
+      "repeatability": "median of integers is deterministic; single run per backend",
+      "rtol": 0.0,
+      "shape": [
+        888,
+        2048,
+        2
+      ],
+      "valid": true
+    },
+    "output_bytes": 9014150,
+    "resume": {
+      "exercised": false,
+      "supported": true
+    }
+  },
+  "source": {
+    "asset": "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb",
+    "asset_id": "4f898ff7-6084-4e84-a449-f05811c1d951",
+    "dataset_identifier": "DANDI:000350",
+    "dataset_version": "0.240822.1759",
+    "dtype": "int16",
+    "path": "/acquisition/NeuronOnePhotonSeries",
+    "physical_chunk_shape": [
+      1,
+      888,
+      2048,
+      1
+    ],
+    "selected_bytes": 58195968,
+    "selected_shape": [
+      8,
+      888,
+      2048,
+      2
+    ],
+    "selection": {
+      "frames": 8,
+      "planes": 2,
+      "z_start": 14
+    },
+    "shape": [
+      3065,
+      888,
+      2048,
+      29
+    ],
+    "total_logical_bytes": 323296788480
+  },
+  "timestamp": "2026-08-21T16:07:33.146767+00:00"
+}

@@ -30,6 +30,11 @@ from examples.dandi_fish_projection import (
 from neuroflow.benchmarking import benchmark_record, write_benchmark_record
 from neuroflow.provenance import capture_environment
 from neuroflow.selection import NWBQuery
+from neuroflow_cellpose import (
+    DEVICE_CHOICES,
+    CellposeDevice,
+    resolve_cellpose_device,
+)
 
 CELLPOSE_EVAL_SETTINGS: dict[str, object] = {
     "batch_size": 1,
@@ -65,14 +70,20 @@ def _direct_cellpose_equivalence(
     labels: neuroflow.NeuroArray,
     *,
     model_name: str,
+    device: CellposeDevice,
 ) -> dict[str, object]:
-    """Run Cellpose directly on every persisted projection plane."""
+    """Run Cellpose directly on every persisted projection plane.
+
+    ``device`` is the same resolved device the NeuroFlow-mediated run used.
+    Comparing masks produced on different devices would test nothing useful,
+    because CPU and GPU kernels are not required to be bit-identical.
+    """
     models = importlib.import_module("cellpose.models")
     model_type = getattr(models, "CellposeModel", None)
     if model_type is None:
         raise RuntimeError("installed Cellpose has no CellposeModel API")
     model = model_type(
-        gpu=False,
+        gpu=device.gpu,
         pretrained_model=model_name,
         use_bfloat16=False,
     )
@@ -111,6 +122,7 @@ def _direct_cellpose_equivalence(
         "cellpose_version": importlib.metadata.version("cellpose"),
         "model": model_name,
         "settings": CELLPOSE_EVAL_SETTINGS,
+        "device": device.to_dict(),
     }
 
 
@@ -206,6 +218,15 @@ def main() -> None:
     parser.add_argument("--validation-frames", type=int, default=1)
     parser.add_argument("--cellpose-model", default="cpsam")
     parser.add_argument(
+        "--cellpose-device",
+        choices=DEVICE_CHOICES,
+        default="auto",
+        help=(
+            "device for both the NeuroFlow-mediated and the direct Cellpose "
+            "run; 'auto' uses CUDA when available and CPU otherwise"
+        ),
+    )
+    parser.add_argument(
         "--classification", choices=("current", "publication"), default="current"
     )
     args = parser.parse_args()
@@ -217,6 +238,12 @@ def main() -> None:
         parser.error("--projection-frames must be between 1 and 50")
     if not 1 <= args.validation_frames <= MOVIE_SHAPE[0]:
         parser.error("--validation-frames is outside the movie")
+    # Resolve the device before any download or segmentation so an unsatisfiable
+    # request fails in a second rather than after hours of remote reads.
+    try:
+        cellpose_device = resolve_cellpose_device(args.cellpose_device)
+    except RuntimeError as exc:
+        parser.error(str(exc))
 
     root = args.output_root
     root.mkdir(parents=True, exist_ok=True)
@@ -244,12 +271,13 @@ def main() -> None:
     try:
         projection_source, projection_selection = neuroflow.open_array(projection_path)
         projection = neuroflow.NeuroArray(projection_source, projection_selection)
+        cellpose_started = time.perf_counter()
         labels = projection.cellpose(
             pretrained_model=args.cellpose_model,
             output=segmentation_path,
             memory_limit=args.memory_limit,
             max_workers=1,
-            gpu=False,
+            gpu=cellpose_device.gpu,
             use_bfloat16=False,
             batch_size=1,
         )
@@ -257,12 +285,14 @@ def main() -> None:
         assert segmentation is not None
         if not segmentation.verify().valid:
             raise RuntimeError("Cellpose segmentation failed integrity verification")
+        cellpose_seconds = time.perf_counter() - cellpose_started
         object_table = segmentation.tables["objects"].as_dask_dataframe().compute()
         segmentation_provenance = segmentation.provenance or {}
         direct_cellpose = _direct_cellpose_equivalence(
             projection,
             labels,
             model_name=args.cellpose_model,
+            device=cellpose_device,
         )
         if not direct_cellpose["valid"]:
             raise RuntimeError("NeuroFlow-mediated Cellpose labels differ from direct")
@@ -420,7 +450,17 @@ def main() -> None:
                 "pipeline_schema_version": "1",
                 "policy": {
                     "memory_limit": args.memory_limit,
-                    "normal_user_overrides": ["backend", "memory_limit"],
+                    "normal_user_overrides": [
+                        "backend",
+                        "memory_limit",
+                        "cellpose_device",
+                    ],
+                },
+                "compute_device": {
+                    "cellpose": cellpose_device.to_dict(),
+                    "same_device_for_direct_comparison": (
+                        direct_cellpose["device"] == cellpose_device.to_dict()
+                    ),
                 },
                 "stages": {
                     "projection": {
@@ -439,6 +479,8 @@ def main() -> None:
                         ),
                         "cellpose_version": importlib.metadata.version("cellpose"),
                         "model": args.cellpose_model,
+                        "device": cellpose_device.to_dict(),
+                        "wall_time_seconds": cellpose_seconds,
                         "parameters": segmentation_provenance.get("parameters"),
                         "object_count": int(len(object_table)),
                         "output_checksum": segmentation_provenance.get(

@@ -260,21 +260,30 @@ def test_numpy_like_neuroarray_median(
     movie.close()
 
 
-def test_workflow_memory_limit_rejects_unsafe_concurrency(
+def test_workflow_memory_limit_clamps_unsafe_concurrency(
     nwb_zarr: tuple[Path, np.ndarray], tmp_path: Path
 ) -> None:
+    """Stated worker availability is reduced to fit, not rejected.
+
+    ``max_workers`` describes the resources the caller has, so a request the
+    memory target cannot afford is clamped and the granted count recorded.
+    Refusing instead would make the caller hand-tune the very number the
+    planner just derived.
+    """
     source = neuroflow.open_source(nwb_zarr[0])
     movie = source.select(NWBQuery(name="movie"))
-    with pytest.raises(ValueError, match="memory-safe"):
-        neuroflow.run(
-            source=source,
-            selection=movie,
-            adapter=_adapter(lambda value: value),
-            partition=TimeWindowPlan(size=5),
-            output=ZarrOutput(str(tmp_path / "memory.zarr")),
-            max_workers=2,
-            memory_limit=300,
-        )
+    result = neuroflow.run(
+        source=source,
+        selection=movie,
+        adapter=_adapter(lambda value: value),
+        partition=TimeWindowPlan(size=5),
+        output=ZarrOutput(str(tmp_path / "memory.zarr")),
+        max_workers=2,
+        # A 600-byte total target tapers to 300 bytes of task memory, which
+        # fits one 240-byte task but not two concurrent ones.
+        memory_limit=600,
+    )
+    assert result.max_workers == 1
     source.close()
 
 

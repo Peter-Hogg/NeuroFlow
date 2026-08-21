@@ -29,7 +29,7 @@ from neuroflow.exceptions import (
     UnsupportedBackendError,
 )
 from neuroflow.execution.graph import build_plan
-from neuroflow.execution.resources import parse_bytes
+from neuroflow.execution.resources import parse_bytes, resolve_memory_budget
 from neuroflow.execution.stages import build_reduction_stage_plans
 from neuroflow.results.workflow import PersistedResult, WorkflowResult
 from neuroflow.source.array import ArraySource
@@ -132,6 +132,25 @@ def plan(
     )
 
 
+def _adapter_external_reserve_bytes(adapter: AnalysisAdapter) -> int:
+    """Bytes an adapter needs resident but does not allocate per partition.
+
+    Adapters that load a large third-party model may implement
+    ``external_memory_reserve_bytes()``. The value is subtracted from the total
+    process-memory target so that a budget which cannot physically hold the
+    model is refused with an explanation instead of appearing to succeed.
+    """
+    hook = getattr(adapter, "external_memory_reserve_bytes", None)
+    if not callable(hook):
+        return 0
+    value = hook()
+    if not isinstance(value, int) or value < 0:
+        raise TypeError(
+            "external_memory_reserve_bytes() must return a non-negative integer"
+        )
+    return value
+
+
 def run(
     *,
     source: NWBSource,
@@ -168,23 +187,48 @@ def run(
     if max_workers is not None and max_workers < 1:
         raise ValueError("max_workers must be positive")
     if memory_limit is not None:
-        budget = parse_bytes(memory_limit)
+        # ``memory_limit`` is a total process-memory target, so the bytes
+        # available for concurrent task working sets are what remains after the
+        # process floor.
+        budget = resolve_memory_budget(memory_limit)
+        # Any residency the adapter declares but does not allocate per
+        # partition -- a loaded Cellpose network, for instance -- is charged
+        # *per worker*, not once. Adapters cache such models in thread-local
+        # state, so N concurrent workers hold N copies; subtracting a single
+        # copy from the target would understate concurrent runs by a factor of
+        # N and let a large worker count silently exceed the budget.
+        reserve = _adapter_external_reserve_bytes(adapter)
         declared = execution_plan.resources.memory
-        per_worker = max(
-            execution_plan.memory_per_task,
-            parse_bytes(declared) if declared is not None else 0,
+        per_worker = (
+            max(
+                execution_plan.memory_per_task,
+                parse_bytes(declared) if declared is not None else 0,
+            )
+            + reserve
         )
-        if per_worker > budget:
+        if per_worker > budget.task_bytes:
             raise ValueError(
-                f"one task requires an estimated {per_worker} bytes, exceeding "
-                f"the {budget}-byte workflow memory limit"
+                f"one task requires an estimated {per_worker} bytes"
+                + (
+                    f" (including {reserve} bytes of declared per-worker model "
+                    "residency)"
+                    if reserve
+                    else ""
+                )
+                + f", exceeding the {budget.task_bytes} bytes available for "
+                f"tasks under a {budget.total_bytes}-byte total process-memory "
+                f"target ({budget.process_overhead_bytes} bytes of process "
+                "overhead)"
             )
-        safe_workers = max(1, budget // max(per_worker, 1))
-        if max_workers is not None and max_workers > safe_workers:
-            raise ValueError(
-                f"max_workers={max_workers} exceeds the memory-safe limit "
-                f"of {safe_workers}"
-            )
+        safe_workers = max(1, budget.task_bytes // max(per_worker, 1))
+        # ``max_workers`` is an availability ceiling, not a demand. The contract
+        # is that a user states the resources they have and the planner picks
+        # partitioning and concurrency to fit; refusing the call would push them
+        # back to hand-tuning a low-level knob to rediscover a number the
+        # planner already computed. Concurrency is therefore clamped down to
+        # what the memory target affords rather than rejected. The clamp is not
+        # silent: the granted count is recorded as ``execution.max_workers`` in
+        # provenance, so a reduced run stays auditable after the fact.
         available_workers = max(1, os.cpu_count() or 1)
         max_workers = int(
             min(max_workers or available_workers, safe_workers, available_workers)

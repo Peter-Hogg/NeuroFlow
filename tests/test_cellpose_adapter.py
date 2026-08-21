@@ -193,11 +193,11 @@ def test_cellpose_can_process_a_rank_preserving_single_plane(
         CellposeAdapter(
             pretrained_model="fake",
             squeeze_singleton_axis=2,
-            memory="1 GiB",
         ),
         output=tmp_path / "plane-labels",
         tile_shape=(1,),
         axes=("z",),
+        max_workers=1,
         memory_limit="1 GiB",
     )
 

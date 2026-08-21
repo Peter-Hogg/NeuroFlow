@@ -31,3 +31,10 @@ venv/
 .ipynb_checkpoints/
 examples/_output/
 publication/runs/
+
+# Ad-hoc local inspection scripts for the retained fish run. Kept out of the
+# tree rather than packaged: they need matplotlib/napari, which are not project
+# dependencies, and interactive viewers are outside the release scope. Remove
+# these entries if either script is ever promoted to a supported example.
+/fish_traces_postrun.py
+/view_fish_labels.py

@@ -104,8 +104,12 @@ def write_json_atomic(uri: str, value: Mapping[str, object]) -> None:
     try:
         with fs.open(temporary, "wb") as stream:
             stream.write(payload)
-        if fs.exists(path):
-            fs.rm(path)
+        # Move straight onto the destination. Removing the destination first
+        # opened a window in which the manifest did not exist at all: a
+        # concurrent reader raised FileNotFoundError between its existence
+        # check and its open, and a crash inside the window destroyed a
+        # completed partition's only record. A rename over an existing file is
+        # already atomic on POSIX, so the delete could only ever weaken this.
         fs.mv(temporary, path)
     finally:
         if fs.exists(temporary):

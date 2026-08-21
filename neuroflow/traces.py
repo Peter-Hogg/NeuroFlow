@@ -18,7 +18,11 @@ import zarr
 
 from neuroflow.array import NeuroArray
 from neuroflow.exceptions import OutputConflictError, ProvenanceMismatchError
-from neuroflow.execution.resources import parse_bytes
+from neuroflow.execution.resources import (
+    MemoryBudget,
+    parse_bytes,
+    resolve_memory_budget,
+)
 from neuroflow.partition.base import Partition
 from neuroflow.provenance.environment import capture_environment
 from neuroflow.provenance.hashing import stable_hash
@@ -66,6 +70,7 @@ class TracePlan:
     automatic_time_chunk: bool
     task_count: int
     memory_limit_bytes: int
+    memory_budget: MemoryBudget
     estimated_memory_per_task: int
     estimated_source_chunks_touched: int | None
     estimated_total_bytes_read: int | None
@@ -108,7 +113,23 @@ class TracePlan:
             },
             "resources": {
                 "memory_limit_bytes": self.memory_limit_bytes,
+                "memory_budget": self.memory_budget.to_dict(),
                 "estimated_memory_per_task": estimate(self.estimated_memory_per_task),
+                # The planner controls the task working set; it cannot control
+                # allocator retention or third-party residency, so the planned
+                # total is an estimate of process peak, not a guarantee.
+                "estimated_process_peak_bytes": estimate(
+                    self.memory_budget.reserved_bytes
+                    + self.estimated_memory_per_task
+                ),
+                "measured_process_peak_rss_bytes": {
+                    "status": "unknown",
+                    "value": None,
+                    "note": (
+                        "populated from execution metrics after a run; planning "
+                        "alone cannot measure resident set size"
+                    ),
+                },
             },
             "output": {
                 "axes": ["time", "cell"],
@@ -117,7 +138,8 @@ class TracePlan:
             },
             "bounded": {
                 "status": "estimated",
-                "value": self.estimated_memory_per_task <= self.memory_limit_bytes,
+                "value": self.estimated_memory_per_task
+                <= self.memory_budget.task_bytes,
                 "reasons": [
                     "movie traversal is aligned to source spatial chunks",
                     "each task covers one finite time window",
@@ -140,9 +162,14 @@ class TracePlan:
                 f"{self.active_spatial_chunks} active, "
                 f"{self.skipped_empty_spatial_chunks} empty skipped",
                 f"tasks: {self.task_count}, time window={self.time_chunk}",
-                "memory: "
-                f"estimated {self.estimated_memory_per_task} / "
-                f"budget {self.memory_limit_bytes} bytes",
+                "memory: total process target "
+                f"{self.memory_limit_bytes} bytes = "
+                f"{self.memory_budget.reserved_bytes} reserved overhead + "
+                f"{self.memory_budget.task_bytes} available per task; "
+                f"estimated task working set {self.estimated_memory_per_task} bytes",
+                "estimated process peak: "
+                f"{self.memory_budget.reserved_bytes + self.estimated_memory_per_task}"
+                " bytes (measure the real peak RSS to confirm)",
                 f"estimated source read: {read}",
                 f"output: shape={self.expected_output_shape}, "
                 f"{self.expected_output_bytes} bytes",
@@ -284,6 +311,8 @@ def extract_traces(
         computed_partitions=computed_partitions,
         resumed_partitions=resumed_partitions,
         bytes_read=_bytes_delta(io_before, _source_bytes_read(movie)),
+        memory_budget=plan.memory_budget,
+        estimated_memory_per_task=plan.estimated_memory_per_task,
     )
     from neuroflow.api import open_array
 
@@ -333,17 +362,26 @@ def _build_trace_plan(
     time_chunk: int | None,
     memory_limit: int | str,
 ) -> tuple[TracePlan, np.ndarray, np.ndarray, tuple[ROIChunk, ...]]:
-    budget = parse_bytes(memory_limit)
+    # ``memory_limit`` is a total process-memory target. Only what remains
+    # after the unavoidable process overhead may be spent on partition data,
+    # so window sizing is driven by ``budget.task_bytes`` rather than by the
+    # headline number.
+    budget = resolve_memory_budget(memory_limit)
+    task_budget = budget.task_bytes
+    total_budget = budget.total_bytes
     movie_data = movie.selection.as_dask_array(chunks="native")
     label_data = labels.selection.as_dask_array()
     spatial_chunks = tuple(
         tuple(int(value) for value in movie_data.chunks[movie.axes.index(axis)])
         for axis in labels.axes
     )
+    # Label indexing allocates real per-task working memory (one label block
+    # plus the distinct-label mapping), so it is bounded by what remains after
+    # process overhead, not by the headline target.
     ids, counts, roi_chunks, total_spatial_chunks = _discover_label_counts(
         label_data,
         spatial_chunks=spatial_chunks,
-        budget=budget,
+        budget=task_budget,
     )
     if not len(ids):
         raise ValueError("labels contain no cells")
@@ -360,7 +398,7 @@ def _build_trace_plan(
             labels,
             len(ids),
             maximum_spatial_shape,
-            budget,
+            task_budget,
             native_time,
         )
     estimated_memory = _estimated_trace_memory(
@@ -371,10 +409,12 @@ def _build_trace_plan(
         maximum_spatial_shape,
         native_time,
     )
-    if estimated_memory > budget:
+    if estimated_memory > task_budget:
         raise ValueError(
-            f"trace window requires an estimated {estimated_memory} bytes, "
-            f"exceeding memory_limit={memory_limit!r}"
+            f"trace window requires an estimated {estimated_memory} bytes of "
+            f"task working memory, exceeding the {task_budget} bytes that "
+            f"remain of memory_limit={memory_limit!r} after an estimated "
+            f"{budget.reserved_bytes} bytes of process overhead"
         )
     task_count = math.ceil(time_size / time_chunk)
     if native is None:
@@ -408,7 +448,8 @@ def _build_trace_plan(
         time_chunk=time_chunk,
         automatic_time_chunk=automatic_time_chunk,
         task_count=task_count,
-        memory_limit_bytes=budget,
+        memory_limit_bytes=total_budget,
+        memory_budget=budget,
         estimated_memory_per_task=estimated_memory,
         estimated_source_chunks_touched=chunks_touched,
         estimated_total_bytes_read=total_read,
@@ -458,7 +499,8 @@ def _discover_label_counts(
         if block_workspace + len(counts_by_id) * entry_bytes > budget:
             raise ValueError(
                 "label discovery requires an estimated chunk workspace exceeding "
-                f"memory_limit={budget} bytes; rechunk labels or raise the limit"
+                f"the {budget} bytes of task memory available under the current "
+                "memory_limit; rechunk labels or raise the limit"
             )
         block = np.asarray(lazy_block.compute(scheduler="threads", num_workers=1))
         if block.dtype.kind == "i" and np.any(block < 0):
@@ -478,8 +520,8 @@ def _discover_label_counts(
         ):
             raise ValueError(
                 "label discovery found an estimated distinct-label workspace "
-                "exceeding "
-                f"memory_limit={budget} bytes"
+                f"exceeding the {budget} bytes of task memory available under "
+                "the current memory_limit"
             )
         for label_id, count in zip(local_ids, local_counts, strict=True):
             label_key = int(label_id)
@@ -518,7 +560,8 @@ def _automatic_time_chunk(
     if one > budget:
         raise ValueError(
             "one source-aligned trace chunk requires an estimated "
-            f"{one} bytes, exceeding memory_limit={budget}"
+            f"{one} bytes of task working memory, exceeding the {budget} bytes "
+            "left for tasks after process overhead; raise memory_limit"
         )
     two = _estimated_trace_memory(
         movie,
@@ -582,7 +625,10 @@ def _estimated_trace_memory(
     accumulator_bytes = requested_frames * cell_count * np.dtype("float64").itemsize
     trace_output_bytes = requested_frames * cell_count * np.dtype("float32").itemsize
     cell_index_bytes = cell_count * 160
-    scheduler_and_cache_reserve = 128 * 1024 * 1024
+    # No scheduler or cache reserve is added here. Those costs are process
+    # overhead, not per-task working set, and are accounted once in
+    # ``MemoryBudget.process_overhead_bytes``; including them again would
+    # double-count them and shrink the window for no reason.
     return (
         source_movie_bytes
         + 2 * float_movie_bytes
@@ -591,7 +637,6 @@ def _estimated_trace_memory(
         + accumulator_bytes
         + trace_output_bytes
         + cell_index_bytes
-        + scheduler_and_cache_reserve
     )
 
 
@@ -704,6 +749,7 @@ def _initialize_trace_output(
             "automatic_time_chunk": plan.automatic_time_chunk,
             "estimated_memory_per_window": plan.estimated_memory_per_task,
             "memory_limit": memory_limit,
+            "memory_budget": plan.memory_budget.to_dict(),
         },
         "preflight_plan": plan.to_dict(),
         "selection": {
@@ -827,6 +873,8 @@ def _finalize_trace_output(
     computed_partitions: int,
     resumed_partitions: int,
     bytes_read: int | None,
+    memory_budget: MemoryBudget,
+    estimated_memory_per_task: int,
 ) -> None:
     provenance_uri = join_uri(uri, ".neuroflow", "provenance.json")
     provenance = read_json(provenance_uri)
@@ -865,6 +913,20 @@ def _finalize_trace_output(
             "estimated_size_bytes"
         ]["value"],  # type: ignore[index]
         "peak_rss_bytes": _peak_rss_bytes(),
+        # Planned versus measured, side by side, so the gap is always visible
+        # rather than something a reader has to reconstruct.
+        "memory": {
+            "budget": memory_budget.to_dict(),
+            "planned_task_working_bytes": estimated_memory_per_task,
+            "planned_process_peak_bytes": (
+                memory_budget.reserved_bytes + estimated_memory_per_task
+            ),
+            "measured_process_peak_rss_bytes": _peak_rss_bytes(),
+            "measurement_scope": (
+                "whole process high-water mark for this interpreter, including "
+                "any work done before or after trace extraction"
+            ),
+        },
     }
     provenance["execution_metrics"] = execution_metrics
     attempts = provenance.get("execution_attempts")

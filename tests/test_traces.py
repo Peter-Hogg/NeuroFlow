@@ -183,6 +183,8 @@ def test_trace_memory_limit_rejects_label_discovery_before_compute(
         np.ones((16, 16), dtype=np.uint64),
         ("y", "x"),
     )
+    # One 16x16 uint64 label block needs a ~10 KiB np.unique workspace, so a
+    # one-byte total target must be rejected during indexing.
     with pytest.raises(ValueError, match="label discovery"):
         movie.extract_traces(labels, output=tmp_path / "traces.zarr", memory_limit=1)
     assert not (tmp_path / "traces.zarr").exists()
@@ -206,11 +208,14 @@ def test_trace_label_discovery_caps_pathological_distinct_ids(
         ("y", "x"),
     )
 
+    # A 2000-byte target tapers to 1000 bytes of task memory. The 640-byte
+    # block workspace fits, but sixteen distinct labels in a 4x4 plane push the
+    # mapping past it.
     with pytest.raises(ValueError, match="distinct-label workspace"):
         movie.extract_traces(
             labels,
             output=tmp_path / "traces.zarr",
-            memory_limit=1000,
+            memory_limit=2000,
         )
 
     assert not (tmp_path / "traces.zarr").exists()

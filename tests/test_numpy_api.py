@@ -297,7 +297,7 @@ def test_compute_memory_guard_fails_before_source_read(
         return original(array, key)
 
     monkeypatch.setattr(zarr.Array, "__getitem__", recorded)
-    with pytest.raises(ValueError, match="compute memory limit"):
+    with pytest.raises(ValueError, match="total process-memory target"):
         (movie + 1).compute(memory_limit=100)
     assert reads == 0
     movie.close()
