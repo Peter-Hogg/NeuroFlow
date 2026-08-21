@@ -177,38 +177,46 @@ in-process.
 
 ### 192 frames — `benchmarks/results/current-resource-scaling-fits-2gib.json`
 
-All five requested configurations complete.
+All five requested configurations complete. Three independent repetitions per
+configuration, each in a fresh process with a fresh output root; measured peak
+is reported as median [min, max].
 
-| Target / workers | Granted | Window | Tasks | Planned task | Planned peak | **Measured peak** | vs target | Wall |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2 GiB / 1 | 1 | 88 | 3 | 1,584 MiB | 2,032 MiB | **2,062 MiB** | +14 MiB | 7.1 s |
-| 4 GiB / 1 | 1 | 192 | 1 | 3,388 MiB | 3,836 MiB | **2,908 MiB** | −1,188 MiB | 6.1 s |
-| 4 GiB / 2 | 2 | 192 | 1 | 3,388 MiB | 3,836 MiB | **2,294 MiB** | −1,802 MiB | 6.2 s |
-| 8 GiB / 2 | 2 | 192 | 1 | 3,388 MiB | 3,836 MiB | **2,294 MiB** | −5,898 MiB | 6.2 s |
-| 8 GiB / 4 | 4 | 192 | 1 | 3,388 MiB | 3,836 MiB | **2,294 MiB** | −5,898 MiB | 6.2 s |
+| Target / workers | **Measured peak, median [range]** | vs target | Wall (median) |
+| --- | --- | --- | --- |
+| 2 GiB / 1 | **2,061 MiB [2,061, 2,062]** | +0.6% | 7.2 s |
+| 4 GiB / 1 | **2,908 MiB [2,908, 2,908]** | −29% | 6.2 s |
+| 4 GiB / 2 | **2,293 MiB [2,293, 2,295]** | −44% | 6.2 s |
+| 8 GiB / 2 | **2,294 MiB [2,293, 2,295]** | −72% | 6.2 s |
+| 8 GiB / 4 | **2,294 MiB [2,293, 2,294]** | −72% | 6.2 s |
 
-The headline result for Priority 1: a 2 GiB request produced a **2,062 MiB
-measured process peak, 0.7% above the stated target** — against 6,097 MiB for
-the same nominal request before this pass.
+The headline result for Priority 1: a 2 GiB request produced a **2,061 MiB
+median process peak with a 1 MiB run-to-run spread over three repetitions,
+0.6% above the stated target** — against 6,097 MiB for the same nominal
+request before this pass. The ≤2 MiB spreads across every configuration show
+the peaks are properties of the plan, not noise.
 
 ### 384 frames — `benchmarks/results/current-resource-scaling.json`
 
-| Target / workers | Granted | Window | Tasks | Planned peak | **Measured peak** | vs target |
-| --- | --- | --- | --- | --- | --- | --- |
-| 2 GiB / 1 | — | — | — | — | **refused** | one task needs 2,822,504,448 B > 1,677,721,600 B available |
-| 4 GiB / 1 | 1 | 206 | 2 | 4,079 MiB | **4,690 MiB** | **+594 MiB** |
-| 4 GiB / 2 | 1 | 206 | 2 | 4,079 MiB | **4,691 MiB** | **+595 MiB** |
-| 8 GiB / 2 | 2 | 384 | 1 | 7,168 MiB | **5,453 MiB** | −2,739 MiB |
-| 8 GiB / 4 | 2 | 384 | 1 | 7,168 MiB | **5,453 MiB** | −2,739 MiB |
+Three repetitions per configuration; measured peak as median [min, max]. The
+2 GiB refusal reproduced identically in all three repetitions.
+
+| Target / workers | **Measured peak, median [range]** | vs target |
+| --- | --- | --- |
+| 2 GiB / 1 | **refused (3/3)** — one task needs 2,822,504,448 B > 1,677,721,600 B available | — |
+| 4 GiB / 1 | **4,690 MiB [4,690, 4,691]** | **+14.5%** |
+| 4 GiB / 2 | **4,690 MiB [4,690, 4,692]** | **+14.5%** |
+| 8 GiB / 2 | **5,453 MiB [5,452, 5,453]** | −33% |
+| 8 GiB / 4 | **5,453 MiB [5,453, 5,453]** | −33% |
 
 Two findings must be stated plainly rather than smoothed over:
 
 1. **The target is approximate and can be overrun.** At 4 GiB with a
-   budget-bound 206-frame window the process peaked 594 MiB (14.5%) *above* the
-   requested total. The overrun grows with window size, so the planner
-   under-models large transient allocations — plausibly the internal copy an
-   exact median requires. A 2 GiB request overran by only 0.7%. The target is
-   therefore honest at laptop-scale targets and optimistic at large windows.
+   budget-bound 206-frame window the process peaked 14.5% *above* the
+   requested total, reproducibly (≤2 MiB spread over three runs). The overrun
+   grows with window size, so the planner under-models large transient
+   allocations — plausibly the internal copy an exact median requires. A 2 GiB
+   request overran by only 0.6%. The target is therefore honest at
+   laptop-scale targets and optimistic at large windows.
 2. **A 384-frame exact median cannot fit 2 GiB at this plane geometry**, and is
    refused rather than attempted. With one native chunk per 888x2048 plane there
    is no smaller spatial tile available, so the reduction axis cannot be
