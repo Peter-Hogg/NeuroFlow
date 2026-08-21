@@ -30,8 +30,8 @@
       "zarr": "2.18.3"
     },
     "git": {
-      "commit": "460bbf67009860e86cb5abd33bcc7691719281ec",
-      "dirty": true,
+      "commit": "c50a3369138d09439e29bac7eccdb9018a8aea38",
+      "dirty": false,
       "source": "git"
     },
     "neuroflow_version": "0.1.0",
@@ -42,7 +42,7 @@
       "system": "Linux"
     },
     "python": {
-      "executable": "python",
+      "executable": "python3",
       "implementation": "CPython",
       "version": "3.10.19"
     },
@@ -50,18 +50,18 @@
     "total_ram_bytes": 132559962112
   },
   "execution": {
-    "bytes_read": 3422379957,
+    "bytes_read": 3506266037,
     "bytes_read_status": "counted from HTTP Content-Length headers",
     "cache_state": "cold; fresh process, no prior reads of this asset",
-    "engine_phase_peak_rss_bytes": 3004170240,
+    "engine_phase_peak_rss_bytes": 2908434432,
     "estimated_total_bytes_read": 201326592,
     "execution_metrics": {
-      "bytes_read": 3422379957,
+      "bytes_read": 3506266037,
       "bytes_read_status": "measured",
       "completed_task_count": 64,
       "computed_task_count": 64,
-      "execution_finished": "2026-08-21T16:57:25.671517+00:00",
-      "execution_started": "2026-08-21T16:56:15.946709+00:00",
+      "execution_finished": "2026-08-21T17:14:49.633278+00:00",
+      "execution_started": "2026-08-21T17:13:37.962193+00:00",
       "integrity_verification": {
         "checksums": "not-run-during-finalization",
         "manifests": "valid",
@@ -69,13 +69,13 @@
       },
       "output_bytes": 4194304,
       "partitions_completed": 64,
-      "peak_rss_bytes": 3003908096,
+      "peak_rss_bytes": 2908434432,
       "resumed_task_count": 0,
       "schema_version": "1",
       "stages": [],
-      "wall_time_seconds": 69.724808
+      "wall_time_seconds": 71.671085
     },
-    "http_responses": 475,
+    "http_responses": 620,
     "memory_budget": "2 GiB",
     "network_context": "public DANDI HTTPS; runner location is external",
     "partition_configuration": {
@@ -86,9 +86,9 @@
         128
       ]
     },
-    "peak_rss_bytes": 3303202816,
+    "peak_rss_bytes": 3278098432,
     "peak_rss_note": "whole-process high-water mark including the harness's own direct-reference computation; engine_phase_peak_rss_bytes is the engine-attributable figure",
-    "persist_seconds": 69.76562921400182,
+    "persist_seconds": 71.70981515299354,
     "plan": {
       "bounded": {
         "reasons": [
@@ -177,7 +177,7 @@
       "workflow_id": "fa3eb64e9b9f318df5015519d169226c01f165e8a9c7793d1d284c3cf1ed54b6"
     },
     "task_count": 64,
-    "wall_time_seconds": 75.92669100499188
+    "wall_time_seconds": 77.54404652300582
   },
   "notes": [
     "This is a generality smoke test: an unfamiliar real dataset with a different dimensionality, dtype, and native chunk geometry than the retained fish evidence, driven entirely through the public discovery and persistence API with no dataset-specific code.",
@@ -197,8 +197,8 @@
       "rtol": 1e-06,
       "valid": true
     },
-    "output": "/tmp/claude-1000/-home-peter-Code-transfer/e2c6bd59-66e8-41a4-b4af-f6af918e4c0b/scratchpad/smoke/dandi-smoke-DANDI-000223-0.260528.0906-t96.zarr",
-    "output_bytes": 2731350,
+    "output": "/tmp/neuroflow-dandi-smoke-000223/dandi-smoke-DANDI-000223-t96.zarr",
+    "output_bytes": 2726195,
     "output_dtype": "float32",
     "output_shape": [
       1024,
@@ -214,7 +214,7 @@
     "asset_count_in_dandiset": 20,
     "asset_id": "cc499fe1-fe23-42aa-8db0-0e689970fb89",
     "dataset_identifier": "DANDI:000223",
-    "dataset_version": "0.260528.0906",
+    "dataset_version": null,
     "discovery": {
       "asset": "cc499fe1-fe23-42aa-8db0-0e689970fb89",
       "mechanism": "NWBQuery through the ordinary public select()",
@@ -256,5 +256,5 @@
     ],
     "total_logical_bytes": 3774873600
   },
-  "timestamp": "2026-08-21T16:57:30.577278+00:00"
+  "timestamp": "2026-08-21T17:14:54.244478+00:00"
 }
