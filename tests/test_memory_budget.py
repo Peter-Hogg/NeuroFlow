@@ -303,7 +303,9 @@ def test_cpsam_cpu_cannot_fit_a_two_gibibyte_total_target() -> None:
     assert budget.task_bytes > 0
 
 
-def test_stated_worker_availability_is_clamped_not_refused(tmp_path: Path) -> None:
+def test_stated_worker_availability_is_clamped_not_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Declaring more workers than the target affords must not fail the run.
 
     The user-facing contract is that a caller states the resources they *have*
@@ -319,6 +321,13 @@ def test_stated_worker_availability_is_clamped_not_refused(tmp_path: Path) -> No
     data alone let a 3.4 MiB-per-task workload run at the full core count and
     overrun a 2 GiB total-process target by ~40% on DANDI:000223.
     """
+    import os
+
+    # This test isolates the *memory*-derived grant, so the core-count ceiling
+    # is pinned above every expected grant. Without this the assertion is
+    # machine-dependent: on a 2-4 vCPU CI runner both GiB targets clamp to the
+    # core count and the strict monotone growth below is false.
+    monkeypatch.setattr(os, "cpu_count", lambda: 64)
     granted_by_limit: dict[str, int] = {}
     for limit in ("64 MiB", "1 GiB", "2 GiB"):
         movie, _ = _fish_like_movie(
