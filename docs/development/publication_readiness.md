@@ -15,7 +15,8 @@ Repository commit before changes: `5f85f669133d64525dca91c59de27effd95f8a3c`
   could not bind a local scheduler socket inside the restricted execution
   sandbox; the remaining targeted baseline tests did not expose a product
   failure. This environmental limitation is not recorded as a passing full
-  suite. Final evidence is recorded in `PUBLICATION_READINESS.md`.
+  suite. Final evidence was recorded in the root evidence ledger, retired from
+  the public tree in `04633da` (last version: `7e54b6c:PUBLICATION_READINESS.md`).
 - Ruff: passed on the untouched tree.
 - basedpyright: passed with 0 errors, warnings, or notes.
 - Sphinx: passed with warnings treated as errors after directing PyNWB's cache
@@ -55,9 +56,11 @@ their own retained evidence.
 ## Revised flagship implementation
 
 The updated mission promotes the projection → actual Cellpose → whole-movie
-soma trace workflow above the projection-only demonstration. The current
-implementation and evidence ledger are maintained in the root
-`PUBLICATION_READINESS.md`. In particular,
+soma trace workflow above the projection-only demonstration. The evidence
+ledger that tracked this work was retired from the public tree in `04633da`
+(last version: `7e54b6c:PUBLICATION_READINESS.md`); retained benchmark records
+live under `benchmarks/results/` and the final run-book in
+`RELEASE_CHECKLIST.md`. In particular,
 the repository now has optional LINDI transport, capability-based HDF5 array
 discovery, source-chunk-aware trace planning/execution, direct Cellpose and
 NumPy comparison paths, a full fish runner, and a manual LINDI/Dask baseline.

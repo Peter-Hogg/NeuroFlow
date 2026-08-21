@@ -8,6 +8,7 @@ authors:
     email: peterhogg2006@gmail.com
 repository-code: "https://github.com/Peter-Hogg/NeuroFlow"
 url: "https://github.com/Peter-Hogg/NeuroFlow"
+license: BSD-3-Clause
 version: 0.1.0
 abstract: >-
   A bounded, resumable, provenance-aware execution layer for analysis of

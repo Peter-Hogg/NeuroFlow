@@ -46,9 +46,11 @@ def parse_bytes(value: int | str) -> int:
 
 # Resident-set floor that exists before any partition is loaded. Every figure
 # is a rounded-up envelope over the measurements in
-# ``benchmarks/memory_attribution.py`` on the fish geometry (see
-# ``PUBLICATION_READINESS.md``); the measured value is quoted beside each one so
-# the envelope can be re-derived rather than taken on trust.
+# ``benchmarks/memory_attribution.py`` on the fish geometry, retained in
+# ``benchmarks/results/current-memory-attribution.json``; the measured value
+# is quoted beside each one so the envelope can be re-derived rather than
+# taken on trust. A regression test fails if a component drifts below its
+# recorded measurement.
 PROCESS_OVERHEAD_COMPONENTS: dict[str, int] = {
     # CPython + numpy baseline (30 MB) plus the neuroflow import chain,
     # which pulls in dask, zarr, h5py, fsspec and pynwb (167 MB).

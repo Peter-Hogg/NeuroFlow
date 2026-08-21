@@ -8,5 +8,6 @@
     }
   ],
   "keywords": ["DANDI", "Dask", "neuroscience", "NWB", "reproducibility"],
+  "license": "BSD-3-Clause",
   "access_right": "open"
 }

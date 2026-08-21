@@ -3,6 +3,7 @@ name = "neuroflow"
 version = "0.1.0"
 description = "Lazy execution and interoperability for archive-scale NWB analysis"
 readme = "README.md"
+license = "BSD-3-Clause"
 authors = [
     { name = "Peter Hogg", email = "peterhogg2006@gmail.com" },
 ]
@@ -11,6 +12,7 @@ keywords = ["dandi", "dask", "neuroscience", "nwb", "reproducibility"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",

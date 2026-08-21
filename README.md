@@ -348,6 +348,13 @@ sliced alongside the corresponding data partition. User-function outputs are
 normalized into partitioned Parquet tables, and the installed Pynapple version is
 recorded in provenance.
 
+## License
+
+NeuroFlow is released under the BSD 3-Clause License; see
+[LICENSE](LICENSE). Optional integrations (Cellpose, Pynapple) and any model
+weights they download carry their own licenses, which users must check for
+their use case.
+
 ## Development
 
 ```bash
