@@ -1,0 +1,6853 @@
+{
+  "backend": "dandi-nwb-hdf5-remfile",
+  "baselines": [],
+  "benchmark_name": "dandi-fish-cellpose-soma-traces",
+  "benchmark_schema_version": "1",
+  "classification": "publication",
+  "compute_device": {
+    "cellpose": {
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu_name": "NVIDIA RTX PRO 4500 Blackwell",
+      "gpu_total_memory_bytes": 33662042112,
+      "note": "GPU memory is a separate resource from the NeuroFlow host memory budget and is never counted against memory_limit",
+      "requested_device": "cuda",
+      "selected_device": "cuda",
+      "torch_version": "2.13.0+cu130"
+    },
+    "same_device_for_direct_comparison": true
+  },
+  "environment": {
+    "cpu": {
+      "logical_count": 32,
+      "model": "AMD Ryzen 9 9950X 16-Core Processor"
+    },
+    "dependencies": {
+      "cellpose": "4.2.1.1",
+      "dask": "2026.7.1",
+      "distributed": "2026.7.1",
+      "fsspec": "2026.7.0",
+      "h5py": "3.16.0",
+      "hdmf-zarr": "0.13.0",
+      "lindi": "0.4.6",
+      "neuroflow": "0.1.0",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "pyarrow": "25.0.0",
+      "pynapple": null,
+      "pynwb": "4.1.0",
+      "remfile": "0.1.14",
+      "s3fs": "2026.7.0",
+      "scipy": "1.15.3",
+      "xarray": "2025.6.1",
+      "zarr": "2.18.3"
+    },
+    "git": {
+      "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+      "dirty": false,
+      "source": "git"
+    },
+    "neuroflow_version": "0.1.0",
+    "platform": {
+      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "release": "7.0.0-29-generic",
+      "system": "Linux"
+    },
+    "python": {
+      "executable": "python",
+      "implementation": "CPython",
+      "version": "3.10.19"
+    },
+    "schema_version": "1",
+    "total_ram_bytes": 132559962112
+  },
+  "execution": {
+    "bytes_read": 234065661279,
+    "cache_state": "bounded remfile: block 1048576 B, cache 64 MiB, identical across every stage",
+    "memory_budget": "2 GiB",
+    "network_context": "public DANDI HTTPS; runner location is external",
+    "partition_configuration": {
+      "cellpose_tasks": 29,
+      "projection_tasks": 29,
+      "trace_plan": {
+        "bounded": {
+          "reasons": [
+            "movie traversal is aligned to source spatial chunks",
+            "each task covers one finite time window",
+            "empty spatial chunks are omitted after bounded label indexing"
+          ],
+          "status": "estimated",
+          "value": true
+        },
+        "operation": "mean-fluorescence-traces",
+        "output": {
+          "axes": [
+            "time",
+            "cell"
+          ],
+          "estimated_size_bytes": {
+            "status": "estimated",
+            "value": 68136456
+          },
+          "shape": [
+            3065,
+            5552
+          ]
+        },
+        "partitioning": {
+          "automatic_time_chunk": true,
+          "estimated_source_chunks_touched": {
+            "status": "estimated",
+            "value": 88885
+          },
+          "estimated_total_bytes_read": {
+            "status": "estimated",
+            "value": 323296788480
+          },
+          "task_count": {
+            "status": "estimated",
+            "value": 35
+          },
+          "time_chunk": 88
+        },
+        "resources": {
+          "estimated_memory_per_task": {
+            "status": "estimated",
+            "value": 1667154944
+          },
+          "estimated_process_peak_bytes": {
+            "status": "estimated",
+            "value": 2136916992
+          },
+          "measured_process_peak_rss_bytes": {
+            "note": "populated from execution metrics after a run; planning alone cannot measure resident set size",
+            "status": "unknown",
+            "value": null
+          },
+          "memory_budget": {
+            "enforcement": "planning-only; no OS-level memory cap is installed",
+            "external_reserve_bytes": 0,
+            "interpretation": "approximate-total-process-target",
+            "measured_process_floor_bytes": 469762048,
+            "note": "task_bytes bounds partition working sets; the total target is attainable",
+            "process_overhead_bytes": 469762048,
+            "process_overhead_components": {
+              "dask_runtime": 134217728,
+              "interpreter_and_libraries": 234881024,
+              "output_write_buffers": 33554432,
+              "source_read_cache": 67108864
+            },
+            "task_bytes": 1677721600,
+            "total_bytes": 2147483648,
+            "total_target_attainable": true
+          },
+          "memory_limit_bytes": 2147483648
+        },
+        "roi_index": {
+          "active_spatial_chunks": 29,
+          "cell_count": 5552,
+          "skipped_empty_spatial_chunks": 0
+        },
+        "schema_version": "1",
+        "source": {
+          "dtype": "int16",
+          "logical_bytes": {
+            "status": "estimated",
+            "value": 323296788480
+          },
+          "physical_chunks": [
+            1,
+            888,
+            2048,
+            1
+          ],
+          "shape": [
+            3065,
+            888,
+            2048,
+            29
+          ]
+        }
+      }
+    },
+    "peak_rss_bytes": 4240654336,
+    "task_count": 93,
+    "transport_configuration": {
+      "applies_to": "projection, trace extraction, resume",
+      "block_size": 1048576,
+      "cache_size_bytes": 67108864
+    },
+    "wall_time_seconds": 15548.405751163984
+  },
+  "notes": [
+    "No complete source download is performed by this workflow.",
+    "Cellpose transport equivalence is distinct from biological accuracy.",
+    "A publication-classified run is rejected when Git is dirty.",
+    "Trace arrays are stored as (time, cell)."
+  ],
+  "pipeline_schema_version": "1",
+  "policy": {
+    "memory_limit": "2 GiB",
+    "normal_user_overrides": [
+      "backend",
+      "memory_limit",
+      "cellpose_device"
+    ]
+  },
+  "result": {
+    "checksum": "269f126b4a228ecc04493192d965fd5c5de53e284e6c07178e981ab07e1fb001",
+    "integrity_verified": true,
+    "numerical_validation": {
+      "atol": 1e-05,
+      "direct_checksum": "b0bb63040f6d2f4b898152504fefd4eb5423bb67b53a42fcb398204a110ed539",
+      "dtype": "float32",
+      "maximum_absolute_error": 0.0,
+      "maximum_relative_error": 0.0,
+      "method": "direct plane-wise NumPy mean on the leading movie frames",
+      "rtol": 1e-05,
+      "shape": [
+        1,
+        5552
+      ],
+      "shape_agreement": true,
+      "valid": true,
+      "wall_time_seconds": 2.777893598016817
+    },
+    "output_bytes": 56528105,
+    "resume": {
+      "bytes_read": 0,
+      "computed_task_count": 0,
+      "corruption_repair": "covered by benchmarks.benchmark_resume_integrity on deterministic local data; archive output was not deliberately corrupted",
+      "exercised": true,
+      "integrity_verified": true,
+      "resumed_task_count": 35
+    }
+  },
+  "source": {
+    "asset": "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb",
+    "asset_id": "4f898ff7-6084-4e84-a449-f05811c1d951",
+    "dataset_identifier": "DANDI:000350",
+    "dataset_version": "0.240822.1759",
+    "dtype": "<i2",
+    "path": "/acquisition/NeuronOnePhotonSeries",
+    "physical_chunk_shape": [
+      1,
+      888,
+      2048,
+      1
+    ],
+    "selected_bytes": 323296788480,
+    "shape": [
+      3065,
+      888,
+      2048,
+      29
+    ],
+    "total_logical_bytes": 323296788480
+  },
+  "stages": {
+    "cellpose": {
+      "cellpose_version": "4.2.1.1",
+      "device": {
+        "cuda_available": true,
+        "cuda_version": "13.0",
+        "gpu_name": "NVIDIA RTX PRO 4500 Blackwell",
+        "gpu_total_memory_bytes": 33662042112,
+        "note": "GPU memory is a separate resource from the NeuroFlow host memory budget and is never counted against memory_limit",
+        "requested_device": "cuda",
+        "selected_device": "cuda",
+        "torch_version": "2.13.0+cu130"
+      },
+      "direct_equivalence": {
+        "cellpose_version": "4.2.1.1",
+        "device": {
+          "cuda_available": true,
+          "cuda_version": "13.0",
+          "gpu_name": "NVIDIA RTX PRO 4500 Blackwell",
+          "gpu_total_memory_bytes": 33662042112,
+          "note": "GPU memory is a separate resource from the NeuroFlow host memory budget and is never counted against memory_limit",
+          "requested_device": "cuda",
+          "selected_device": "cuda",
+          "torch_version": "2.13.0+cu130"
+        },
+        "direct_object_count": 5552,
+        "exact": true,
+        "mismatched_voxels": 0,
+        "model": "cpsam",
+        "settings": {
+          "anisotropy": null,
+          "batch_size": 1,
+          "cellprob_threshold": 0.0,
+          "channel_axis": null,
+          "channels": null,
+          "diameter": null,
+          "do_3D": false,
+          "flow_threshold": 0.4,
+          "min_size": 15,
+          "normalize": true,
+          "tile_overlap": 0.1,
+          "z_axis": null
+        },
+        "valid": true,
+        "wall_time_seconds": 55.571698101994116
+      },
+      "input_projection_identity": "fcdfbf043fa06db0b1fc67915e36bdfbedd2bb48675aae74c55a73ca031210d3",
+      "model": "cpsam",
+      "object_count": 5552,
+      "output_checksum": null,
+      "parameters": {
+        "anisotropy": null,
+        "batch_size": 1,
+        "cellprob_threshold": 0.0,
+        "channel_axis": null,
+        "channels": null,
+        "device": null,
+        "diameter": null,
+        "do_3d": false,
+        "flow_threshold": 0.4,
+        "gpu": true,
+        "halo": {},
+        "min_size": 15,
+        "normalize": true,
+        "pretrained_model": "cpsam",
+        "squeeze_singleton_axis": 2,
+        "tile_overlap": 0.1,
+        "use_bfloat16": false,
+        "z_axis": null
+      },
+      "provenance": {
+        "adapter": {
+          "name": "cellpose",
+          "version": "1"
+        },
+        "completed_partitions": [
+          "7320609ff98bc7e814e31d78835c77b172dd7c1a65a42fb3aec0168adf30d390",
+          "d4a8a6f9903226e4cc7d464736cb65ae30b0ab6324821cb8e7baa9219cb8e5ca",
+          "e65683d3ea98d3f12d5587561a26f57ee5ac1af0634a317ca9a689e44ad3b812",
+          "16ef89f554c447554c0b93df2fd524818aee059ba644f7873cc484156fdcf597",
+          "0f7f22c6be5644a7b16b93f67f20293d063d97feeefd290ab00d9e425db5b32a",
+          "f7a6b12d0445a555a4bf08d1ff7763866a204b84533f57ec78e21244b0c31538",
+          "79fd443a967547bbb052c962177d0f7835e6cce2aac3cd5dc4b9c31818202bd3",
+          "a472157f76b5f4a3c10047f9d2c0ecc4edede1181054b52e05c34dc6a9727d3b",
+          "e019bcc033bdcc56549cc3384d252bf9af960a23f33bc033a32ae5469a35c651",
+          "44f50afde645a5ea70f8214643208d0c10ffaa791b7de372106002daf8f36105",
+          "7e70fb41677a86728aefb1b43bd97fb5183b0952830f32ccbaf95449254f2836",
+          "86e74aacff9bfd2ac441f20a405115985f68c77eb58bbecf8c4eccfef1e2de54",
+          "69db1c45e786550699385768e47650b9b7153f7435f898c30cc7dd9bef78af93",
+          "bd2295de9f66f6be28758096360a2eb6ef8aa839eafead00867259fc74b1881b",
+          "b5f35a4767f361b87f55310502d32d1f90ba54b25c6d86ffee6b2b3e65fddab3",
+          "3b182c7722365bf35b51657eeee575f2d54a4642176d3bb3d734e0a669251b0a",
+          "bfe25abfc5010ab64fe716bcb42a5ddb398be9baef88007a92216fa5b803fd33",
+          "fae5bea7e9b49313fef36d3f07e059bea393a443e8e952166fb57e6c98571993",
+          "c9c2994d8d249a62c0f851ae1d820f49e2d1bc5e4208e27564c582cf198d50c3",
+          "ed5cafbc61dad096c4ad10b58eb9bea605defb7c49178fa9daa303e4f50d710d",
+          "1bee891e2cef0d52283af91214e3ca3077489dfbabca2da752b155a2b536e852",
+          "c7803937a7e68e8114899164ddf51a40058ef8afa121e5559d01333afbc227b5",
+          "545343113efb7ef9bc1687764721fc158e4842b2fe9c5dca5a3edc027b09f7eb",
+          "9d735f0b57383a1ed6bd987fb57fae31bee6803b13c15abecbafd0c886c1befb",
+          "6d133578dd674ec388fbff8e0ac6e0989fe62c6e45277f2759905f544d340d2c",
+          "eda6b74175915274623cb28f7501736a2f9a9e7f414ac0fe6847b4896b451115",
+          "c549f5e7fcc5c9a9858f58a3a5eea6653b2c2b4c4a01fa8f46628de85c512e3a",
+          "0e07c79d379b90d4abb38292ff167fa0f00a6a76fb470b869d7a153cb16ba41a",
+          "25166df402a43c2474595d1d022cd85d5bd8a284e8ebe7d68e5fc53bb563f50c"
+        ],
+        "environment": {
+          "cpu": {
+            "logical_count": 32,
+            "model": "AMD Ryzen 9 9950X 16-Core Processor"
+          },
+          "dependencies": {
+            "cellpose": "4.2.1.1",
+            "dask": "2026.7.1",
+            "distributed": "2026.7.1",
+            "fsspec": "2026.7.0",
+            "h5py": "3.16.0",
+            "hdmf-zarr": "0.13.0",
+            "lindi": "0.4.6",
+            "neuroflow": "0.1.0",
+            "numpy": "2.2.6",
+            "pandas": "2.3.3",
+            "pyarrow": "25.0.0",
+            "pynapple": null,
+            "pynwb": "4.1.0",
+            "remfile": "0.1.14",
+            "s3fs": "2026.7.0",
+            "scipy": "1.15.3",
+            "xarray": "2025.6.1",
+            "zarr": "2.18.3"
+          },
+          "git": {
+            "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+            "dirty": false,
+            "source": "git"
+          },
+          "neuroflow_version": "0.1.0",
+          "platform": {
+            "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+            "machine": "x86_64",
+            "release": "7.0.0-29-generic",
+            "system": "Linux"
+          },
+          "python": {
+            "executable": "python",
+            "implementation": "CPython",
+            "version": "3.10.19"
+          },
+          "schema_version": "1",
+          "total_ram_bytes": 132559962112
+        },
+        "execution_attempts": [
+          {
+            "environment": {
+              "cpu": {
+                "logical_count": 32,
+                "model": "AMD Ryzen 9 9950X 16-Core Processor"
+              },
+              "dependencies": {
+                "cellpose": "4.2.1.1",
+                "dask": "2026.7.1",
+                "distributed": "2026.7.1",
+                "fsspec": "2026.7.0",
+                "h5py": "3.16.0",
+                "hdmf-zarr": "0.13.0",
+                "lindi": "0.4.6",
+                "neuroflow": "0.1.0",
+                "numpy": "2.2.6",
+                "pandas": "2.3.3",
+                "pyarrow": "25.0.0",
+                "pynapple": null,
+                "pynwb": "4.1.0",
+                "remfile": "0.1.14",
+                "s3fs": "2026.7.0",
+                "scipy": "1.15.3",
+                "xarray": "2025.6.1",
+                "zarr": "2.18.3"
+              },
+              "git": {
+                "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+                "dirty": false,
+                "source": "git"
+              },
+              "neuroflow_version": "0.1.0",
+              "platform": {
+                "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+                "machine": "x86_64",
+                "release": "7.0.0-29-generic",
+                "system": "Linux"
+              },
+              "python": {
+                "executable": "python",
+                "implementation": "CPython",
+                "version": "3.10.19"
+              },
+              "schema_version": "1",
+              "total_ram_bytes": 132559962112
+            },
+            "execution_finished": "2026-08-21T22:01:16.957350+00:00",
+            "execution_policy": {
+              "max_workers": 1,
+              "memory_limit": "2 GiB"
+            },
+            "execution_started": "2026-08-21T22:00:05.131240+00:00",
+            "scheduler": "threads",
+            "source_backend": "local-or-fsspec",
+            "status": "complete"
+          }
+        ],
+        "execution_finished": "2026-08-21T22:01:16.957350+00:00",
+        "execution_metrics": {
+          "bytes_read": null,
+          "bytes_read_status": "unknown",
+          "completed_task_count": 29,
+          "computed_task_count": 29,
+          "execution_finished": "2026-08-21T22:01:16.957350+00:00",
+          "execution_started": "2026-08-21T22:00:05.131240+00:00",
+          "integrity_verification": {
+            "checksums": "not-run-during-finalization",
+            "manifests": "valid",
+            "status": "measured"
+          },
+          "output_bytes": 422447890,
+          "partitions_completed": 29,
+          "peak_rss_bytes": 2491887616,
+          "resumed_task_count": 0,
+          "schema_version": "1",
+          "stages": [],
+          "wall_time_seconds": 71.82611
+        },
+        "execution_policy": {
+          "max_workers": 1,
+          "memory_limit": "2 GiB"
+        },
+        "execution_started": "2026-08-21T22:00:05.131240+00:00",
+        "external_libraries": {
+          "cellpose": "4.2.1.1"
+        },
+        "failed_partitions": [],
+        "neuroflow_version": "0.1.0",
+        "nwb_paths": [
+          "result"
+        ],
+        "output": {
+          "arrays": {
+            "labels": {
+              "chunks": [
+                888,
+                2048,
+                1
+              ],
+              "dtype": "uint64",
+              "name": "labels"
+            }
+          },
+          "axes": [
+            "y",
+            "x",
+            "z"
+          ],
+          "bounds": [
+            [
+              0,
+              888
+            ],
+            [
+              0,
+              2048
+            ],
+            [
+              0,
+              29
+            ]
+          ],
+          "kind": "segmentation",
+          "merge_status": "unmerged",
+          "shape": [
+            888,
+            2048,
+            29
+          ],
+          "tables": {
+            "objects": {
+              "name": "objects"
+            }
+          },
+          "uri": "publication/runs-publication/fish-cellpose.zarr"
+        },
+        "parameters": {
+          "anisotropy": null,
+          "batch_size": 1,
+          "cellprob_threshold": 0.0,
+          "channel_axis": null,
+          "channels": null,
+          "device": null,
+          "diameter": null,
+          "do_3d": false,
+          "flow_threshold": 0.4,
+          "gpu": true,
+          "halo": {},
+          "min_size": 15,
+          "normalize": true,
+          "pretrained_model": "cpsam",
+          "squeeze_singleton_axis": 2,
+          "tile_overlap": 0.1,
+          "use_bfloat16": false,
+          "z_axis": null
+        },
+        "partition_plan": {
+          "overlap": [
+            0,
+            0,
+            0
+          ],
+          "partition_ids": [
+            "7320609ff98bc7e814e31d78835c77b172dd7c1a65a42fb3aec0168adf30d390",
+            "d4a8a6f9903226e4cc7d464736cb65ae30b0ab6324821cb8e7baa9219cb8e5ca",
+            "e65683d3ea98d3f12d5587561a26f57ee5ac1af0634a317ca9a689e44ad3b812",
+            "16ef89f554c447554c0b93df2fd524818aee059ba644f7873cc484156fdcf597",
+            "0f7f22c6be5644a7b16b93f67f20293d063d97feeefd290ab00d9e425db5b32a",
+            "f7a6b12d0445a555a4bf08d1ff7763866a204b84533f57ec78e21244b0c31538",
+            "79fd443a967547bbb052c962177d0f7835e6cce2aac3cd5dc4b9c31818202bd3",
+            "a472157f76b5f4a3c10047f9d2c0ecc4edede1181054b52e05c34dc6a9727d3b",
+            "e019bcc033bdcc56549cc3384d252bf9af960a23f33bc033a32ae5469a35c651",
+            "44f50afde645a5ea70f8214643208d0c10ffaa791b7de372106002daf8f36105",
+            "7e70fb41677a86728aefb1b43bd97fb5183b0952830f32ccbaf95449254f2836",
+            "86e74aacff9bfd2ac441f20a405115985f68c77eb58bbecf8c4eccfef1e2de54",
+            "69db1c45e786550699385768e47650b9b7153f7435f898c30cc7dd9bef78af93",
+            "bd2295de9f66f6be28758096360a2eb6ef8aa839eafead00867259fc74b1881b",
+            "b5f35a4767f361b87f55310502d32d1f90ba54b25c6d86ffee6b2b3e65fddab3",
+            "3b182c7722365bf35b51657eeee575f2d54a4642176d3bb3d734e0a669251b0a",
+            "bfe25abfc5010ab64fe716bcb42a5ddb398be9baef88007a92216fa5b803fd33",
+            "fae5bea7e9b49313fef36d3f07e059bea393a443e8e952166fb57e6c98571993",
+            "c9c2994d8d249a62c0f851ae1d820f49e2d1bc5e4208e27564c582cf198d50c3",
+            "ed5cafbc61dad096c4ad10b58eb9bea605defb7c49178fa9daa303e4f50d710d",
+            "1bee891e2cef0d52283af91214e3ca3077489dfbabca2da752b155a2b536e852",
+            "c7803937a7e68e8114899164ddf51a40058ef8afa121e5559d01333afbc227b5",
+            "545343113efb7ef9bc1687764721fc158e4842b2fe9c5dca5a3edc027b09f7eb",
+            "9d735f0b57383a1ed6bd987fb57fae31bee6803b13c15abecbafd0c886c1befb",
+            "6d133578dd674ec388fbff8e0ac6e0989fe62c6e45277f2759905f544d340d2c",
+            "eda6b74175915274623cb28f7501736a2f9a9e7f414ac0fe6847b4896b451115",
+            "c549f5e7fcc5c9a9858f58a3a5eea6653b2c2b4c4a01fa8f46628de85c512e3a",
+            "0e07c79d379b90d4abb38292ff167fa0f00a6a76fb470b869d7a153cb16ba41a",
+            "25166df402a43c2474595d1d022cd85d5bd8a284e8ebe7d68e5fc53bb563f50c"
+          ],
+          "partitions": [
+            {
+              "coordinates": [
+                0
+              ],
+              "key": "spatial-00000000",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ],
+              "partition_id": "7320609ff98bc7e814e31d78835c77b172dd7c1a65a42fb3aec0168adf30d390",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                1
+              ],
+              "key": "spatial-00000001",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  1,
+                  2,
+                  null
+                ]
+              ],
+              "partition_id": "d4a8a6f9903226e4cc7d464736cb65ae30b0ab6324821cb8e7baa9219cb8e5ca",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  1,
+                  2,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                2
+              ],
+              "key": "spatial-00000002",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  2,
+                  3,
+                  null
+                ]
+              ],
+              "partition_id": "e65683d3ea98d3f12d5587561a26f57ee5ac1af0634a317ca9a689e44ad3b812",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  2,
+                  3,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                3
+              ],
+              "key": "spatial-00000003",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  3,
+                  4,
+                  null
+                ]
+              ],
+              "partition_id": "16ef89f554c447554c0b93df2fd524818aee059ba644f7873cc484156fdcf597",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  3,
+                  4,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                4
+              ],
+              "key": "spatial-00000004",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  4,
+                  5,
+                  null
+                ]
+              ],
+              "partition_id": "0f7f22c6be5644a7b16b93f67f20293d063d97feeefd290ab00d9e425db5b32a",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  4,
+                  5,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                5
+              ],
+              "key": "spatial-00000005",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  5,
+                  6,
+                  null
+                ]
+              ],
+              "partition_id": "f7a6b12d0445a555a4bf08d1ff7763866a204b84533f57ec78e21244b0c31538",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  5,
+                  6,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                6
+              ],
+              "key": "spatial-00000006",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  6,
+                  7,
+                  null
+                ]
+              ],
+              "partition_id": "79fd443a967547bbb052c962177d0f7835e6cce2aac3cd5dc4b9c31818202bd3",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  6,
+                  7,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                7
+              ],
+              "key": "spatial-00000007",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  7,
+                  8,
+                  null
+                ]
+              ],
+              "partition_id": "a472157f76b5f4a3c10047f9d2c0ecc4edede1181054b52e05c34dc6a9727d3b",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  7,
+                  8,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                8
+              ],
+              "key": "spatial-00000008",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  8,
+                  9,
+                  null
+                ]
+              ],
+              "partition_id": "e019bcc033bdcc56549cc3384d252bf9af960a23f33bc033a32ae5469a35c651",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  8,
+                  9,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                9
+              ],
+              "key": "spatial-00000009",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  9,
+                  10,
+                  null
+                ]
+              ],
+              "partition_id": "44f50afde645a5ea70f8214643208d0c10ffaa791b7de372106002daf8f36105",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  9,
+                  10,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                10
+              ],
+              "key": "spatial-00000010",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  10,
+                  11,
+                  null
+                ]
+              ],
+              "partition_id": "7e70fb41677a86728aefb1b43bd97fb5183b0952830f32ccbaf95449254f2836",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  10,
+                  11,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                11
+              ],
+              "key": "spatial-00000011",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  11,
+                  12,
+                  null
+                ]
+              ],
+              "partition_id": "86e74aacff9bfd2ac441f20a405115985f68c77eb58bbecf8c4eccfef1e2de54",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  11,
+                  12,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                12
+              ],
+              "key": "spatial-00000012",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  12,
+                  13,
+                  null
+                ]
+              ],
+              "partition_id": "69db1c45e786550699385768e47650b9b7153f7435f898c30cc7dd9bef78af93",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  12,
+                  13,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                13
+              ],
+              "key": "spatial-00000013",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  13,
+                  14,
+                  null
+                ]
+              ],
+              "partition_id": "bd2295de9f66f6be28758096360a2eb6ef8aa839eafead00867259fc74b1881b",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  13,
+                  14,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                14
+              ],
+              "key": "spatial-00000014",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  14,
+                  15,
+                  null
+                ]
+              ],
+              "partition_id": "b5f35a4767f361b87f55310502d32d1f90ba54b25c6d86ffee6b2b3e65fddab3",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  14,
+                  15,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                15
+              ],
+              "key": "spatial-00000015",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  15,
+                  16,
+                  null
+                ]
+              ],
+              "partition_id": "3b182c7722365bf35b51657eeee575f2d54a4642176d3bb3d734e0a669251b0a",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  15,
+                  16,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                16
+              ],
+              "key": "spatial-00000016",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  16,
+                  17,
+                  null
+                ]
+              ],
+              "partition_id": "bfe25abfc5010ab64fe716bcb42a5ddb398be9baef88007a92216fa5b803fd33",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  16,
+                  17,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                17
+              ],
+              "key": "spatial-00000017",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  17,
+                  18,
+                  null
+                ]
+              ],
+              "partition_id": "fae5bea7e9b49313fef36d3f07e059bea393a443e8e952166fb57e6c98571993",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  17,
+                  18,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                18
+              ],
+              "key": "spatial-00000018",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  18,
+                  19,
+                  null
+                ]
+              ],
+              "partition_id": "c9c2994d8d249a62c0f851ae1d820f49e2d1bc5e4208e27564c582cf198d50c3",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  18,
+                  19,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                19
+              ],
+              "key": "spatial-00000019",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  19,
+                  20,
+                  null
+                ]
+              ],
+              "partition_id": "ed5cafbc61dad096c4ad10b58eb9bea605defb7c49178fa9daa303e4f50d710d",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  19,
+                  20,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                20
+              ],
+              "key": "spatial-00000020",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  20,
+                  21,
+                  null
+                ]
+              ],
+              "partition_id": "1bee891e2cef0d52283af91214e3ca3077489dfbabca2da752b155a2b536e852",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  20,
+                  21,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                21
+              ],
+              "key": "spatial-00000021",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  21,
+                  22,
+                  null
+                ]
+              ],
+              "partition_id": "c7803937a7e68e8114899164ddf51a40058ef8afa121e5559d01333afbc227b5",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  21,
+                  22,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                22
+              ],
+              "key": "spatial-00000022",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  22,
+                  23,
+                  null
+                ]
+              ],
+              "partition_id": "545343113efb7ef9bc1687764721fc158e4842b2fe9c5dca5a3edc027b09f7eb",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  22,
+                  23,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                23
+              ],
+              "key": "spatial-00000023",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  23,
+                  24,
+                  null
+                ]
+              ],
+              "partition_id": "9d735f0b57383a1ed6bd987fb57fae31bee6803b13c15abecbafd0c886c1befb",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  23,
+                  24,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                24
+              ],
+              "key": "spatial-00000024",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  24,
+                  25,
+                  null
+                ]
+              ],
+              "partition_id": "6d133578dd674ec388fbff8e0ac6e0989fe62c6e45277f2759905f544d340d2c",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  24,
+                  25,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                25
+              ],
+              "key": "spatial-00000025",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  25,
+                  26,
+                  null
+                ]
+              ],
+              "partition_id": "eda6b74175915274623cb28f7501736a2f9a9e7f414ac0fe6847b4896b451115",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  25,
+                  26,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                26
+              ],
+              "key": "spatial-00000026",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  26,
+                  27,
+                  null
+                ]
+              ],
+              "partition_id": "c549f5e7fcc5c9a9858f58a3a5eea6653b2c2b4c4a01fa8f46628de85c512e3a",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  26,
+                  27,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                27
+              ],
+              "key": "spatial-00000027",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  27,
+                  28,
+                  null
+                ]
+              ],
+              "partition_id": "0e07c79d379b90d4abb38292ff167fa0f00a6a76fb470b869d7a153cb16ba41a",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  27,
+                  28,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                28
+              ],
+              "key": "spatial-00000028",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  28,
+                  29,
+                  null
+                ]
+              ],
+              "partition_id": "25166df402a43c2474595d1d022cd85d5bd8a284e8ebe7d68e5fc53bb563f50c",
+              "read_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  28,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            }
+          ],
+          "processing_shape": [
+            888,
+            2048,
+            1
+          ],
+          "task_count": 29
+        },
+        "random_seeds": [],
+        "scheduler": "threads",
+        "schema_version": "1",
+        "selection": {
+          "axes": [
+            "y",
+            "x",
+            "z"
+          ],
+          "bounds": [
+            [
+              0,
+              888
+            ],
+            [
+              0,
+              2048
+            ],
+            [
+              0,
+              29
+            ]
+          ],
+          "dtype": "float32",
+          "native_chunks": [
+            256,
+            256,
+            1
+          ],
+          "neurodata_type": "Array",
+          "shape": [
+            888,
+            2048,
+            29
+          ]
+        },
+        "source": {
+          "asset_id": "result",
+          "checksum": "fcdfbf043fa06db0b1fc67915e36bdfbedd2bb48675aae74c55a73ca031210d3",
+          "uri": "publication/runs-publication/fish-projection.zarr",
+          "version": null
+        },
+        "source_backend": "local-or-fsspec",
+        "stages": [],
+        "status": "complete",
+        "workflow_id": "0baf450b4d447de62f7b971f4cb45a91b77114285d161ec9a5039cdcf87dcde0"
+      },
+      "wall_time_seconds": 72.04301915501128
+    },
+    "projection": {
+      "execution_metrics": {
+        "bytes_read": 3773205855,
+        "bytes_read_status": "measured",
+        "completed_task_count": 29,
+        "computed_task_count": 29,
+        "execution_finished": "2026-08-21T22:00:04.708204+00:00",
+        "execution_started": "2026-08-21T21:55:03.340877+00:00",
+        "integrity_verification": {
+          "checksums": "not-run-during-finalization",
+          "manifests": "valid",
+          "status": "measured"
+        },
+        "output_bytes": 210960384,
+        "partitions_completed": 29,
+        "peak_rss_bytes": 2491887616,
+        "resumed_task_count": 0,
+        "schema_version": "1",
+        "stages": [],
+        "wall_time_seconds": 301.367327
+      },
+      "identity": "fcdfbf043fa06db0b1fc67915e36bdfbedd2bb48675aae74c55a73ca031210d3",
+      "provenance": {
+        "adapter": {
+          "name": "numpy-expression",
+          "version": "1"
+        },
+        "completed_partitions": [
+          "7c045c318d54d4a6b3d80dc3d3738809a8e4e68fe51e11f74644979188b53128",
+          "0617f5f191ea0433b5a21ff6d7c7882ca9f1f4db661a4f94a19576e664cffc98",
+          "ebae1871dfe4766d00e66c418f899532c3fa0e1f67f5b5d1eb803db0d0d6b39a",
+          "58d6380b4bb742cf52b27b315e4fd9fb13ca7f76ffdd78b067665dd4b85fb5f9",
+          "d4187ff6b7e2a4b6cc2d196af52889d940d2915d413fd043fa37893a86f0749f",
+          "ed5bc6214eaf040ab8a96d92f9c8eba2135c970094a7309ee57080a40175cd7f",
+          "4bf1089e3958e06f9982a974c4adf7caf9e27bee95f4c08158c88006af40bc44",
+          "7de29be4e34ca22a06a620bcce3c62611a515d490cc4ed4fd8035625bab3d9c5",
+          "c6cdee5d5f1b781dec9addd7c25c03e7b2b26efe54e4d021448c01d04c0f831c",
+          "91206863e6fb8839607f8ca95c626d1079431dc6ad2185b521cb0227a2e6da34",
+          "91e7b461ee7db9592243e1829dc43ab280852a6d335d0e3d7487765d9169d2c1",
+          "5b18ebab645f69aba9d6db2fe23f5bb604e198cca4c45a68b04f40619b6df7ce",
+          "6ae3923c96c6290b1326541832c35cb42b930837063664c9cd36ef047ef8099f",
+          "dfc8db6263e55916b9908c93a4588bebc2d915f41dbe5c39a45d0f519fee782d",
+          "515a0218ba2479bd3223520151a0b88027d20749140100d29c27b70abedaf377",
+          "38ebb62fa92a55c4e0222a1103f2b1d023b08edcc362b1282309ecb0e616173c",
+          "51a4435488cfd055249e64616ca681d3e4fe02ec7527b1ac76d896e7ea14c8be",
+          "ba7c953c3bdec1812ff212addb5d8fe4adbb243ce1a8097c90b7d40853c69c02",
+          "082c12ff2d230ab49ab050b3328220744c30bf2d7f6cc2d7d1f167788258b24c",
+          "cb4affa127bb77ff88eacaefba930150a64b4fb9a13a7083a865068fabebfd4c",
+          "1a41e62d064e398667371aafe20465f47efb70538241ff1f02a89f16d4a426fd",
+          "48be3e0508e908395e52f6a47718633eaa4094c481de08496dd216fbdbb69fed",
+          "8027f780b674027302d09d9028b7f7eed65a28841d05b7aba0912d629b12d48b",
+          "fad912bd781eb771e139fd0e17453027b8265d1e260b9ffc42c231cb13fec64c",
+          "f5833e91fb50848ba8a7aeac2047c7a8fbbe3d497edc10e7604c05b2f9a7c7af",
+          "1c0385da1bba43f81824401035e64207ed70edddf54e9dfc4fe7e3aaff68efb3",
+          "07c595719b923f1c359be4b814c14033cd2a0342fd306c081326e3528e97e97e",
+          "8f6e54b04cf342d4f1d0eed7fe5353aad29d5698af32e93a233b1287ad25633b",
+          "29acca731a1b26fa240ed507a23e65a94e036af4989d10e8bb0fa564a7d752a7"
+        ],
+        "environment": {
+          "cpu": {
+            "logical_count": 32,
+            "model": "AMD Ryzen 9 9950X 16-Core Processor"
+          },
+          "dependencies": {
+            "cellpose": "4.2.1.1",
+            "dask": "2026.7.1",
+            "distributed": "2026.7.1",
+            "fsspec": "2026.7.0",
+            "h5py": "3.16.0",
+            "hdmf-zarr": "0.13.0",
+            "lindi": "0.4.6",
+            "neuroflow": "0.1.0",
+            "numpy": "2.2.6",
+            "pandas": "2.3.3",
+            "pyarrow": "25.0.0",
+            "pynapple": null,
+            "pynwb": "4.1.0",
+            "remfile": "0.1.14",
+            "s3fs": "2026.7.0",
+            "scipy": "1.15.3",
+            "xarray": "2025.6.1",
+            "zarr": "2.18.3"
+          },
+          "git": {
+            "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+            "dirty": false,
+            "source": "git"
+          },
+          "neuroflow_version": "0.1.0",
+          "platform": {
+            "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+            "machine": "x86_64",
+            "release": "7.0.0-29-generic",
+            "system": "Linux"
+          },
+          "python": {
+            "executable": "python",
+            "implementation": "CPython",
+            "version": "3.10.19"
+          },
+          "schema_version": "1",
+          "total_ram_bytes": 132559962112
+        },
+        "execution_attempts": [
+          {
+            "environment": {
+              "cpu": {
+                "logical_count": 32,
+                "model": "AMD Ryzen 9 9950X 16-Core Processor"
+              },
+              "dependencies": {
+                "cellpose": "4.2.1.1",
+                "dask": "2026.7.1",
+                "distributed": "2026.7.1",
+                "fsspec": "2026.7.0",
+                "h5py": "3.16.0",
+                "hdmf-zarr": "0.13.0",
+                "lindi": "0.4.6",
+                "neuroflow": "0.1.0",
+                "numpy": "2.2.6",
+                "pandas": "2.3.3",
+                "pyarrow": "25.0.0",
+                "pynapple": null,
+                "pynwb": "4.1.0",
+                "remfile": "0.1.14",
+                "s3fs": "2026.7.0",
+                "scipy": "1.15.3",
+                "xarray": "2025.6.1",
+                "zarr": "2.18.3"
+              },
+              "git": {
+                "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+                "dirty": false,
+                "source": "git"
+              },
+              "neuroflow_version": "0.1.0",
+              "platform": {
+                "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+                "machine": "x86_64",
+                "release": "7.0.0-29-generic",
+                "system": "Linux"
+              },
+              "python": {
+                "executable": "python",
+                "implementation": "CPython",
+                "version": "3.10.19"
+              },
+              "schema_version": "1",
+              "total_ram_bytes": 132559962112
+            },
+            "execution_finished": "2026-08-21T22:00:04.708204+00:00",
+            "execution_policy": {
+              "max_workers": 1,
+              "memory_limit": "2 GiB"
+            },
+            "execution_started": "2026-08-21T21:55:03.340877+00:00",
+            "scheduler": "threads",
+            "source_backend": "remfile",
+            "status": "complete"
+          }
+        ],
+        "execution_finished": "2026-08-21T22:00:04.708204+00:00",
+        "execution_metrics": {
+          "bytes_read": 3773205855,
+          "bytes_read_status": "measured",
+          "completed_task_count": 29,
+          "computed_task_count": 29,
+          "execution_finished": "2026-08-21T22:00:04.708204+00:00",
+          "execution_started": "2026-08-21T21:55:03.340877+00:00",
+          "integrity_verification": {
+            "checksums": "not-run-during-finalization",
+            "manifests": "valid",
+            "status": "measured"
+          },
+          "output_bytes": 210960384,
+          "partitions_completed": 29,
+          "peak_rss_bytes": 2491887616,
+          "resumed_task_count": 0,
+          "schema_version": "1",
+          "stages": [],
+          "wall_time_seconds": 301.367327
+        },
+        "execution_policy": {
+          "max_workers": 1,
+          "memory_limit": "2 GiB"
+        },
+        "execution_started": "2026-08-21T21:55:03.340877+00:00",
+        "external_libraries": {
+          "numpy": "2.2.6"
+        },
+        "failed_partitions": [],
+        "neuroflow_version": "0.1.0",
+        "nwb_paths": [
+          "/acquisition/NeuronOnePhotonSeries"
+        ],
+        "output": {
+          "axes": [
+            "y",
+            "x",
+            "z"
+          ],
+          "chunks": [
+            256,
+            256,
+            1
+          ],
+          "dtype": "float32",
+          "kind": "array",
+          "name": "result",
+          "shape": [
+            888,
+            2048,
+            29
+          ],
+          "uri": "publication/runs-publication/fish-projection.zarr"
+        },
+        "parameters": {
+          "expression": {
+            "axes": [
+              "y",
+              "x",
+              "z"
+            ],
+            "casting": "unsafe",
+            "dtype": "<f4",
+            "kind": "cast",
+            "operand": {
+              "axes": [
+                "y",
+                "x",
+                "z"
+              ],
+              "dtype": "<f8",
+              "dtype_argument": null,
+              "keepdims": false,
+              "kind": "reduction",
+              "operand": {
+                "axes": [
+                  "time",
+                  "y",
+                  "x",
+                  "z"
+                ],
+                "dtype": "<i2",
+                "kind": "input",
+                "shape": [
+                  50,
+                  888,
+                  2048,
+                  29
+                ]
+              },
+              "operation": "median",
+              "parameters": {},
+              "reduced_axes": [
+                "time"
+              ],
+              "shape": [
+                888,
+                2048,
+                29
+              ]
+            },
+            "shape": [
+              888,
+              2048,
+              29
+            ]
+          },
+          "expression_schema_version": "1",
+          "numpy_version": "2.2.6"
+        },
+        "partition_plan": {
+          "overlap": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "partition_ids": [
+            "7c045c318d54d4a6b3d80dc3d3738809a8e4e68fe51e11f74644979188b53128",
+            "0617f5f191ea0433b5a21ff6d7c7882ca9f1f4db661a4f94a19576e664cffc98",
+            "ebae1871dfe4766d00e66c418f899532c3fa0e1f67f5b5d1eb803db0d0d6b39a",
+            "58d6380b4bb742cf52b27b315e4fd9fb13ca7f76ffdd78b067665dd4b85fb5f9",
+            "d4187ff6b7e2a4b6cc2d196af52889d940d2915d413fd043fa37893a86f0749f",
+            "ed5bc6214eaf040ab8a96d92f9c8eba2135c970094a7309ee57080a40175cd7f",
+            "4bf1089e3958e06f9982a974c4adf7caf9e27bee95f4c08158c88006af40bc44",
+            "7de29be4e34ca22a06a620bcce3c62611a515d490cc4ed4fd8035625bab3d9c5",
+            "c6cdee5d5f1b781dec9addd7c25c03e7b2b26efe54e4d021448c01d04c0f831c",
+            "91206863e6fb8839607f8ca95c626d1079431dc6ad2185b521cb0227a2e6da34",
+            "91e7b461ee7db9592243e1829dc43ab280852a6d335d0e3d7487765d9169d2c1",
+            "5b18ebab645f69aba9d6db2fe23f5bb604e198cca4c45a68b04f40619b6df7ce",
+            "6ae3923c96c6290b1326541832c35cb42b930837063664c9cd36ef047ef8099f",
+            "dfc8db6263e55916b9908c93a4588bebc2d915f41dbe5c39a45d0f519fee782d",
+            "515a0218ba2479bd3223520151a0b88027d20749140100d29c27b70abedaf377",
+            "38ebb62fa92a55c4e0222a1103f2b1d023b08edcc362b1282309ecb0e616173c",
+            "51a4435488cfd055249e64616ca681d3e4fe02ec7527b1ac76d896e7ea14c8be",
+            "ba7c953c3bdec1812ff212addb5d8fe4adbb243ce1a8097c90b7d40853c69c02",
+            "082c12ff2d230ab49ab050b3328220744c30bf2d7f6cc2d7d1f167788258b24c",
+            "cb4affa127bb77ff88eacaefba930150a64b4fb9a13a7083a865068fabebfd4c",
+            "1a41e62d064e398667371aafe20465f47efb70538241ff1f02a89f16d4a426fd",
+            "48be3e0508e908395e52f6a47718633eaa4094c481de08496dd216fbdbb69fed",
+            "8027f780b674027302d09d9028b7f7eed65a28841d05b7aba0912d629b12d48b",
+            "fad912bd781eb771e139fd0e17453027b8265d1e260b9ffc42c231cb13fec64c",
+            "f5833e91fb50848ba8a7aeac2047c7a8fbbe3d497edc10e7604c05b2f9a7c7af",
+            "1c0385da1bba43f81824401035e64207ed70edddf54e9dfc4fe7e3aaff68efb3",
+            "07c595719b923f1c359be4b814c14033cd2a0342fd306c081326e3528e97e97e",
+            "8f6e54b04cf342d4f1d0eed7fe5353aad29d5698af32e93a233b1287ad25633b",
+            "29acca731a1b26fa240ed507a23e65a94e036af4989d10e8bb0fa564a7d752a7"
+          ],
+          "partitions": [
+            {
+              "coordinates": [
+                0
+              ],
+              "key": "spatial-00000000",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ],
+              "partition_id": "7c045c318d54d4a6b3d80dc3d3738809a8e4e68fe51e11f74644979188b53128",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                1
+              ],
+              "key": "spatial-00000001",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  1,
+                  2,
+                  null
+                ]
+              ],
+              "partition_id": "0617f5f191ea0433b5a21ff6d7c7882ca9f1f4db661a4f94a19576e664cffc98",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  1,
+                  2,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                2
+              ],
+              "key": "spatial-00000002",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  2,
+                  3,
+                  null
+                ]
+              ],
+              "partition_id": "ebae1871dfe4766d00e66c418f899532c3fa0e1f67f5b5d1eb803db0d0d6b39a",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  2,
+                  3,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                3
+              ],
+              "key": "spatial-00000003",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  3,
+                  4,
+                  null
+                ]
+              ],
+              "partition_id": "58d6380b4bb742cf52b27b315e4fd9fb13ca7f76ffdd78b067665dd4b85fb5f9",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  3,
+                  4,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                4
+              ],
+              "key": "spatial-00000004",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  4,
+                  5,
+                  null
+                ]
+              ],
+              "partition_id": "d4187ff6b7e2a4b6cc2d196af52889d940d2915d413fd043fa37893a86f0749f",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  4,
+                  5,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                5
+              ],
+              "key": "spatial-00000005",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  5,
+                  6,
+                  null
+                ]
+              ],
+              "partition_id": "ed5bc6214eaf040ab8a96d92f9c8eba2135c970094a7309ee57080a40175cd7f",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  5,
+                  6,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                6
+              ],
+              "key": "spatial-00000006",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  6,
+                  7,
+                  null
+                ]
+              ],
+              "partition_id": "4bf1089e3958e06f9982a974c4adf7caf9e27bee95f4c08158c88006af40bc44",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  6,
+                  7,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                7
+              ],
+              "key": "spatial-00000007",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  7,
+                  8,
+                  null
+                ]
+              ],
+              "partition_id": "7de29be4e34ca22a06a620bcce3c62611a515d490cc4ed4fd8035625bab3d9c5",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  7,
+                  8,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                8
+              ],
+              "key": "spatial-00000008",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  8,
+                  9,
+                  null
+                ]
+              ],
+              "partition_id": "c6cdee5d5f1b781dec9addd7c25c03e7b2b26efe54e4d021448c01d04c0f831c",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  8,
+                  9,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                9
+              ],
+              "key": "spatial-00000009",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  9,
+                  10,
+                  null
+                ]
+              ],
+              "partition_id": "91206863e6fb8839607f8ca95c626d1079431dc6ad2185b521cb0227a2e6da34",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  9,
+                  10,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                10
+              ],
+              "key": "spatial-00000010",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  10,
+                  11,
+                  null
+                ]
+              ],
+              "partition_id": "91e7b461ee7db9592243e1829dc43ab280852a6d335d0e3d7487765d9169d2c1",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  10,
+                  11,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                11
+              ],
+              "key": "spatial-00000011",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  11,
+                  12,
+                  null
+                ]
+              ],
+              "partition_id": "5b18ebab645f69aba9d6db2fe23f5bb604e198cca4c45a68b04f40619b6df7ce",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  11,
+                  12,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                12
+              ],
+              "key": "spatial-00000012",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  12,
+                  13,
+                  null
+                ]
+              ],
+              "partition_id": "6ae3923c96c6290b1326541832c35cb42b930837063664c9cd36ef047ef8099f",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  12,
+                  13,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                13
+              ],
+              "key": "spatial-00000013",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  13,
+                  14,
+                  null
+                ]
+              ],
+              "partition_id": "dfc8db6263e55916b9908c93a4588bebc2d915f41dbe5c39a45d0f519fee782d",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  13,
+                  14,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                14
+              ],
+              "key": "spatial-00000014",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  14,
+                  15,
+                  null
+                ]
+              ],
+              "partition_id": "515a0218ba2479bd3223520151a0b88027d20749140100d29c27b70abedaf377",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  14,
+                  15,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                15
+              ],
+              "key": "spatial-00000015",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  15,
+                  16,
+                  null
+                ]
+              ],
+              "partition_id": "38ebb62fa92a55c4e0222a1103f2b1d023b08edcc362b1282309ecb0e616173c",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  15,
+                  16,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                16
+              ],
+              "key": "spatial-00000016",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  16,
+                  17,
+                  null
+                ]
+              ],
+              "partition_id": "51a4435488cfd055249e64616ca681d3e4fe02ec7527b1ac76d896e7ea14c8be",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  16,
+                  17,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                17
+              ],
+              "key": "spatial-00000017",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  17,
+                  18,
+                  null
+                ]
+              ],
+              "partition_id": "ba7c953c3bdec1812ff212addb5d8fe4adbb243ce1a8097c90b7d40853c69c02",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  17,
+                  18,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                18
+              ],
+              "key": "spatial-00000018",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  18,
+                  19,
+                  null
+                ]
+              ],
+              "partition_id": "082c12ff2d230ab49ab050b3328220744c30bf2d7f6cc2d7d1f167788258b24c",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  18,
+                  19,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                19
+              ],
+              "key": "spatial-00000019",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  19,
+                  20,
+                  null
+                ]
+              ],
+              "partition_id": "cb4affa127bb77ff88eacaefba930150a64b4fb9a13a7083a865068fabebfd4c",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  19,
+                  20,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                20
+              ],
+              "key": "spatial-00000020",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  20,
+                  21,
+                  null
+                ]
+              ],
+              "partition_id": "1a41e62d064e398667371aafe20465f47efb70538241ff1f02a89f16d4a426fd",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  20,
+                  21,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                21
+              ],
+              "key": "spatial-00000021",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  21,
+                  22,
+                  null
+                ]
+              ],
+              "partition_id": "48be3e0508e908395e52f6a47718633eaa4094c481de08496dd216fbdbb69fed",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  21,
+                  22,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                22
+              ],
+              "key": "spatial-00000022",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  22,
+                  23,
+                  null
+                ]
+              ],
+              "partition_id": "8027f780b674027302d09d9028b7f7eed65a28841d05b7aba0912d629b12d48b",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  22,
+                  23,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                23
+              ],
+              "key": "spatial-00000023",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  23,
+                  24,
+                  null
+                ]
+              ],
+              "partition_id": "fad912bd781eb771e139fd0e17453027b8265d1e260b9ffc42c231cb13fec64c",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  23,
+                  24,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                24
+              ],
+              "key": "spatial-00000024",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  24,
+                  25,
+                  null
+                ]
+              ],
+              "partition_id": "f5833e91fb50848ba8a7aeac2047c7a8fbbe3d497edc10e7604c05b2f9a7c7af",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  24,
+                  25,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                25
+              ],
+              "key": "spatial-00000025",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  25,
+                  26,
+                  null
+                ]
+              ],
+              "partition_id": "1c0385da1bba43f81824401035e64207ed70edddf54e9dfc4fe7e3aaff68efb3",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  25,
+                  26,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                26
+              ],
+              "key": "spatial-00000026",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  26,
+                  27,
+                  null
+                ]
+              ],
+              "partition_id": "07c595719b923f1c359be4b814c14033cd2a0342fd306c081326e3528e97e97e",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  26,
+                  27,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                27
+              ],
+              "key": "spatial-00000027",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  27,
+                  28,
+                  null
+                ]
+              ],
+              "partition_id": "8f6e54b04cf342d4f1d0eed7fe5353aad29d5698af32e93a233b1287ad25633b",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  27,
+                  28,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            },
+            {
+              "coordinates": [
+                28
+              ],
+              "key": "spatial-00000028",
+              "output_slices": [
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  28,
+                  29,
+                  null
+                ]
+              ],
+              "partition_id": "29acca731a1b26fa240ed507a23e65a94e036af4989d10e8bb0fa564a7d752a7",
+              "read_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  28,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": [
+                [
+                  0,
+                  50,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  1,
+                  null
+                ]
+              ]
+            }
+          ],
+          "processing_shape": [
+            50,
+            888,
+            2048,
+            1
+          ],
+          "task_count": 29
+        },
+        "random_seeds": [],
+        "scheduler": "threads",
+        "schema_version": "1",
+        "selection": {
+          "axes": [
+            "time",
+            "y",
+            "x",
+            "z"
+          ],
+          "bounds": [
+            [
+              0,
+              50
+            ],
+            [
+              0,
+              888
+            ],
+            [
+              0,
+              2048
+            ],
+            [
+              0,
+              29
+            ]
+          ],
+          "dtype": "int16",
+          "native_chunks": [
+            1,
+            888,
+            2048,
+            1
+          ],
+          "neurodata_type": "TwoPhotonSeries",
+          "shape": [
+            50,
+            888,
+            2048,
+            29
+          ]
+        },
+        "source": {
+          "asset_id": "4f898ff7-6084-4e84-a449-f05811c1d951",
+          "checksum": "b04535a3bde5879608cd92931350f7191eb5380eb84e1a723dbbc2bb87012e83",
+          "uri": "DANDI:000350",
+          "version": "0.240822.1759"
+        },
+        "source_backend": "remfile",
+        "stage_execution": [],
+        "stages": [],
+        "status": "complete",
+        "workflow_id": "f633a301445e05b1f8ffa575bd794d4c7bc1a3370dbc7fd70f7fbed848d4d0c6"
+      },
+      "summary": {
+        "asset": "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb",
+        "input_axes": [
+          "time",
+          "y",
+          "x",
+          "z"
+        ],
+        "input_dtype": "int16",
+        "input_shape": [
+          50,
+          888,
+          2048,
+          29
+        ],
+        "native_chunks": [
+          1,
+          888,
+          2048,
+          1
+        ],
+        "native_chunks_touched": 1450,
+        "output_axes": [
+          "y",
+          "x",
+          "z"
+        ],
+        "output_chunks": [
+          256,
+          256,
+          1
+        ],
+        "output_dtype": "float32",
+        "output_shape": [
+          888,
+          2048,
+          29
+        ],
+        "output_uri": "publication/runs-publication/fish-projection.zarr",
+        "preview_uri": "publication/runs-publication/fish-projection-z14.png",
+        "remote_io": {
+          "backend": "remfile",
+          "http_responses": 1490,
+          "response_content_bytes": 3773205855
+        },
+        "source": "DANDI:000350@0.240822.1759",
+        "source_doi": "https://doi.org/10.48324/dandi.000350/0.240822.1759",
+        "task_count": 29,
+        "transport": "remfile",
+        "verified": true
+      }
+    },
+    "traces": {
+      "axes": [
+        "time",
+        "cell"
+      ],
+      "checksum": "269f126b4a228ecc04493192d965fd5c5de53e284e6c07178e981ab07e1fb001",
+      "dtype": "<f4",
+      "first_execution_metrics": {
+        "bytes_read": 230240026624,
+        "completed_task_count": 35,
+        "computed_task_count": 35,
+        "finished_at": "2026-08-22T02:14:06.269778+00:00",
+        "memory": {
+          "budget": {
+            "enforcement": "planning-only; no OS-level memory cap is installed",
+            "external_reserve_bytes": 0,
+            "interpretation": "approximate-total-process-target",
+            "measured_process_floor_bytes": 469762048,
+            "note": "task_bytes bounds partition working sets; the total target is attainable",
+            "process_overhead_bytes": 469762048,
+            "process_overhead_components": {
+              "dask_runtime": 134217728,
+              "interpreter_and_libraries": 234881024,
+              "output_write_buffers": 33554432,
+              "source_read_cache": 67108864
+            },
+            "task_bytes": 1677721600,
+            "total_bytes": 2147483648,
+            "total_target_attainable": true
+          },
+          "measured_process_peak_rss_bytes": 4240654336,
+          "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+          "planned_process_peak_bytes": 2136916992,
+          "planned_task_working_bytes": 1667154944
+        },
+        "output_bytes": 68136456,
+        "partitions_completed": 35,
+        "peak_rss_bytes": 4240654336,
+        "resumed_task_count": 0,
+        "started_at": "2026-08-21T22:02:16.600394+00:00",
+        "wall_time_seconds": 15109.669102301006
+      },
+      "integrity_verified": true,
+      "preflight": {
+        "bounded": {
+          "reasons": [
+            "movie traversal is aligned to source spatial chunks",
+            "each task covers one finite time window",
+            "empty spatial chunks are omitted after bounded label indexing"
+          ],
+          "status": "estimated",
+          "value": true
+        },
+        "operation": "mean-fluorescence-traces",
+        "output": {
+          "axes": [
+            "time",
+            "cell"
+          ],
+          "estimated_size_bytes": {
+            "status": "estimated",
+            "value": 68136456
+          },
+          "shape": [
+            3065,
+            5552
+          ]
+        },
+        "partitioning": {
+          "automatic_time_chunk": true,
+          "estimated_source_chunks_touched": {
+            "status": "estimated",
+            "value": 88885
+          },
+          "estimated_total_bytes_read": {
+            "status": "estimated",
+            "value": 323296788480
+          },
+          "task_count": {
+            "status": "estimated",
+            "value": 35
+          },
+          "time_chunk": 88
+        },
+        "resources": {
+          "estimated_memory_per_task": {
+            "status": "estimated",
+            "value": 1667154944
+          },
+          "estimated_process_peak_bytes": {
+            "status": "estimated",
+            "value": 2136916992
+          },
+          "measured_process_peak_rss_bytes": {
+            "note": "populated from execution metrics after a run; planning alone cannot measure resident set size",
+            "status": "unknown",
+            "value": null
+          },
+          "memory_budget": {
+            "enforcement": "planning-only; no OS-level memory cap is installed",
+            "external_reserve_bytes": 0,
+            "interpretation": "approximate-total-process-target",
+            "measured_process_floor_bytes": 469762048,
+            "note": "task_bytes bounds partition working sets; the total target is attainable",
+            "process_overhead_bytes": 469762048,
+            "process_overhead_components": {
+              "dask_runtime": 134217728,
+              "interpreter_and_libraries": 234881024,
+              "output_write_buffers": 33554432,
+              "source_read_cache": 67108864
+            },
+            "task_bytes": 1677721600,
+            "total_bytes": 2147483648,
+            "total_target_attainable": true
+          },
+          "memory_limit_bytes": 2147483648
+        },
+        "roi_index": {
+          "active_spatial_chunks": 29,
+          "cell_count": 5552,
+          "skipped_empty_spatial_chunks": 0
+        },
+        "schema_version": "1",
+        "source": {
+          "dtype": "int16",
+          "logical_bytes": {
+            "status": "estimated",
+            "value": 323296788480
+          },
+          "physical_chunks": [
+            1,
+            888,
+            2048,
+            1
+          ],
+          "shape": [
+            3065,
+            888,
+            2048,
+            29
+          ]
+        }
+      },
+      "provenance": {
+        "adapter": {
+          "name": "mean-fluorescence-traces",
+          "version": "1"
+        },
+        "completed_partitions": [
+          "trace-00000000",
+          "trace-00000088",
+          "trace-00000176",
+          "trace-00000264",
+          "trace-00000352",
+          "trace-00000440",
+          "trace-00000528",
+          "trace-00000616",
+          "trace-00000704",
+          "trace-00000792",
+          "trace-00000880",
+          "trace-00000968",
+          "trace-00001056",
+          "trace-00001144",
+          "trace-00001232",
+          "trace-00001320",
+          "trace-00001408",
+          "trace-00001496",
+          "trace-00001584",
+          "trace-00001672",
+          "trace-00001760",
+          "trace-00001848",
+          "trace-00001936",
+          "trace-00002024",
+          "trace-00002112",
+          "trace-00002200",
+          "trace-00002288",
+          "trace-00002376",
+          "trace-00002464",
+          "trace-00002552",
+          "trace-00002640",
+          "trace-00002728",
+          "trace-00002816",
+          "trace-00002904",
+          "trace-00002992"
+        ],
+        "environment": {
+          "cpu": {
+            "logical_count": 32,
+            "model": "AMD Ryzen 9 9950X 16-Core Processor"
+          },
+          "dependencies": {
+            "cellpose": "4.2.1.1",
+            "dask": "2026.7.1",
+            "distributed": "2026.7.1",
+            "fsspec": "2026.7.0",
+            "h5py": "3.16.0",
+            "hdmf-zarr": "0.13.0",
+            "lindi": "0.4.6",
+            "neuroflow": "0.1.0",
+            "numpy": "2.2.6",
+            "pandas": "2.3.3",
+            "pyarrow": "25.0.0",
+            "pynapple": null,
+            "pynwb": "4.1.0",
+            "remfile": "0.1.14",
+            "s3fs": "2026.7.0",
+            "scipy": "1.15.3",
+            "xarray": "2025.6.1",
+            "zarr": "2.18.3"
+          },
+          "git": {
+            "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+            "dirty": false,
+            "source": "git"
+          },
+          "neuroflow_version": "0.1.0",
+          "platform": {
+            "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+            "machine": "x86_64",
+            "release": "7.0.0-29-generic",
+            "system": "Linux"
+          },
+          "python": {
+            "executable": "python",
+            "implementation": "CPython",
+            "version": "3.10.19"
+          },
+          "schema_version": "1",
+          "total_ram_bytes": 132559962112
+        },
+        "execution_attempts": [
+          {
+            "execution_finished": "2026-08-22T02:14:06.269778+00:00",
+            "execution_metrics": {
+              "bytes_read": 230240026624,
+              "completed_task_count": 35,
+              "computed_task_count": 35,
+              "finished_at": "2026-08-22T02:14:06.269778+00:00",
+              "memory": {
+                "budget": {
+                  "enforcement": "planning-only; no OS-level memory cap is installed",
+                  "external_reserve_bytes": 0,
+                  "interpretation": "approximate-total-process-target",
+                  "measured_process_floor_bytes": 469762048,
+                  "note": "task_bytes bounds partition working sets; the total target is attainable",
+                  "process_overhead_bytes": 469762048,
+                  "process_overhead_components": {
+                    "dask_runtime": 134217728,
+                    "interpreter_and_libraries": 234881024,
+                    "output_write_buffers": 33554432,
+                    "source_read_cache": 67108864
+                  },
+                  "task_bytes": 1677721600,
+                  "total_bytes": 2147483648,
+                  "total_target_attainable": true
+                },
+                "measured_process_peak_rss_bytes": 4240654336,
+                "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+                "planned_process_peak_bytes": 2136916992,
+                "planned_task_working_bytes": 1667154944
+              },
+              "output_bytes": 68136456,
+              "partitions_completed": 35,
+              "peak_rss_bytes": 4240654336,
+              "resumed_task_count": 0,
+              "started_at": "2026-08-21T22:02:16.600394+00:00",
+              "wall_time_seconds": 15109.669102301006
+            },
+            "execution_started": "2026-08-21T22:02:16.782054+00:00",
+            "memory_limit": "2 GiB",
+            "status": "complete"
+          }
+        ],
+        "execution_finished": "2026-08-22T02:14:06.269778+00:00",
+        "execution_metrics": {
+          "bytes_read": 230240026624,
+          "completed_task_count": 35,
+          "computed_task_count": 35,
+          "finished_at": "2026-08-22T02:14:06.269778+00:00",
+          "memory": {
+            "budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 1677721600,
+              "total_bytes": 2147483648,
+              "total_target_attainable": true
+            },
+            "measured_process_peak_rss_bytes": 4240654336,
+            "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
+            "planned_process_peak_bytes": 2136916992,
+            "planned_task_working_bytes": 1667154944
+          },
+          "output_bytes": 68136456,
+          "partitions_completed": 35,
+          "peak_rss_bytes": 4240654336,
+          "resumed_task_count": 0,
+          "started_at": "2026-08-21T22:02:16.600394+00:00",
+          "wall_time_seconds": 15109.669102301006
+        },
+        "execution_started": "2026-08-21T22:02:16.782054+00:00",
+        "failed_partitions": [],
+        "integrity_verified": true,
+        "labels": {
+          "axes": [
+            "y",
+            "x",
+            "z"
+          ],
+          "path": "labels",
+          "segmentation_workflow": {
+            "adapter": {
+              "name": "cellpose",
+              "version": "1"
+            },
+            "external_libraries": {
+              "cellpose": "4.2.1.1"
+            },
+            "parameters": {
+              "anisotropy": null,
+              "batch_size": 1,
+              "cellprob_threshold": 0.0,
+              "channel_axis": null,
+              "channels": null,
+              "device": null,
+              "diameter": null,
+              "do_3d": false,
+              "flow_threshold": 0.4,
+              "gpu": true,
+              "halo": {},
+              "min_size": 15,
+              "normalize": true,
+              "pretrained_model": "cpsam",
+              "squeeze_singleton_axis": 2,
+              "tile_overlap": 0.1,
+              "use_bfloat16": false,
+              "z_axis": null
+            },
+            "result_checksum": null,
+            "workflow_id": "0baf450b4d447de62f7b971f4cb45a91b77114285d161ec9a5039cdcf87dcde0"
+          },
+          "shape": [
+            888,
+            2048,
+            29
+          ],
+          "source": {
+            "asset_id": "labels",
+            "checksum": "389999f1ab8125f3605acda3027f16a7eb209fd7a8b79d6d9559146827ac9046",
+            "uri": "publication/runs-publication/fish-cellpose.zarr",
+            "version": null
+          }
+        },
+        "nwb_paths": [
+          "/acquisition/NeuronOnePhotonSeries"
+        ],
+        "output": {
+          "axes": [
+            "time",
+            "cell"
+          ],
+          "chunks": [
+            88,
+            1024
+          ],
+          "coordinates": {
+            "cell": "cell_ids",
+            "time": "timestamps"
+          },
+          "dtype": "float32",
+          "kind": "array",
+          "name": "traces",
+          "shape": [
+            3065,
+            5552
+          ],
+          "uri": "publication/runs-publication/fish-traces.zarr"
+        },
+        "parameters": {
+          "automatic_time_chunk": true,
+          "estimated_memory_per_window": 1667154944,
+          "memory_budget": {
+            "enforcement": "planning-only; no OS-level memory cap is installed",
+            "external_reserve_bytes": 0,
+            "interpretation": "approximate-total-process-target",
+            "measured_process_floor_bytes": 469762048,
+            "note": "task_bytes bounds partition working sets; the total target is attainable",
+            "process_overhead_bytes": 469762048,
+            "process_overhead_components": {
+              "dask_runtime": 134217728,
+              "interpreter_and_libraries": 234881024,
+              "output_write_buffers": 33554432,
+              "source_read_cache": 67108864
+            },
+            "task_bytes": 1677721600,
+            "total_bytes": 2147483648,
+            "total_target_attainable": true
+          },
+          "memory_limit": "2 GiB",
+          "time_chunk": 88
+        },
+        "partition_plan": {
+          "partition_ids": [
+            "trace-00000000",
+            "trace-00000088",
+            "trace-00000176",
+            "trace-00000264",
+            "trace-00000352",
+            "trace-00000440",
+            "trace-00000528",
+            "trace-00000616",
+            "trace-00000704",
+            "trace-00000792",
+            "trace-00000880",
+            "trace-00000968",
+            "trace-00001056",
+            "trace-00001144",
+            "trace-00001232",
+            "trace-00001320",
+            "trace-00001408",
+            "trace-00001496",
+            "trace-00001584",
+            "trace-00001672",
+            "trace-00001760",
+            "trace-00001848",
+            "trace-00001936",
+            "trace-00002024",
+            "trace-00002112",
+            "trace-00002200",
+            "trace-00002288",
+            "trace-00002376",
+            "trace-00002464",
+            "trace-00002552",
+            "trace-00002640",
+            "trace-00002728",
+            "trace-00002816",
+            "trace-00002904",
+            "trace-00002992"
+          ],
+          "partitions": [
+            {
+              "coordinates": [
+                0
+              ],
+              "key": "trace-00000000",
+              "output_slices": [
+                [
+                  0,
+                  88,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000000",
+              "read_slices": [
+                [
+                  0,
+                  88,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                88
+              ],
+              "key": "trace-00000088",
+              "output_slices": [
+                [
+                  88,
+                  176,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000088",
+              "read_slices": [
+                [
+                  88,
+                  176,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                176
+              ],
+              "key": "trace-00000176",
+              "output_slices": [
+                [
+                  176,
+                  264,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000176",
+              "read_slices": [
+                [
+                  176,
+                  264,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                264
+              ],
+              "key": "trace-00000264",
+              "output_slices": [
+                [
+                  264,
+                  352,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000264",
+              "read_slices": [
+                [
+                  264,
+                  352,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                352
+              ],
+              "key": "trace-00000352",
+              "output_slices": [
+                [
+                  352,
+                  440,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000352",
+              "read_slices": [
+                [
+                  352,
+                  440,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                440
+              ],
+              "key": "trace-00000440",
+              "output_slices": [
+                [
+                  440,
+                  528,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000440",
+              "read_slices": [
+                [
+                  440,
+                  528,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                528
+              ],
+              "key": "trace-00000528",
+              "output_slices": [
+                [
+                  528,
+                  616,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000528",
+              "read_slices": [
+                [
+                  528,
+                  616,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                616
+              ],
+              "key": "trace-00000616",
+              "output_slices": [
+                [
+                  616,
+                  704,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000616",
+              "read_slices": [
+                [
+                  616,
+                  704,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                704
+              ],
+              "key": "trace-00000704",
+              "output_slices": [
+                [
+                  704,
+                  792,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000704",
+              "read_slices": [
+                [
+                  704,
+                  792,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                792
+              ],
+              "key": "trace-00000792",
+              "output_slices": [
+                [
+                  792,
+                  880,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000792",
+              "read_slices": [
+                [
+                  792,
+                  880,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                880
+              ],
+              "key": "trace-00000880",
+              "output_slices": [
+                [
+                  880,
+                  968,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000880",
+              "read_slices": [
+                [
+                  880,
+                  968,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                968
+              ],
+              "key": "trace-00000968",
+              "output_slices": [
+                [
+                  968,
+                  1056,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00000968",
+              "read_slices": [
+                [
+                  968,
+                  1056,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1056
+              ],
+              "key": "trace-00001056",
+              "output_slices": [
+                [
+                  1056,
+                  1144,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001056",
+              "read_slices": [
+                [
+                  1056,
+                  1144,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1144
+              ],
+              "key": "trace-00001144",
+              "output_slices": [
+                [
+                  1144,
+                  1232,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001144",
+              "read_slices": [
+                [
+                  1144,
+                  1232,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1232
+              ],
+              "key": "trace-00001232",
+              "output_slices": [
+                [
+                  1232,
+                  1320,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001232",
+              "read_slices": [
+                [
+                  1232,
+                  1320,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1320
+              ],
+              "key": "trace-00001320",
+              "output_slices": [
+                [
+                  1320,
+                  1408,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001320",
+              "read_slices": [
+                [
+                  1320,
+                  1408,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1408
+              ],
+              "key": "trace-00001408",
+              "output_slices": [
+                [
+                  1408,
+                  1496,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001408",
+              "read_slices": [
+                [
+                  1408,
+                  1496,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1496
+              ],
+              "key": "trace-00001496",
+              "output_slices": [
+                [
+                  1496,
+                  1584,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001496",
+              "read_slices": [
+                [
+                  1496,
+                  1584,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1584
+              ],
+              "key": "trace-00001584",
+              "output_slices": [
+                [
+                  1584,
+                  1672,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001584",
+              "read_slices": [
+                [
+                  1584,
+                  1672,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1672
+              ],
+              "key": "trace-00001672",
+              "output_slices": [
+                [
+                  1672,
+                  1760,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001672",
+              "read_slices": [
+                [
+                  1672,
+                  1760,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1760
+              ],
+              "key": "trace-00001760",
+              "output_slices": [
+                [
+                  1760,
+                  1848,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001760",
+              "read_slices": [
+                [
+                  1760,
+                  1848,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1848
+              ],
+              "key": "trace-00001848",
+              "output_slices": [
+                [
+                  1848,
+                  1936,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001848",
+              "read_slices": [
+                [
+                  1848,
+                  1936,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                1936
+              ],
+              "key": "trace-00001936",
+              "output_slices": [
+                [
+                  1936,
+                  2024,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00001936",
+              "read_slices": [
+                [
+                  1936,
+                  2024,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2024
+              ],
+              "key": "trace-00002024",
+              "output_slices": [
+                [
+                  2024,
+                  2112,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002024",
+              "read_slices": [
+                [
+                  2024,
+                  2112,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2112
+              ],
+              "key": "trace-00002112",
+              "output_slices": [
+                [
+                  2112,
+                  2200,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002112",
+              "read_slices": [
+                [
+                  2112,
+                  2200,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2200
+              ],
+              "key": "trace-00002200",
+              "output_slices": [
+                [
+                  2200,
+                  2288,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002200",
+              "read_slices": [
+                [
+                  2200,
+                  2288,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2288
+              ],
+              "key": "trace-00002288",
+              "output_slices": [
+                [
+                  2288,
+                  2376,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002288",
+              "read_slices": [
+                [
+                  2288,
+                  2376,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2376
+              ],
+              "key": "trace-00002376",
+              "output_slices": [
+                [
+                  2376,
+                  2464,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002376",
+              "read_slices": [
+                [
+                  2376,
+                  2464,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2464
+              ],
+              "key": "trace-00002464",
+              "output_slices": [
+                [
+                  2464,
+                  2552,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002464",
+              "read_slices": [
+                [
+                  2464,
+                  2552,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2552
+              ],
+              "key": "trace-00002552",
+              "output_slices": [
+                [
+                  2552,
+                  2640,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002552",
+              "read_slices": [
+                [
+                  2552,
+                  2640,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2640
+              ],
+              "key": "trace-00002640",
+              "output_slices": [
+                [
+                  2640,
+                  2728,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002640",
+              "read_slices": [
+                [
+                  2640,
+                  2728,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2728
+              ],
+              "key": "trace-00002728",
+              "output_slices": [
+                [
+                  2728,
+                  2816,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002728",
+              "read_slices": [
+                [
+                  2728,
+                  2816,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2816
+              ],
+              "key": "trace-00002816",
+              "output_slices": [
+                [
+                  2816,
+                  2904,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002816",
+              "read_slices": [
+                [
+                  2816,
+                  2904,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2904
+              ],
+              "key": "trace-00002904",
+              "output_slices": [
+                [
+                  2904,
+                  2992,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002904",
+              "read_slices": [
+                [
+                  2904,
+                  2992,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            },
+            {
+              "coordinates": [
+                2992
+              ],
+              "key": "trace-00002992",
+              "output_slices": [
+                [
+                  2992,
+                  3065,
+                  null
+                ],
+                [
+                  0,
+                  5552,
+                  null
+                ]
+              ],
+              "partition_id": "trace-00002992",
+              "read_slices": [
+                [
+                  2992,
+                  3065,
+                  null
+                ],
+                [
+                  0,
+                  888,
+                  null
+                ],
+                [
+                  0,
+                  2048,
+                  null
+                ],
+                [
+                  0,
+                  29,
+                  null
+                ]
+              ],
+              "trim_slices": []
+            }
+          ],
+          "task_count": 35
+        },
+        "preflight_plan": {
+          "bounded": {
+            "reasons": [
+              "movie traversal is aligned to source spatial chunks",
+              "each task covers one finite time window",
+              "empty spatial chunks are omitted after bounded label indexing"
+            ],
+            "status": "estimated",
+            "value": true
+          },
+          "operation": "mean-fluorescence-traces",
+          "output": {
+            "axes": [
+              "time",
+              "cell"
+            ],
+            "estimated_size_bytes": {
+              "status": "estimated",
+              "value": 68136456
+            },
+            "shape": [
+              3065,
+              5552
+            ]
+          },
+          "partitioning": {
+            "automatic_time_chunk": true,
+            "estimated_source_chunks_touched": {
+              "status": "estimated",
+              "value": 88885
+            },
+            "estimated_total_bytes_read": {
+              "status": "estimated",
+              "value": 323296788480
+            },
+            "task_count": {
+              "status": "estimated",
+              "value": 35
+            },
+            "time_chunk": 88
+          },
+          "resources": {
+            "estimated_memory_per_task": {
+              "status": "estimated",
+              "value": 1667154944
+            },
+            "estimated_process_peak_bytes": {
+              "status": "estimated",
+              "value": 2136916992
+            },
+            "measured_process_peak_rss_bytes": {
+              "note": "populated from execution metrics after a run; planning alone cannot measure resident set size",
+              "status": "unknown",
+              "value": null
+            },
+            "memory_budget": {
+              "enforcement": "planning-only; no OS-level memory cap is installed",
+              "external_reserve_bytes": 0,
+              "interpretation": "approximate-total-process-target",
+              "measured_process_floor_bytes": 469762048,
+              "note": "task_bytes bounds partition working sets; the total target is attainable",
+              "process_overhead_bytes": 469762048,
+              "process_overhead_components": {
+                "dask_runtime": 134217728,
+                "interpreter_and_libraries": 234881024,
+                "output_write_buffers": 33554432,
+                "source_read_cache": 67108864
+              },
+              "task_bytes": 1677721600,
+              "total_bytes": 2147483648,
+              "total_target_attainable": true
+            },
+            "memory_limit_bytes": 2147483648
+          },
+          "roi_index": {
+            "active_spatial_chunks": 29,
+            "cell_count": 5552,
+            "skipped_empty_spatial_chunks": 0
+          },
+          "schema_version": "1",
+          "source": {
+            "dtype": "int16",
+            "logical_bytes": {
+              "status": "estimated",
+              "value": 323296788480
+            },
+            "physical_chunks": [
+              1,
+              888,
+              2048,
+              1
+            ],
+            "shape": [
+              3065,
+              888,
+              2048,
+              29
+            ]
+          }
+        },
+        "result_checksum": "269f126b4a228ecc04493192d965fd5c5de53e284e6c07178e981ab07e1fb001",
+        "schema_version": "1",
+        "selection": {
+          "axes": [
+            "time",
+            "y",
+            "x",
+            "z"
+          ],
+          "dtype": "int16",
+          "shape": [
+            3065,
+            888,
+            2048,
+            29
+          ]
+        },
+        "source": {
+          "asset_id": "4f898ff7-6084-4e84-a449-f05811c1d951",
+          "checksum": "b04535a3bde5879608cd92931350f7191eb5380eb84e1a723dbbc2bb87012e83",
+          "uri": "DANDI:000350",
+          "version": "0.240822.1759"
+        },
+        "source_backend": "remfile",
+        "status": "complete",
+        "workflow_id": "1d653223a4690eb9dbf7af0132a590efe2cd60ff7e61a71af4b573923a0e1ece"
+      },
+      "resume": {
+        "bytes_read": 0,
+        "computed_task_count": 0,
+        "corruption_repair": "covered by benchmarks.benchmark_resume_integrity on deterministic local data; archive output was not deliberately corrupted",
+        "exercised": true,
+        "integrity_verified": true,
+        "resumed_task_count": 35
+      },
+      "shape": [
+        3065,
+        5552
+      ],
+      "soma_count": 5552,
+      "source_chunks_touched": 88885,
+      "timepoints_processed": 3065
+    }
+  },
+  "timestamp": "2026-08-22T02:14:09.424484+00:00",
+  "validation": {
+    "biological_accuracy": null,
+    "cellpose_direct_equivalence": {
+      "cellpose_version": "4.2.1.1",
+      "device": {
+        "cuda_available": true,
+        "cuda_version": "13.0",
+        "gpu_name": "NVIDIA RTX PRO 4500 Blackwell",
+        "gpu_total_memory_bytes": 33662042112,
+        "note": "GPU memory is a separate resource from the NeuroFlow host memory budget and is never counted against memory_limit",
+        "requested_device": "cuda",
+        "selected_device": "cuda",
+        "torch_version": "2.13.0+cu130"
+      },
+      "direct_object_count": 5552,
+      "exact": true,
+      "mismatched_voxels": 0,
+      "model": "cpsam",
+      "settings": {
+        "anisotropy": null,
+        "batch_size": 1,
+        "cellprob_threshold": 0.0,
+        "channel_axis": null,
+        "channels": null,
+        "diameter": null,
+        "do_3D": false,
+        "flow_threshold": 0.4,
+        "min_size": 15,
+        "normalize": true,
+        "tile_overlap": 0.1,
+        "z_axis": null
+      },
+      "valid": true,
+      "wall_time_seconds": 55.571698101994116
+    },
+    "trace_direct_numpy": {
+      "atol": 1e-05,
+      "direct_checksum": "b0bb63040f6d2f4b898152504fefd4eb5423bb67b53a42fcb398204a110ed539",
+      "dtype": "float32",
+      "maximum_absolute_error": 0.0,
+      "maximum_relative_error": 0.0,
+      "method": "direct plane-wise NumPy mean on the leading movie frames",
+      "rtol": 1e-05,
+      "shape": [
+        1,
+        5552
+      ],
+      "shape_agreement": true,
+      "valid": true,
+      "wall_time_seconds": 2.777893598016817
+    },
+    "trace_validation_remote_bytes": 52428800
+  }
+}

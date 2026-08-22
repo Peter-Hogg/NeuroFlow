@@ -32,11 +32,20 @@
   Cellpose on the same deterministic projection.
 - [ ] Retain the successful real Cellpose job log/model cache identity for the
   release candidate; mocked tests alone are not publication evidence.
-- [ ] Run and retain the clean end-to-end DANDI fish projection → Cellpose →
+- [x] Run and retain the clean end-to-end DANDI fish projection → Cellpose →
   whole-movie trace record with memory, transfer, wall time, checksums,
-  numerical validation, integrity, and resume.
-- [ ] Run and retain the clean PyNWB + LINDI + Dask trace baseline over the exact
-  same masks; run the remfile baseline if used in the manuscript table.
+  numerical validation, integrity, and resume
+  (`publication-fish-soma-traces-remfile.json`, commit `5afa77b`, CUDA
+  Cellpose, 2 GiB target; the LINDI variant
+  `publication-fish-soma-traces-lindi.json` produced a byte-identical trace
+  checksum).
+- [x] Run and retain the clean PyNWB + LINDI + Dask trace baseline over the exact
+  same masks, plus the remfile baseline, both at configuration parity
+  (block 1 MiB, cache 64 MiB, time window 88): exact numerical agreement with
+  the NeuroFlow traces (max abs error 0.0). Known wart, disclosed rather than
+  hidden: the LINDI baseline process segfaults at interpreter teardown
+  *after* writing its complete record (LINDI/h5py close ordering); the
+  record's measurements are unaffected.
 - [ ] Complete expert/manual biological assessment, or state explicitly in the
   manuscript that only software-path equivalence was established.
 - [x] Preserve the legacy fish record as `historical` and the dirty current
@@ -55,11 +64,12 @@ uv run pytest -q && uv run ruff check . && uv run basedpyright
 git status --porcelain && git rev-parse HEAD
 
 # 1. Local correctness, resume, integrity (publication classification).
+#    These two runners take --output, not --record.
 uv run python benchmarks/benchmark_projection.py \
-    --record benchmarks/results/publication-local-projection.json \
+    --output benchmarks/results/publication-local-projection.json \
     --classification publication
 uv run python benchmarks/benchmark_resume_integrity.py \
-    --record benchmarks/results/publication-resume-integrity.json \
+    --output benchmarks/results/publication-resume-integrity.json \
     --classification publication
 
 # 2. Component memory attribution (include cuda probes on a GPU host).

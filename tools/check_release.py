@@ -58,7 +58,7 @@ def audit_release(root: Path | None = None) -> ReleaseAudit:
     manual: list[str] = []
     if not (repository / "LICENSE").is_file():
         manual.append("select an OSI-approved license and synchronize metadata")
-    fish_record = results / "publication-fish-soma-traces.json"
+    fish_record = results / "publication-fish-soma-traces-remfile.json"
     if not _is_clean_publication_record(fish_record):
         manual.append("retain a clean publication-classified full fish pipeline record")
     lindi_record = results / "publication-fish-lindi-dask-traces.json"

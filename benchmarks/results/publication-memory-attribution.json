@@ -1,0 +1,187 @@
+{
+  "components": [
+    {
+      "component": "process_baseline",
+      "detail": "interpreter, numpy, stdlib only",
+      "process_peak_rss_bytes": 30498816,
+      "rss_after_bytes": 30732288,
+      "rss_before_bytes": 30728192,
+      "rss_delta_bytes": 4096,
+      "status": "measured"
+    },
+    {
+      "component": "neuroflow_import",
+      "detail": "neuroflow package import chain (dask, zarr, h5py, pynwb)",
+      "process_peak_rss_bytes": 201768960,
+      "rss_after_bytes": 203726848,
+      "rss_before_bytes": 30728192,
+      "rss_delta_bytes": 172998656,
+      "status": "measured"
+    },
+    {
+      "component": "dask_runtime",
+      "detail": "dask.array import plus a 4x stacked lazy graph, never computed",
+      "graph_keys": 106,
+      "process_peak_rss_bytes": 146358272,
+      "rss_after_bytes": 147902464,
+      "rss_before_bytes": 30769152,
+      "rss_delta_bytes": 117133312,
+      "stacked_keys": 1115,
+      "status": "measured"
+    },
+    {
+      "block_bytes": 3637248,
+      "cache_size_bytes": 67108864,
+      "component": "remfile_cache",
+      "dataset_shape": [
+        3065,
+        888,
+        2048,
+        29
+      ],
+      "detail": "remfile.File + h5py metadata + one native chunk read",
+      "native_chunks": [
+        1,
+        888,
+        2048,
+        1
+      ],
+      "process_peak_rss_bytes": 69791744,
+      "rss_after_bytes": 68165632,
+      "rss_before_bytes": 30773248,
+      "rss_delta_bytes": 37392384,
+      "status": "measured"
+    },
+    {
+      "array_bytes": 385548288,
+      "component": "source_partition_array",
+      "detail": "one int16 (106, 888, 2048) window",
+      "process_peak_rss_bytes": 415223808,
+      "rss_after_bytes": 416182272,
+      "rss_before_bytes": 30625792,
+      "rss_delta_bytes": 385556480,
+      "status": "measured"
+    },
+    {
+      "component": "temporary_numpy_arrays",
+      "copy_bytes": 771096576,
+      "detail": "int16 window + float32 cast + contiguous reshape copy",
+      "float_bytes": 771096576,
+      "process_peak_rss_bytes": 1186172928,
+      "rss_after_bytes": 1187397632,
+      "rss_before_bytes": 30740480,
+      "rss_delta_bytes": 1156657152,
+      "source_bytes": 385548288,
+      "status": "measured"
+    },
+    {
+      "component": "roi_index_state",
+      "detail": "uint64 label plane, np.unique workspace, ROI chunk index",
+      "distinct_labels": 5558,
+      "label_bytes": 14548992,
+      "process_peak_rss_bytes": 49631232,
+      "roi_chunk_count": 29,
+      "rss_after_bytes": 33058816,
+      "rss_before_bytes": 30793728,
+      "rss_delta_bytes": 2265088,
+      "status": "measured"
+    },
+    {
+      "accumulator_bytes": 4712336,
+      "component": "trace_accumulators",
+      "detail": "float64 accumulator + float32 output block for one window",
+      "output_bytes": 2356168,
+      "process_peak_rss_bytes": 41922560,
+      "rss_after_bytes": 38084608,
+      "rss_before_bytes": 30842880,
+      "rss_delta_bytes": 7241728,
+      "status": "measured"
+    },
+    {
+      "component": "output_buffers",
+      "detail": "zarr group, one written window, one verification read",
+      "process_peak_rss_bytes": 47017984,
+      "read_bytes": 2356168,
+      "rss_after_bytes": 43884544,
+      "rss_before_bytes": 30834688,
+      "rss_delta_bytes": 13049856,
+      "status": "measured",
+      "written_bytes": 2356168
+    },
+    {
+      "component": "torch_import",
+      "cuda_available": true,
+      "detail": "torch import only",
+      "process_peak_rss_bytes": 503926784,
+      "rss_after_bytes": 506482688,
+      "rss_before_bytes": 30674944,
+      "rss_delta_bytes": 475807744,
+      "status": "measured",
+      "torch_version": "2.13.0+cu130"
+    },
+    {
+      "cellpose_version": "4.2.1.1",
+      "component": "cellpose_model_cpu",
+      "detail": "cellpose import + CellposeModel(cpsam) on cpu",
+      "device": "cpu",
+      "model_parameter_bytes": 1218515720,
+      "process_peak_rss_bytes": 3211661312,
+      "rss_after_bytes": 1994989568,
+      "rss_before_bytes": 30760960,
+      "rss_delta_bytes": 1964228608,
+      "status": "measured",
+      "torch_cuda_allocated_bytes": 0
+    },
+    {
+      "cellpose_version": "4.2.1.1",
+      "component": "cellpose_model_cuda",
+      "detail": "cellpose import + CellposeModel(cpsam) on cuda",
+      "device": "cuda",
+      "model_parameter_bytes": 1218515720,
+      "process_peak_rss_bytes": 2087591936,
+      "rss_after_bytes": 888676352,
+      "rss_before_bytes": 30683136,
+      "rss_delta_bytes": 857993216,
+      "status": "measured",
+      "torch_cuda_allocated_bytes": 1218529280
+    },
+    {
+      "component": "cellpose_eval_cpu",
+      "detail": "one 888x2048 cpsam eval on cpu",
+      "device": "cpu",
+      "eval_seconds": 66.74591442200472,
+      "object_count": 0,
+      "process_peak_rss_bytes": 3211673600,
+      "rss_after_bytes": 2100789248,
+      "rss_before_bytes": 30654464,
+      "rss_delta_bytes": 2070134784,
+      "status": "measured",
+      "torch_cuda_peak_bytes": 0
+    },
+    {
+      "component": "cellpose_eval_cuda",
+      "detail": "one 888x2048 cpsam eval on cuda",
+      "device": "cuda",
+      "eval_seconds": 2.212495209998451,
+      "object_count": 0,
+      "process_peak_rss_bytes": 2089906176,
+      "rss_after_bytes": 1845325824,
+      "rss_before_bytes": 30806016,
+      "rss_delta_bytes": 1814519808,
+      "status": "measured",
+      "torch_cuda_peak_bytes": 2452524032
+    }
+  ],
+  "geometry": {
+    "cell_count": 5557,
+    "plane_shape": [
+      888,
+      2048
+    ],
+    "planes": 29,
+    "time_window": 106
+  },
+  "measurement": "component-resident-set-attribution",
+  "method": "each component runs in a fresh interpreter; rss_delta_bytes is the VmRSS increase caused by that component alone",
+  "schema_version": "1"
+}

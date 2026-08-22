@@ -1,0 +1,146 @@
+{
+  "backend": "pynwb-remfile-dask",
+  "baselines": [],
+  "benchmark_name": "dandi-fish-manual-remfile-dask-traces",
+  "benchmark_schema_version": "1",
+  "classification": "publication",
+  "environment": {
+    "cpu": {
+      "logical_count": 32,
+      "model": "AMD Ryzen 9 9950X 16-Core Processor"
+    },
+    "dependencies": {
+      "cellpose": "4.2.1.1",
+      "dask": "2026.7.1",
+      "distributed": "2026.7.1",
+      "fsspec": "2026.7.0",
+      "h5py": "3.16.0",
+      "hdmf-zarr": "0.13.0",
+      "lindi": "0.4.6",
+      "neuroflow": "0.1.0",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "pyarrow": "25.0.0",
+      "pynapple": null,
+      "pynwb": "4.1.0",
+      "remfile": "0.1.14",
+      "s3fs": "2026.7.0",
+      "scipy": "1.15.3",
+      "xarray": "2025.6.1",
+      "zarr": "2.18.3"
+    },
+    "git": {
+      "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+      "dirty": false,
+      "source": "git"
+    },
+    "neuroflow_version": "0.1.0",
+    "platform": {
+      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "release": "7.0.0-29-generic",
+      "system": "Linux"
+    },
+    "python": {
+      "executable": "python",
+      "implementation": "CPython",
+      "version": "3.10.19"
+    },
+    "schema_version": "1",
+    "total_ram_bytes": 132559962112
+  },
+  "execution": {
+    "bytes_read": 230260378975,
+    "cache_state": "manual remfile: block 1048576 B, cache 64 MiB",
+    "configuration_parity": {
+      "block_size": 1048576,
+      "cache_size_bytes": 67108864,
+      "note": "set --time-chunk to the NeuroFlow record's trace_plan.time_window and keep block/cache at the shared defaults; the baseline reads the identical retained masks via --labels",
+      "time_chunk_frames": 88
+    },
+    "memory_budget": null,
+    "network_context": "public DANDI HTTPS; runner location is external",
+    "partition_configuration": {
+      "active_spatial_chunks": 29,
+      "cell_count": 5552,
+      "dask_compute_calls": 1015,
+      "estimated_uncompressed_bytes_read": 323296788480,
+      "skipped_spatial_chunks": 0,
+      "source_chunks": [
+        1,
+        888,
+        2048,
+        1
+      ],
+      "source_chunks_touched": 88885,
+      "source_shape": [
+        3065,
+        888,
+        2048,
+        29
+      ],
+      "time_chunk": 88
+    },
+    "peak_rss_bytes": 2948861952,
+    "task_count": 1015,
+    "wall_time_seconds": 18445.333676120004
+  },
+  "notes": [
+    "This baseline uses the exact persisted Cellpose masks from NeuroFlow.",
+    "It manually implements source-chunk traversal and Dask compute calls.",
+    "Its raw Zarr output has no manifests, resume, integrity, or provenance.",
+    "LINDI is treated as a transport backend, not a competing workflow engine."
+  ],
+  "result": {
+    "checksum": "70e7a9b177a0e8033115a4b8c8a8421b54d1ddb5c2182c5eb39d2df8ec939c49",
+    "integrity_verified": false,
+    "numerical_validation": {
+      "atol": 1e-05,
+      "cell_ids_equal": true,
+      "maximum_absolute_error": 0.0,
+      "rtol": 1e-05,
+      "shape_agreement": true,
+      "valid": true
+    },
+    "output_bytes": 56483153,
+    "resume": {
+      "exercised": false,
+      "supported": false
+    }
+  },
+  "source": {
+    "asset": "sub-20170113-4/sub-20170113-4_ses-20170113T171241_ophys.nwb",
+    "asset_id": "4f898ff7-6084-4e84-a449-f05811c1d951",
+    "dataset_identifier": "DANDI:000350",
+    "dataset_version": "0.240822.1759",
+    "dtype": "int16",
+    "path": "/acquisition/NeuronOnePhotonSeries",
+    "physical_chunk_shape": [
+      1,
+      888,
+      2048,
+      1
+    ],
+    "selected_bytes": 323296788480,
+    "shape": [
+      3065,
+      888,
+      2048,
+      29
+    ],
+    "total_logical_bytes": 323296788480
+  },
+  "timestamp": "2026-08-22T11:45:56.870907+00:00",
+  "workflow_features": {
+    "complete_benchmark_runner_code_lines": 263,
+    "http_responses": 180866,
+    "integrity_verification": false,
+    "label_checksum": "58b3a2038895f2f7c6d906f418c0af9e3a9f12f8e331d3bc2c1878c9e71b86d1",
+    "manual_chunk_configuration": true,
+    "manual_scheduler_configuration": true,
+    "manual_trace_function_code_lines": 74,
+    "output_provenance": false,
+    "persistence": true,
+    "resume": false
+  }
+}
