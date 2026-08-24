@@ -126,3 +126,37 @@ writes native-coordinate candidate tables for manual annotation and detector
 validation. These tables are not validated cell counts. Atlas registration,
 region assignment, and brainrender visualization are intentionally deferred until
 the correct channel metadata, voxel geometry, and registration target are known.
+
+## Region traces across every timepoint
+
+```bash
+uv run python -m examples.dandi_region_traces
+```
+
+This example answers the question the projection examples cannot: what does it
+cost to extract a *trace*, which needs every one of the 1,800 timepoints, when
+you only care about one region? It uses DANDI:000223 version `0.260528.0906`
+(paired dendritic-spine calcium imaging), whose `TwoPhotonSeries` is
+`1800 x 1024 x 1024` uint16 stored as fine `1 x 128 x 128` chunks.
+
+The workflow is the ordinary public API: discover the series with
+`NWBQuery(neurodata_type="TwoPhotonSeries")`, slice a chunk-aligned `256 x 256`
+region by named axes, persist a 96-frame mean projection, segment it with
+Cellpose (CUDA when available), then run `extract_traces` over the complete
+recording. The traces are verified and resumable like every NeuroFlow result.
+
+Measured on the default region: full-length traces for the detected cell,
+transferring ~504 MB of a 3,775 MB movie (13.4%) with 32 KiB transport blocks
+matched to the chunk size — the other ~87% is never downloaded. The same run
+transfers 9,118 MB (2.4x the whole movie) with the 1 MiB default block, which
+is exactly what the plan's `estimated_transport_bytes_read` predicts: on
+fine-chunked assets, check that number before reading. This asset has sparse
+cpsam-detectable somata; the example demonstrates the data-access ratio, not
+segmentation richness.
+
+Two caveats measured rather than assumed: parallel readers do not help this
+transport stack (h5py serializes reads under a global lock; a 4-worker Dask
+read of the same chunks measured 0.77x sequential speed, and per-thread file
+handles measured 0.42x), and chunk-geometry decides everything — on the fish
+asset, whose chunks are whole `888 x 2048` planes, any region in a plane costs
+the full plane across time.
