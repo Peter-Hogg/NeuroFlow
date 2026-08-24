@@ -160,3 +160,31 @@ read of the same chunks measured 0.77x sequential speed, and per-thread file
 handles measured 0.42x), and chunk-geometry decides everything — on the fish
 asset, whose chunks are whole `888 x 2048` planes, any region in a plane costs
 the full plane across time.
+
+### Transport choice is a measured latency/bandwidth trade
+
+The same example runs over LINDI with `--backend lindi`, and the two
+transports produce the identical verified result while sitting on opposite
+ends of a trade (all runs on the same machine and connection; LINDI transfer
+measured at the requests layer from Content-Length headers, corroborated by
+the read phase saturating the measured line rate for its entire duration):
+
+| Transport | Configuration | Wall | Transfer | Requests |
+| --- | --- | --- | --- | --- |
+| remfile | 1 MiB default block | 569 s | 9,118 MB | — |
+| remfile | 64 KiB blocks | 398 s | 924 MB | — |
+| remfile | 32 KiB blocks (matched) | 415 s | 504 MB | ~6,200 small |
+| LINDI | no knobs | **213 s** | ~5,600 MB | ~3,100 coalesced |
+
+remfile with matched blocks fetches nearly the minimum bytes but pays a round
+trip for thousands of small serialized reads, so it is latency-bound with the
+pipe mostly idle. LINDI's reference index coalesces chunk ranges into ~1.8 MB
+spans, overfetching unwanted tiles but keeping the pipe saturated, so it is
+bandwidth-bound and here twice as fast. Choose by constraint: wall time on a
+fast connection favors `backend="lindi"`; metered or slow connections favor
+remfile with `block_size` matched to the chunk size. On coarse-chunked assets
+(the fish) the archival records measured the two transports byte-identical in
+output at wall times within 1%. Two LINDI caveats: its open cost parses the
+remote HDF5 metadata (dominates tiny jobs; pre-built `.lindi.json` indexes
+would remove it), and its process can segfault at interpreter teardown after
+all results are written — outputs and records are unaffected.

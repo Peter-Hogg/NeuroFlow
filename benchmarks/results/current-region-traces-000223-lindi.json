@@ -1,0 +1,42 @@
+{
+  "asset": "sub-3112/sub-3112_ecephys+ophys.nwb",
+  "cellpose_device": {
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu_name": "NVIDIA RTX PRO 4500 Blackwell",
+    "gpu_total_memory_bytes": 33662042112,
+    "note": "GPU memory is a separate resource from the NeuroFlow host memory budget and is never counted against memory_limit",
+    "requested_device": "auto",
+    "selected_device": "cuda",
+    "torch_version": "2.13.0+cu130"
+  },
+  "cells": 1,
+  "dandiset": "DANDI:000223@0.260528.0906",
+  "fraction_of_movie_transferred": null,
+  "integrity_verified": true,
+  "measured_response_bytes": null,
+  "movie_shape": [
+    1800,
+    1024,
+    1024
+  ],
+  "region": {
+    "x": [
+      384,
+      640
+    ],
+    "y": [
+      512,
+      768
+    ]
+  },
+  "region_logical_bytes": 235929600,
+  "timepoints": 1800,
+  "total_logical_bytes": 3774873600,
+  "traces_shape": [
+    1800,
+    1
+  ],
+  "transport_block_size": null,
+  "wall_time_seconds": 212.7
+}
