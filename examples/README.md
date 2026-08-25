@@ -154,12 +154,17 @@ fine-chunked assets, check that number before reading. This asset has sparse
 cpsam-detectable somata; the example demonstrates the data-access ratio, not
 segmentation richness.
 
-Two caveats measured rather than assumed: parallel readers do not help this
-transport stack (h5py serializes reads under a global lock; a 4-worker Dask
-read of the same chunks measured 0.77x sequential speed, and per-thread file
-handles measured 0.42x), and chunk-geometry decides everything — on the fish
-asset, whose chunks are whole `888 x 2048` planes, any region in a plane costs
-the full plane across time.
+Two caveats measured rather than assumed. First, client-side parallel readers
+do not help on either transport: against a 16.4 MB/s sequential baseline
+(line rate ~30 MB/s), a 4-worker Dask read measured 0.77x through
+remfile+h5py (global lock), 0.99x through a shared LINDI handle, and 0.62x /
+0.76x with per-task and pre-opened per-worker LINDI handles — concurrent
+connections split this path's throughput rather than adding to it. The only
+configuration that reached line rate was LINDI's coalesced ~1.8 MB span
+requests: request size, not request parallelism, is what closes the latency
+gap. Second, chunk geometry decides everything — on the fish asset, whose
+chunks are whole `888 x 2048` planes, any region in a plane costs the full
+plane across time.
 
 ### Transport choice is a measured latency/bandwidth trade
 
