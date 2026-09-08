@@ -1,5 +1,10 @@
 # NeuroFlow
 
+[![CI](https://github.com/Peter-Hogg/NeuroFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/Peter-Hogg/NeuroFlow/actions/workflows/ci.yml)
+[![Docs](https://github.com/Peter-Hogg/NeuroFlow/actions/workflows/docs.yml/badge.svg)](https://peter-hogg.github.io/NeuroFlow/)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)
+<!-- After the Zenodo deposit, add: [![DOI](https://zenodo.org/badge/DOI/<doi>.svg)](https://doi.org/<doi>) -->
+
 **Run ordinary Python analyses on NWB recordings that are too large—or too
 remote—to load all at once.**
 
@@ -31,18 +36,25 @@ workflow publishes every successful `master` build.
 
 ## Try it in two minutes
 
-Install the development environment with [uv](https://docs.astral.sh/uv/):
+Clone the repository and install the locked environment with
+[uv](https://docs.astral.sh/uv/), then run the fully local example — it creates
+a tiny NWB-Zarr recording, runs four chunks through a custom function, verifies
+the output, and tests resume, all without network access:
 
 ```bash
-uv sync --dev
-```
-
-Start with the fully local example. It creates a tiny NWB-Zarr recording, runs
-four chunks through a custom function, verifies the output, and tests resume:
-
-```bash
+git clone https://github.com/Peter-Hogg/NeuroFlow.git
+cd NeuroFlow
+uv sync --locked --dev
 uv run python -m examples.local_nwb_zarr
 ```
+
+Expect it to finish in seconds, printing the four-task plan, a verification
+report (`valid: True`), and a no-recomputation resume.
+
+Without `uv`, install from the checkout with pip into any Python ≥ 3.10
+environment: `pip install .` (extras as `pip install ".[cellpose,pynapple,lindi]"`).
+NeuroFlow is not yet on PyPI;
+`pip install git+https://github.com/Peter-Hogg/NeuroFlow` also works.
 
 For a real recording, run the DANDI example:
 
@@ -59,6 +71,17 @@ locally or loaded into memory.
 The recording is pinned for reproducibility and the default numerical workload
 is about 1 MiB. Internet access is required. See [the examples guide](examples/README.md)
 for the exact asset, generated files, and options.
+
+The most complete demonstration of what bounded remote analysis buys is the
+region-traces example: full-length fluorescence traces — which need every one
+of a movie's 1,800 timepoints — extracted while transferring ~504 MB of a
+3.6 GB recording (13%), with the transfer cost predicted by the plan before
+any download starts:
+
+```bash
+uv sync --locked --dev --extra cellpose
+uv run python -m examples.dandi_region_traces
+```
 
 For a real calcium movie, the fish example uses a plain NumPy temporal median
 through NeuroFlow to project 50 frames across all 29 z-planes of a 323 GB
@@ -358,7 +381,7 @@ their use case.
 ## Development
 
 ```bash
-uv sync --dev
+uv sync --locked --dev
 uv run pytest
 uv run ruff check .
 uv run basedpyright

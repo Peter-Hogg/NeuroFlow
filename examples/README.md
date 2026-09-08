@@ -1,5 +1,19 @@
 # Runnable examples
 
+At a glance:
+
+| Example | Network | Data moved | Extras | Runtime |
+|---|---|---|---|---|
+| `local_nwb_zarr` | none | ~1 MiB, generated locally | none | seconds |
+| `dandi_hdf5` | DANDI | bounded region (~MiB) | none | seconds–minutes |
+| `dandi_region_traces` | DANDI | ~504 MB (13% of movie) | `cellpose` | ~30–60 min |
+| `dandi_fish_projection` | DANDI | ~GBs (50 frames × 29 planes) | none | minutes–hour |
+| `dandi_fish_reference_volume` | DANDI | bounded | none | minutes |
+| `dandi_dual_channel_cells` | DANDI | bounded, budgeted | `cellpose` (optional) | minutes |
+
+No example requires a GPU: Cellpose runs on CPU with a larger memory target,
+and the planner refuses up front rather than exceeding a budget.
+
 ## Local NWB-Zarr
 
 Run the complete example from the repository root:
@@ -130,6 +144,7 @@ the correct channel metadata, voxel geometry, and registration target are known.
 ## Region traces across every timepoint
 
 ```bash
+uv sync --locked --dev --extra cellpose
 uv run python -m examples.dandi_region_traces
 ```
 

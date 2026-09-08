@@ -8,15 +8,18 @@ provenance, resume, and verification.
 import numpy as np
 import neuroflow
 
-movie = neuroflow.load("session.nwb.zarr", name="calcium_movie")
+movie = neuroflow.load("session.nwb.zarr", name="movie")  # axes: time, y, x
 lazy_projection = np.sqrt(np.median(movie[:50], axis="time") + 1)
 projection = lazy_projection.persist(
     "projection.zarr",
-    chunks=(256, 256, 1),
+    chunks=(256, 256),
     memory_limit="2 GiB",
 )
 assert projection.workflow.verify().valid
 ```
+
+Run `python -m examples.local_nwb_zarr` from a checkout to create a small
+`session.nwb.zarr` this snippet works against.
 
 ```{toctree}
 :maxdepth: 2
@@ -33,23 +36,12 @@ reproducibility
 
 ```{toctree}
 :maxdepth: 2
-:caption: Reference and design
+:caption: Reference
 
 api
-NeuroFlow_Architecture
-NeuroFlow_Architecture_Decisions
 ```
 
-```{toctree}
-:maxdepth: 1
-:caption: Development and release
-
-development/publication_readiness
-development/license_decision
-development/name_assessment
-development/history/README
-```
-
-Development and publication status are tracked in
-`development/publication_readiness.md`; historical design notes are indexed in
-`development/history/README.md` and are not a second user-facing API contract.
+Maintainer records — release decisions, publication status, and historical
+design documents — live in the repository under `docs/development/` and are
+deliberately not part of this site; they are not a second user-facing API
+contract.

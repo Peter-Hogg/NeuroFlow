@@ -13,11 +13,26 @@ uv sync --locked --dev
 Optional integrations are deliberately separate:
 
 ```bash
-uv sync --dev --extra cellpose
-uv sync --dev --extra pynapple
+uv sync --locked --dev --extra cellpose
+uv sync --locked --dev --extra pynapple
 uv sync --locked --dev --extra lindi
 uv sync --locked --dev --extra baselines
 ```
+
+Without `uv`, install from the checkout with pip: `pip install .` (add extras
+as `pip install ".[cellpose,lindi]"`).
+
+## Memory limits in one paragraph
+
+Every `memory_limit` is a **total process-memory target**, not a per-array
+allowance: the planner subtracts a measured process floor (interpreter,
+libraries, caches) and fits partitioned work into what remains. Defaults are
+1 GiB for computations, 2 GiB for persists, and 4 GiB for Cellpose
+segmentation. If a target cannot fit — for example `"2 GiB"` with the `cpsam`
+model on CPU, whose loaded network alone holds ~2 GiB — NeuroFlow refuses up
+front with the reason and the fix, rather than failing mid-run. You do not
+need to understand the planner: run the commands below, and if a refusal
+appears, do what it says (usually raise the target or switch device).
 
 ## A bounded local workflow
 
@@ -45,7 +60,7 @@ workflow = projection.to_spec(
 workflow.to_json("projection-workflow.json")
 print(workflow.plan().summary())
 result = neuroflow.reproduce(workflow)
-assert result.workflow.verify().valid
+assert result.verify().valid
 ```
 
 Use named or contiguous NumPy slicing and a declared memory limit. Arithmetic,
@@ -77,7 +92,7 @@ projection = np.median(movie[:50], axis="time").astype("float32").persist(
     "projection.zarr", memory_limit="2 GiB"
 )
 labels = projection.cellpose(
-    output="labels.zarr", pretrained_model="cpsam", memory_limit="2 GiB"
+    output="labels.zarr", pretrained_model="cpsam", memory_limit="4 GiB"
 )
 plan = movie.plan_traces(labels, memory_limit="2 GiB")
 print(plan.summary())
@@ -88,7 +103,9 @@ traces = movie.extract_traces(
 
 The trace result is oriented `(time, cell)` and includes `timestamps` and
 `cell_ids`. NeuroFlow chooses the time window from the memory target and source
-chunks; `time_chunk` remains an expert override.
+chunks; `time_chunk` remains an expert override. The `"4 GiB"` segmentation
+target accommodates the `cpsam` network on CPU; on a CUDA GPU, where the
+weights live in VRAM, `"2 GiB"` suffices.
 
 The workflow record can be checked and rerun without importing the analysis
 script:

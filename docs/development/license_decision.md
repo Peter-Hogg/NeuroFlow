@@ -1,10 +1,9 @@
-# License decision required
+# License decision (resolved: BSD-3-Clause)
 
-NeuroFlow does not currently have a software license. Copyright law therefore
-reserves reuse rights by default, even though the repository is public. A
-maintainer must choose and approve an OSI-approved license before a public
-release or journal submission; this repository does not make that legal choice
-automatically.
+**Resolved.** NeuroFlow is licensed under BSD-3-Clause (see `LICENSE`,
+copyright Peter W. Hogg), matching the recommendation below. This document is
+retained as the record of the decision and its rationale; the analysis that
+follows describes the pre-decision state.
 
 ## Recommendation
 

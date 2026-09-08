@@ -35,7 +35,7 @@ import neuroflow
 movie = neuroflow.load("session.nwb.zarr", name="movie")[:50]
 workflow = (movie / movie.max()).to_spec(
     "normalized.zarr",
-    chunks=(256, 256),
+    chunks=(10, 256, 256),
     memory_limit="1 GiB",
 )
 workflow.to_json("workflow.json")
@@ -72,12 +72,14 @@ docker build \
   --build-arg NEUROFLOW_GIT_DIRTY="$(test -z "$(git status --porcelain)" && echo false || echo true)" \
   -t neuroflow-publication .
 docker run --rm neuroflow-publication environment
-docker run --rm --entrypoint pytest neuroflow-publication -q
+docker run --rm neuroflow-publication --help
 ```
 
-Resolve and record the digest on the experiment date. Docker was not available
-on every development host, so a successful image build must be retained by CI
-or the publication runner rather than inferred from the Dockerfile.
+The image contains the locked runtime and CLI, not the test suite; run
+`uv run pytest` from a source checkout to execute tests. Resolve and record the
+digest on the experiment date. Docker was not available on every development
+host, so a successful image build must be retained by CI or the publication
+runner rather than inferred from the Dockerfile.
 
 ## Network-free publication experiments
 
@@ -85,10 +87,11 @@ or the publication runner rather than inferred from the Dockerfile.
 uv run python -m benchmarks.benchmark_projection \
   --classification publication \
   --output benchmarks/results/publication-local-projection.json
-uv run python -m benchmarks.benchmark_scaling \
-  --sizes 128,256,512 --frames 16 --repetitions 3 \
+uv run python -m benchmarks.benchmark_resource_scaling \
+  --fixture-root /tmp/nf-scaling --output-root /tmp/nf-scaling-out \
+  --frames 1024 --planes 8 --repetitions 3 \
   --classification publication \
-  --output benchmarks/results/publication-scaling.json
+  --record benchmarks/results/publication-resource-scaling.json
 uv run python -m benchmarks.benchmark_resume_integrity \
   --classification publication \
   --output benchmarks/results/publication-resume-integrity.json
@@ -105,9 +108,16 @@ process high-water mark, not a hard limit; unavailable byte-transfer data is
 uv sync --locked --dev --extra cellpose --extra lindi
 uv run python -m benchmarks.benchmark_fish_pipeline \
   --backend remfile \
+  --output-root publication/runs-publication \
+  --memory-limit "4 GiB" --cellpose-device auto \
   --classification publication \
   --record benchmarks/results/publication-fish-soma-traces.json
 ```
+
+The default `"2 GiB"` memory target is refused when the `cpsam` model runs on
+CPU — the loaded network alone holds ~2 GiB — so pass `"4 GiB"` (or
+`--cellpose-device cuda` on a GPU host). Never write into `publication/runs`,
+which holds retained development evidence.
 
 This one command performs the bounded projection, actual plane-wise Cellpose,
 direct Cellpose comparison, source-chunk-aware whole-movie traces, direct NumPy
@@ -121,12 +131,17 @@ Run the fair manual LINDI/Dask trace baseline over the exact same masks:
 ```bash
 uv run python -m benchmarks.benchmark_fish_trace_baseline \
   --backend lindi \
-  --labels publication/runs/fish-cellpose.zarr \
-  --reference-traces publication/runs/fish-traces.zarr \
-  --output publication/runs/fish-lindi-dask-traces.zarr \
+  --labels publication/runs-publication/fish-cellpose.zarr \
+  --reference-traces publication/runs-publication/fish-traces.zarr \
+  --output /tmp/nf-baseline-traces-lindi.zarr \
+  --time-chunk 88 \
   --record benchmarks/results/publication-fish-lindi-dask-traces.json \
   --classification publication
 ```
+
+`--time-chunk` must equal the NeuroFlow record's `execution.trace_plan.time_window`
+so both sides read identical temporal spans (the retained records used 88; see
+`RELEASE_CHECKLIST.md` for the full parity-configured sequence).
 
 The baseline intentionally requires manual time chunking, traversal,
 accumulators, persistence, and scheduler calls. It does not treat LINDI as a
@@ -147,5 +162,6 @@ The fish experiment pins:
 - primary article <https://doi.org/10.1016/j.cell.2019.05.050>.
 
 Software equivalence does not establish biological interpretation. Follow the
-separate protocol in `../publication/experiments/scientific_validation_protocol.md`
+separate protocol in
+[`publication/experiments/scientific_validation_protocol.md`](https://github.com/Peter-Hogg/NeuroFlow/blob/master/publication/experiments/scientific_validation_protocol.md)
 before making segmentation or trace-validity claims.
