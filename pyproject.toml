@@ -5,7 +5,7 @@ description = "Lazy execution and interoperability for archive-scale NWB analysi
 readme = "README.md"
 license = "BSD-3-Clause"
 authors = [
-    { name = "Peter Hogg", email = "peterhogg2006@gmail.com" },
+    { name = "Peter W. Hogg", email = "peterhogg2006@gmail.com" },
 ]
 requires-python = ">=3.10"
 keywords = ["dandi", "dask", "neuroscience", "nwb", "reproducibility"]
@@ -30,16 +30,16 @@ dependencies = [
     "pyarrow>=25.0.0",
     "pynwb>=4.1.0",
     "remfile>=0.1.13",
-    "rich>=15.0.0",
     "s3fs>=2026.7.0",
     "scipy>=1.15.3",
     "typer>=0.27.0",
-    "xarray>=2025.6.1",
     "zarr>=2.18.3",
 ]
 
 [project.optional-dependencies]
-cellpose = ["cellpose>=4.1"]
+# The adapter passes cellpose 4.x eval keywords positionally-verified against
+# 4.2; a future major with a changed signature would fail at run time.
+cellpose = ["cellpose>=4.1,<5"]
 pynapple = ["pynapple>=0.11"]
 baselines = ["lindi>=0.4.6,<0.5"]
 lindi = ["lindi>=0.4.6,<0.5"]
@@ -73,6 +73,7 @@ pythonpath = ["."]
 testpaths = ["tests"]
 markers = [
     "cellpose_real: opt-in execution with actual Cellpose model weights",
+    "pynapple_real: opt-in equivalence check against the real pynapple package",
 ]
 
 [tool.basedpyright]
