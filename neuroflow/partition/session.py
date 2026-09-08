@@ -1,7 +1,11 @@
-"""Asset- and session-level processing partitions."""
+"""Asset- and session-level processing partitions.
 
-from collections.abc import Mapping
-from dataclasses import dataclass, field
+Both plans process the whole selection as a single partition. Asset filtering
+and session grouping are not implemented; rather than accept parameters the
+planner would silently ignore, the plans take none.
+"""
+
+from dataclasses import dataclass
 
 from neuroflow.partition.base import Partition, ValidationReport
 from neuroflow.selection.query import Selection
@@ -14,8 +18,6 @@ def _whole(selection: Selection, key: str) -> tuple[Partition, ...]:
 
 @dataclass(frozen=True)
 class AssetPlan:
-    filter: Mapping[str, object] = field(default_factory=dict)
-
     def validate(self, selection: Selection) -> ValidationReport:
         return ValidationReport(True)
 
@@ -25,8 +27,6 @@ class AssetPlan:
 
 @dataclass(frozen=True)
 class SessionPlan:
-    group_by: tuple[str, ...] = ("subject_id", "session_id")
-
     def validate(self, selection: Selection) -> ValidationReport:
         return ValidationReport(True)
 

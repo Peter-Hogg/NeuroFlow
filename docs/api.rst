@@ -14,6 +14,7 @@ Top-level API
 .. autofunction:: neuroflow.open_result
 .. autofunction:: neuroflow.plan
 .. autofunction:: neuroflow.run
+.. autofunction:: neuroflow.reproduce
 .. autofunction:: neuroflow.compare_segmentations
 
 Named arrays
@@ -38,6 +39,12 @@ Selection
 ---------
 
 .. automodule:: neuroflow.selection
+   :members:
+
+Storage outputs
+---------------
+
+.. automodule:: neuroflow.storage
    :members:
 
 Cellpose integration

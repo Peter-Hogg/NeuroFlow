@@ -1,6 +1,6 @@
 """Adapter contracts and task context types."""
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -24,7 +24,6 @@ class AdapterRequirements:
     output_kinds: tuple[str, ...]
     resources: ResourceSpec = field(default_factory=ResourceSpec)
     deterministic: bool = True
-    requires_local_path: bool = False
 
 
 @dataclass(frozen=True)
@@ -32,25 +31,6 @@ class TaskContext:
     partition_id: str
     parameters: Mapping[str, object] = field(default_factory=dict)
     random_seed: int | None = None
-
-
-@dataclass(frozen=True)
-class BoundarySummary:
-    partition_id: str
-    payload: Mapping[str, object]
-
-
-@dataclass(frozen=True)
-class MergeContext:
-    workflow_id: str
-    parameters: Mapping[str, object] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class MergeManifest:
-    workflow_id: str
-    merged_partitions: tuple[str, ...]
-    outputs: Mapping[str, str]
 
 
 class AnalysisAdapter(Protocol):
@@ -69,14 +49,3 @@ class AnalysisAdapter(Protocol):
     def persist(
         self, output: object, writer: object, context: TaskContext
     ) -> object: ...
-
-
-class MergeableAdapter(AnalysisAdapter, Protocol):
-    def boundary_summary(self, manifest: object) -> BoundarySummary: ...
-
-    def merge(
-        self,
-        neighbors: Sequence[BoundarySummary],
-        writer: object,
-        context: MergeContext,
-    ) -> MergeManifest: ...

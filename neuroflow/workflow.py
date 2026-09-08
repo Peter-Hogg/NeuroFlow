@@ -566,11 +566,19 @@ def _partition_from_dict(value: dict[str, object]) -> PartitionPlan:
                 align_to=cast(Any, value.get("align_to")),
             )
         if kind == "asset":
-            return AssetPlan(filter=_mapping(value.get("filter", {}), "asset filter"))
+            if value.get("filter"):
+                raise WorkflowSpecError(
+                    "asset filtering is not implemented; remove 'filter' from "
+                    "the workflow spec"
+                )
+            return AssetPlan()
         if kind == "session":
-            return SessionPlan(
-                group_by=_string_tuple(value.get("group_by"), "session grouping")
-            )
+            if value.get("group_by"):
+                raise WorkflowSpecError(
+                    "session grouping is not implemented; remove 'group_by' "
+                    "from the workflow spec"
+                )
+            return SessionPlan()
     except (TypeError, ValueError) as exc:
         if isinstance(exc, WorkflowSpecError):
             raise
