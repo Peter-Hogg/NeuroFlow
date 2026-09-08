@@ -82,12 +82,17 @@ uv run python benchmarks/memory_attribution.py \
 #    repetitions each.
 uv run python -m benchmarks.benchmark_resource_scaling \
     --fixture-root /tmp/nf-scaling --output-root /tmp/nf-scaling-out \
-    --frames 1024 --planes 8 --repetitions 3 \
+    --frames 1024 --planes 8 --projection-frames 192 --repetitions 3 \
     --record benchmarks/results/publication-resource-scaling.json \
     --classification publication
 # --planes > 1 is required for the worker axis to measure anything: a
 # single-plane fixture gives the projection one splittable task, so every
-# worker count produces the same wall time.
+# worker count produces the same wall time. --projection-frames must stay
+# small enough that one per-plane task fits the smallest memory target
+# (192 frames ~ 1.4 GB against the 2 GiB target's 1.68 GB task budget);
+# reducing the whole 1024-frame movie needs ~7.5 GB per task and is refused
+# everywhere below 8 GiB. The traces stage still spans all --frames, which
+# is what exercises the memory axis.
 uv run python -m benchmarks.benchmark_dandi_smoke \
     --dandiset "DANDI:000223@0.260528.0906" \
     --asset cc499fe1-fe23-42aa-8db0-0e689970fb89 \

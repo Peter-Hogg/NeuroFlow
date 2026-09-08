@@ -89,7 +89,7 @@ uv run python -m benchmarks.benchmark_projection \
   --output benchmarks/results/publication-local-projection.json
 uv run python -m benchmarks.benchmark_resource_scaling \
   --fixture-root /tmp/nf-scaling --output-root /tmp/nf-scaling-out \
-  --frames 1024 --planes 8 --repetitions 3 \
+  --frames 1024 --planes 8 --projection-frames 192 --repetitions 3 \
   --classification publication \
   --record benchmarks/results/publication-resource-scaling.json
 uv run python -m benchmarks.benchmark_resume_integrity \
