@@ -4,7 +4,7 @@ title: "NeuroFlow: lazy, reproducible analysis of archive-scale NWB data"
 type: software
 authors:
   - family-names: Hogg
-    given-names: Peter
+    given-names: Peter W.
     email: peterhogg2006@gmail.com
 repository-code: "https://github.com/Peter-Hogg/NeuroFlow"
 url: "https://github.com/Peter-Hogg/NeuroFlow"

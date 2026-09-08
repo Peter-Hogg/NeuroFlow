@@ -4,7 +4,7 @@
   "description": "Named-axis NumPy-like analysis over lazily streamed NWB and DANDI data with bounded Dask execution, durable results, provenance, verification, and resume.",
   "creators": [
     {
-      "name": "Hogg, Peter"
+      "name": "Hogg, Peter W."
     }
   ],
   "keywords": ["DANDI", "Dask", "neuroscience", "NWB", "reproducibility"],
