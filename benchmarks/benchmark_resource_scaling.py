@@ -43,6 +43,7 @@ PLANE_HEIGHT = 888
 PLANE_WIDTH = 2048
 DEFAULT_FRAMES = 384
 DEFAULT_CELLS = 512
+DEFAULT_PLANES = 1
 
 # (memory_limit, workers) pairs from the publication scaling matrix.
 DEFAULT_CONFIGURATIONS: tuple[tuple[str, int], ...] = (
@@ -60,38 +61,52 @@ def _peak_rss_bytes() -> int:
 
 
 def build_fixture(
-    root: Path, *, frames: int, cells: int
+    root: Path, *, frames: int, cells: int, planes: int
 ) -> tuple[Path, Path]:
-    """Create (or reuse) a fish-shaped synthetic movie and label volume."""
-    movie_path = root / f"scaling-movie-t{frames}.zarr"
-    labels_path = root / f"scaling-labels-c{cells}.zarr"
+    """Create (or reuse) a fish-shaped synthetic movie and label volume.
+
+    ``planes`` matters for the worker axis. A single-plane fixture gives the
+    temporal projection exactly one splittable task, so every worker count
+    produces the same wall time and the concurrency axis measures nothing. With
+    one source chunk per (y, x, z) plane, a projection over ``planes`` planes
+    has ``planes`` independent tasks and concurrency becomes observable.
+    """
+    movie_path = root / f"scaling-movie-t{frames}-z{planes}.zarr"
+    labels_path = root / f"scaling-labels-c{cells}-z{planes}.zarr"
     if not (movie_path / ".zgroup").exists():
         root.mkdir(parents=True, exist_ok=True)
         group = zarr.open_group(str(movie_path), mode="w")
         array = group.create_dataset(
             "movie",
-            shape=(frames, PLANE_HEIGHT, PLANE_WIDTH, 1),
+            shape=(frames, PLANE_HEIGHT, PLANE_WIDTH, planes),
             chunks=(1, PLANE_HEIGHT, PLANE_WIDTH, 1),
             dtype="int16",
         )
         rng = np.random.default_rng(0)
-        # Written frame by frame so building the fixture never needs the whole
-        # movie resident; this harness must not itself be the memory hog.
+        # Written one source chunk at a time so building the fixture never needs
+        # the whole movie resident; this harness must not itself be the memory
+        # hog it is trying to measure.
         for index in range(frames):
-            array[index, :, :, 0] = rng.integers(
-                0, 4096, size=(PLANE_HEIGHT, PLANE_WIDTH), dtype=np.int16
-            )
+            for plane in range(planes):
+                array[index, :, :, plane] = rng.integers(
+                    0, 4096, size=(PLANE_HEIGHT, PLANE_WIDTH), dtype=np.int16
+                )
     if not (labels_path / ".zgroup").exists():
-        labels = np.zeros((PLANE_HEIGHT, PLANE_WIDTH, 1), dtype=np.uint64)
-        # Compact square ROIs on a grid, one label per cell.
+        labels = np.zeros((PLANE_HEIGHT, PLANE_WIDTH, planes), dtype=np.uint64)
+        # Compact square ROIs on a grid, one label per cell, repeated on every
+        # plane with a plane-local namespace so labels never span planes.
         side = 8
         per_row = PLANE_WIDTH // (side * 2)
-        for cell in range(cells):
-            row = (cell // per_row) * side * 2
-            column = (cell % per_row) * side * 2
-            if row + side > PLANE_HEIGHT:
-                break
-            labels[row : row + side, column : column + side, 0] = cell + 1
+        for plane in range(planes):
+            namespace = plane * cells
+            for cell in range(cells):
+                row = (cell // per_row) * side * 2
+                column = (cell % per_row) * side * 2
+                if row + side > PLANE_HEIGHT:
+                    break
+                labels[row : row + side, column : column + side, plane] = (
+                    namespace + cell + 1
+                )
         group = zarr.open_group(str(labels_path), mode="w")
         group.create_dataset(
             "labels", data=labels, chunks=(PLANE_HEIGHT, PLANE_WIDTH, 1)
@@ -111,6 +126,7 @@ def run_configuration(
     output_root: Path,
     memory_limit: str,
     workers: int,
+    projection_frames: int,
 ) -> dict[str, object]:
     """Run one (memory_limit, workers) point and report planned vs measured."""
     movie = _open(movie_path, "movie", ("time", "y", "x", "z"))
@@ -141,9 +157,14 @@ def run_configuration(
         tag = f"projection-{memory_limit}-{workers}".replace(" ", "")
         projection_output = output_root / tag
         projection_started = time.perf_counter()
-        projection = np.median(movie, axis="time").astype(  # type: ignore[call-overload]
-            np.float32
+        # The projection is a concurrency probe, not the memory probe, so it
+        # reduces a bounded prefix of the movie. A median over every frame would
+        # let sort cost dominate the wall time the worker axis is meant to show.
+        projection_input = neuroflow.NeuroArray(
+            movie.source, movie.selection.isel(time=slice(0, projection_frames))
         )
+        reduced = np.median(projection_input, axis="time")  # type: ignore[call-overload]
+        projection = reduced.astype(np.float32)
         projection_result = projection.persist(
             projection_output,
             chunks=(256, 256, 1),
@@ -154,6 +175,7 @@ def run_configuration(
         projection_seconds = time.perf_counter() - projection_started
         projection_plan = projection_result.workflow
         record["projection"] = {
+            "reduced_frames": projection_frames,
             "requested_workers": workers,
             "granted_workers": (
                 projection_plan.max_workers if projection_plan is not None else None
@@ -202,6 +224,24 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--frames", type=int, default=DEFAULT_FRAMES)
     parser.add_argument("--cells", type=int, default=DEFAULT_CELLS)
+    parser.add_argument(
+        "--planes",
+        type=int,
+        default=DEFAULT_PLANES,
+        help=(
+            "z planes in the fixture; the temporal projection splits along z, "
+            "so this sets how many independent tasks the worker axis has"
+        ),
+    )
+    parser.add_argument(
+        "--projection-frames",
+        type=int,
+        default=None,
+        help=(
+            "frames the concurrency-probe projection reduces; defaults to the "
+            "whole movie so an existing command reproduces its earlier record"
+        ),
+    )
     parser.add_argument("--record", type=Path)
     parser.add_argument(
         "--configuration",
@@ -223,13 +263,22 @@ def main() -> None:
     arguments = parser.parse_args()
     if arguments.repetitions < 1:
         parser.error("--repetitions must be at least 1")
+    if arguments.planes < 1:
+        parser.error("--planes must be at least 1")
+    if arguments.projection_frames is None:
+        arguments.projection_frames = arguments.frames
+    if not 1 <= arguments.projection_frames <= arguments.frames:
+        parser.error("--projection-frames must lie within --frames")
     environment = capture_environment()
     git = cast(dict[str, object], environment["git"])
     if arguments.classification == "publication" and git.get("dirty") is not False:
         parser.error("publication classification requires a clean Git tree")
 
     movie_path, labels_path = build_fixture(
-        arguments.fixture_root, frames=arguments.frames, cells=arguments.cells
+        arguments.fixture_root,
+        frames=arguments.frames,
+        cells=arguments.cells,
+        planes=arguments.planes,
     )
     arguments.output_root.mkdir(parents=True, exist_ok=True)
 
@@ -243,6 +292,7 @@ def main() -> None:
                     output_root=arguments.output_root,
                     memory_limit=limit,
                     workers=int(worker_text),
+                    projection_frames=arguments.projection_frames,
                 ),
                 sort_keys=True,
             )
@@ -259,6 +309,10 @@ def main() -> None:
                 str(arguments.fixture_root),
                 "--output-root",
                 str(output_root),
+                "--planes",
+                str(arguments.planes),
+                "--projection-frames",
+                str(arguments.projection_frames),
                 "--frames",
                 str(arguments.frames),
                 "--cells",
@@ -358,10 +412,21 @@ def main() -> None:
                 "isolates memory behaviour from network variance and avoids "
                 "re-reading a 323 GB archive per scaling point"
             ),
-            "movie_shape": [arguments.frames, PLANE_HEIGHT, PLANE_WIDTH, 1],
+            "movie_shape": [
+                arguments.frames,
+                PLANE_HEIGHT,
+                PLANE_WIDTH,
+                arguments.planes,
+            ],
             "source_chunk_shape": [1, PLANE_HEIGHT, PLANE_WIDTH, 1],
             "dtype": "int16",
             "requested_cells": arguments.cells,
+            "projection_frames": arguments.projection_frames,
+            "saturation_check": (
+                "the movie must be longer than the widest planned trace window, "
+                "and planes must exceed one, or the memory and worker axes "
+                "respectively stop varying"
+            ),
         },
         "configurations": results,
         "notes": [
