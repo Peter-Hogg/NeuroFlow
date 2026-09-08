@@ -46,8 +46,10 @@
   hidden: the LINDI baseline process segfaults at interpreter teardown
   *after* writing its complete record (LINDI/h5py close ordering); the
   record's measurements are unaffected.
-- [ ] Complete expert/manual biological assessment, or state explicitly in the
-  manuscript that only software-path equivalence was established.
+- [x] Complete expert/manual biological assessment, or state explicitly in the
+  manuscript that only software-path equivalence was established (the
+  manuscript's Scientific scope section now states the software-path-only
+  scope plainly).
 - [x] Preserve the legacy fish record as `historical` and the dirty current
   projection measurement as development evidence, not publication evidence.
 
@@ -80,9 +82,12 @@ uv run python benchmarks/memory_attribution.py \
 #    repetitions each.
 uv run python -m benchmarks.benchmark_resource_scaling \
     --fixture-root /tmp/nf-scaling --output-root /tmp/nf-scaling-out \
-    --frames 192 --repetitions 3 \
+    --frames 1024 --planes 8 --repetitions 3 \
     --record benchmarks/results/publication-resource-scaling.json \
     --classification publication
+# --planes > 1 is required for the worker axis to measure anything: a
+# single-plane fixture gives the projection one splittable task, so every
+# worker count produces the same wall time.
 uv run python -m benchmarks.benchmark_dandi_smoke \
     --dandiset "DANDI:000223@0.260528.0906" \
     --asset cc499fe1-fe23-42aa-8db0-0e689970fb89 \
