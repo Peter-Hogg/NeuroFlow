@@ -169,7 +169,9 @@ def run_example(config: RegionTracesConfig) -> dict[str, object]:
         source.close()
 
 
-def main() -> None:
+def parse_args(
+    argv: list[str] | None = None,
+) -> tuple[RegionTracesConfig, Path | None]:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--y-start", type=int, default=512)
     parser.add_argument("--x-start", type=int, default=384)
@@ -186,28 +188,32 @@ def main() -> None:
     )
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--record", type=Path)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     for name in ("y_start", "x_start"):
         if getattr(args, name) % 128 != 0:
             parser.error(f"--{name.replace('_', '-')} should be chunk-aligned (128)")
-    summary = run_example(
-        RegionTracesConfig(
-            y_start=args.y_start,
-            x_start=args.x_start,
-            height=args.height,
-            width=args.width,
-            projection_frames=args.projection_frames,
-            memory_limit=args.memory_limit,
-            backend=cast(Any, args.backend),
-            cellpose_device=args.cellpose_device,
-            block_size=args.block_size,
-            output_root=args.output_root,
-        )
+    config = RegionTracesConfig(
+        y_start=args.y_start,
+        x_start=args.x_start,
+        height=args.height,
+        width=args.width,
+        projection_frames=args.projection_frames,
+        memory_limit=args.memory_limit,
+        backend=cast(Any, args.backend),
+        cellpose_device=args.cellpose_device,
+        block_size=args.block_size,
+        output_root=args.output_root,
     )
+    return config, args.record
+
+
+def main() -> None:
+    config, record = parse_args()
+    summary = run_example(config)
     text = json.dumps(summary, indent=2, sort_keys=True)
-    if args.record is not None:
-        args.record.parent.mkdir(parents=True, exist_ok=True)
-        args.record.write_text(text + "\n")
+    if record is not None:
+        record.parent.mkdir(parents=True, exist_ok=True)
+        record.write_text(text + "\n")
     print(text)
 
 
