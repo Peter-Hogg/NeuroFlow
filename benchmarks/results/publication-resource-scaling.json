@@ -6,14 +6,15 @@
       "repetition_count": 3,
       "repetitions": [
         {
-          "measured_process_peak_rss_bytes": 2161393664,
+          "measured_process_peak_rss_bytes": 2362810368,
           "memory_limit": "2 GiB",
           "projection": {
             "granted_workers": 1,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 1,
-            "task_count": 1,
-            "wall_time_seconds": 4.984610810002778
+            "task_count": 8,
+            "wall_time_seconds": 38.902828803002194
           },
           "status": "measured",
           "trace_plan": {
@@ -35,16 +36,16 @@
               "total_bytes": 2147483648,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 2130788352,
-            "planned_task_working_bytes": 1661026304,
-            "task_count": 3,
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 2135146496,
+            "planned_task_working_bytes": 1665384448,
+            "task_count": 12,
             "time_window": 88
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 3,
+            "computed_task_count": 12,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -63,25 +64,26 @@
                 "total_bytes": 2147483648,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2161393664,
+              "measured_process_peak_rss_bytes": 2362810368,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 2130788352,
-              "planned_task_working_bytes": 1661026304
+              "planned_process_peak_bytes": 2135146496,
+              "planned_task_working_bytes": 1665384448
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 2.191831998003181
+            "output_bytes": 16818176,
+            "wall_time_seconds": 69.64650271599385
           },
           "workers": 1
         },
         {
-          "measured_process_peak_rss_bytes": 2160865280,
+          "measured_process_peak_rss_bytes": 2428112896,
           "memory_limit": "2 GiB",
           "projection": {
             "granted_workers": 1,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 1,
-            "task_count": 1,
-            "wall_time_seconds": 4.97485511098057
+            "task_count": 8,
+            "wall_time_seconds": 38.81821807399683
           },
           "status": "measured",
           "trace_plan": {
@@ -103,16 +105,16 @@
               "total_bytes": 2147483648,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 2130788352,
-            "planned_task_working_bytes": 1661026304,
-            "task_count": 3,
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 2135146496,
+            "planned_task_working_bytes": 1665384448,
+            "task_count": 12,
             "time_window": 88
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 3,
+            "computed_task_count": 12,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -131,25 +133,26 @@
                 "total_bytes": 2147483648,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2160865280,
+              "measured_process_peak_rss_bytes": 2428112896,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 2130788352,
-              "planned_task_working_bytes": 1661026304
+              "planned_process_peak_bytes": 2135146496,
+              "planned_task_working_bytes": 1665384448
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 2.1956162189890165
+            "output_bytes": 16818176,
+            "wall_time_seconds": 69.81857703599962
           },
           "workers": 1
         },
         {
-          "measured_process_peak_rss_bytes": 2161426432,
+          "measured_process_peak_rss_bytes": 2427949056,
           "memory_limit": "2 GiB",
           "projection": {
             "granted_workers": 1,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 1,
-            "task_count": 1,
-            "wall_time_seconds": 4.966396279982291
+            "task_count": 8,
+            "wall_time_seconds": 38.91675670599943
           },
           "status": "measured",
           "trace_plan": {
@@ -171,16 +174,16 @@
               "total_bytes": 2147483648,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 2130788352,
-            "planned_task_working_bytes": 1661026304,
-            "task_count": 3,
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 2135146496,
+            "planned_task_working_bytes": 1665384448,
+            "task_count": 12,
             "time_window": 88
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 3,
+            "computed_task_count": 12,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -199,13 +202,13 @@
                 "total_bytes": 2147483648,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2161426432,
+              "measured_process_peak_rss_bytes": 2427949056,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 2130788352,
-              "planned_task_working_bytes": 1661026304
+              "planned_process_peak_bytes": 2135146496,
+              "planned_task_working_bytes": 1665384448
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 2.150558944005752
+            "output_bytes": 16818176,
+            "wall_time_seconds": 70.71982352300256
           },
           "workers": 1
         }
@@ -213,14 +216,14 @@
       "status": "measured",
       "summary": {
         "measured_process_peak_rss_bytes": {
-          "max": 2161426432.0,
-          "median": 2161393664.0,
-          "min": 2160865280.0
+          "max": 2428112896.0,
+          "median": 2427949056.0,
+          "min": 2362810368.0
         },
         "wall_time_seconds": {
-          "max": 7.176442808005959,
-          "median": 7.170471329969587,
-          "min": 7.116955223988043
+          "max": 109.63658022900199,
+          "median": 108.63679510999646,
+          "min": 108.54933151899604
         }
       },
       "workers": 1
@@ -230,14 +233,15 @@
       "repetition_count": 3,
       "repetitions": [
         {
-          "measured_process_peak_rss_bytes": 3049070592,
+          "measured_process_peak_rss_bytes": 4776296448,
           "memory_limit": "4 GiB",
           "projection": {
             "granted_workers": 1,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 1,
-            "task_count": 1,
-            "wall_time_seconds": 4.964463195996359
+            "task_count": 8,
+            "wall_time_seconds": 38.883374179000384
           },
           "status": "measured",
           "trace_plan": {
@@ -259,16 +263,16 @@
               "total_bytes": 4294967296,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 4286922752,
+            "planned_task_working_bytes": 3817160704,
+            "task_count": 5,
+            "time_window": 206
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 5,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -287,25 +291,26 @@
                 "total_bytes": 4294967296,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 3049070592,
+              "measured_process_peak_rss_bytes": 4776296448,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 4286922752,
+              "planned_task_working_bytes": 3817160704
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.1785032940097153
+            "output_bytes": 16818176,
+            "wall_time_seconds": 42.383567788005166
           },
           "workers": 1
         },
         {
-          "measured_process_peak_rss_bytes": 3048226816,
+          "measured_process_peak_rss_bytes": 4776849408,
           "memory_limit": "4 GiB",
           "projection": {
             "granted_workers": 1,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 1,
-            "task_count": 1,
-            "wall_time_seconds": 4.969112119986676
+            "task_count": 8,
+            "wall_time_seconds": 38.8375881030006
           },
           "status": "measured",
           "trace_plan": {
@@ -327,16 +332,16 @@
               "total_bytes": 4294967296,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 4286922752,
+            "planned_task_working_bytes": 3817160704,
+            "task_count": 5,
+            "time_window": 206
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 5,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -355,25 +360,26 @@
                 "total_bytes": 4294967296,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 3048226816,
+              "measured_process_peak_rss_bytes": 4776849408,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 4286922752,
+              "planned_task_working_bytes": 3817160704
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.1908083070011344
+            "output_bytes": 16818176,
+            "wall_time_seconds": 42.8119897889992
           },
           "workers": 1
         },
         {
-          "measured_process_peak_rss_bytes": 3048849408,
+          "measured_process_peak_rss_bytes": 4775555072,
           "memory_limit": "4 GiB",
           "projection": {
             "granted_workers": 1,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 1,
-            "task_count": 1,
-            "wall_time_seconds": 5.021838665998075
+            "task_count": 8,
+            "wall_time_seconds": 38.92616016000102
           },
           "status": "measured",
           "trace_plan": {
@@ -395,16 +401,16 @@
               "total_bytes": 4294967296,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 4286922752,
+            "planned_task_working_bytes": 3817160704,
+            "task_count": 5,
+            "time_window": 206
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 5,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -423,13 +429,13 @@
                 "total_bytes": 4294967296,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 3048849408,
+              "measured_process_peak_rss_bytes": 4775555072,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 4286922752,
+              "planned_task_working_bytes": 3817160704
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.1559444519807585
+            "output_bytes": 16818176,
+            "wall_time_seconds": 42.43671344900213
           },
           "workers": 1
         }
@@ -437,14 +443,14 @@
       "status": "measured",
       "summary": {
         "measured_process_peak_rss_bytes": {
-          "max": 3049070592.0,
-          "median": 3048849408.0,
-          "min": 3048226816.0
+          "max": 4776849408.0,
+          "median": 4776296448.0,
+          "min": 4775555072.0
         },
         "wall_time_seconds": {
-          "max": 6.177783117978834,
-          "median": 6.15992042698781,
-          "min": 6.142966490006074
+          "max": 81.6495778919998,
+          "median": 81.36287360900315,
+          "min": 81.26694196700555
         }
       },
       "workers": 1
@@ -454,14 +460,15 @@
       "repetition_count": 3,
       "repetitions": [
         {
-          "measured_process_peak_rss_bytes": 2404937728,
+          "measured_process_peak_rss_bytes": 6581923840,
           "memory_limit": "4 GiB",
           "projection": {
             "granted_workers": 2,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 2,
-            "task_count": 1,
-            "wall_time_seconds": 4.960579484992195
+            "task_count": 8,
+            "wall_time_seconds": 19.695919938996667
           },
           "status": "measured",
           "trace_plan": {
@@ -483,16 +490,16 @@
               "total_bytes": 4294967296,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 4286922752,
+            "planned_task_working_bytes": 3817160704,
+            "task_count": 5,
+            "time_window": 206
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 5,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -511,25 +518,26 @@
                 "total_bytes": 4294967296,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2404937728,
+              "measured_process_peak_rss_bytes": 6581923840,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 4286922752,
+              "planned_task_working_bytes": 3817160704
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.1693749430123717
+            "output_bytes": 16818176,
+            "wall_time_seconds": 42.43553171199892
           },
           "workers": 2
         },
         {
-          "measured_process_peak_rss_bytes": 2405244928,
+          "measured_process_peak_rss_bytes": 4802994176,
           "memory_limit": "4 GiB",
           "projection": {
             "granted_workers": 2,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 2,
-            "task_count": 1,
-            "wall_time_seconds": 4.9262981330102775
+            "task_count": 8,
+            "wall_time_seconds": 19.933762742002727
           },
           "status": "measured",
           "trace_plan": {
@@ -551,16 +559,16 @@
               "total_bytes": 4294967296,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 4286922752,
+            "planned_task_working_bytes": 3817160704,
+            "task_count": 5,
+            "time_window": 206
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 5,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -579,25 +587,26 @@
                 "total_bytes": 4294967296,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2405244928,
+              "measured_process_peak_rss_bytes": 4802994176,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 4286922752,
+              "planned_task_working_bytes": 3817160704
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.2398901680135168
+            "output_bytes": 16818176,
+            "wall_time_seconds": 42.990794957004255
           },
           "workers": 2
         },
         {
-          "measured_process_peak_rss_bytes": 2405478400,
+          "measured_process_peak_rss_bytes": 5761323008,
           "memory_limit": "4 GiB",
           "projection": {
             "granted_workers": 2,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 2,
-            "task_count": 1,
-            "wall_time_seconds": 5.021690566994948
+            "task_count": 8,
+            "wall_time_seconds": 19.625537143998372
           },
           "status": "measured",
           "trace_plan": {
@@ -619,16 +628,16 @@
               "total_bytes": 4294967296,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 4286922752,
+            "planned_task_working_bytes": 3817160704,
+            "task_count": 5,
+            "time_window": 206
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 5,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -647,13 +656,13 @@
                 "total_bytes": 4294967296,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2405478400,
+              "measured_process_peak_rss_bytes": 5761323008,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 4286922752,
+              "planned_task_working_bytes": 3817160704
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.189046789018903
+            "output_bytes": 16818176,
+            "wall_time_seconds": 42.940454431001854
           },
           "workers": 2
         }
@@ -661,14 +670,14 @@
       "status": "measured",
       "summary": {
         "measured_process_peak_rss_bytes": {
-          "max": 2405478400.0,
-          "median": 2405244928.0,
-          "min": 2404937728.0
+          "max": 6581923840.0,
+          "median": 5761323008.0,
+          "min": 4802994176.0
         },
         "wall_time_seconds": {
-          "max": 6.210737356013851,
-          "median": 6.166188301023794,
-          "min": 6.129954428004567
+          "max": 62.92455769900698,
+          "median": 62.565991575000226,
+          "min": 62.13145165099559
         }
       },
       "workers": 2
@@ -678,14 +687,15 @@
       "repetition_count": 3,
       "repetitions": [
         {
-          "measured_process_peak_rss_bytes": 2405044224,
+          "measured_process_peak_rss_bytes": 11114967040,
           "memory_limit": "8 GiB",
           "projection": {
             "granted_workers": 2,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 2,
-            "task_count": 1,
-            "wall_time_seconds": 4.963759107980877
+            "task_count": 8,
+            "wall_time_seconds": 19.794133969997347
           },
           "status": "measured",
           "trace_plan": {
@@ -707,16 +717,16 @@
               "total_bytes": 8589934592,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 8572239872,
+            "planned_task_working_bytes": 8102477824,
+            "task_count": 3,
+            "time_window": 441
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 3,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -735,25 +745,26 @@
                 "total_bytes": 8589934592,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2405044224,
+              "measured_process_peak_rss_bytes": 11114967040,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 8572239872,
+              "planned_task_working_bytes": 8102477824
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.216268014977686
+            "output_bytes": 16818176,
+            "wall_time_seconds": 34.172517635000986
           },
           "workers": 2
         },
         {
-          "measured_process_peak_rss_bytes": 2405421056,
+          "measured_process_peak_rss_bytes": 11180404736,
           "memory_limit": "8 GiB",
           "projection": {
             "granted_workers": 2,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 2,
-            "task_count": 1,
-            "wall_time_seconds": 4.953193513996666
+            "task_count": 8,
+            "wall_time_seconds": 19.788019322993932
           },
           "status": "measured",
           "trace_plan": {
@@ -775,16 +786,16 @@
               "total_bytes": 8589934592,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 8572239872,
+            "planned_task_working_bytes": 8102477824,
+            "task_count": 3,
+            "time_window": 441
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 3,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -803,25 +814,26 @@
                 "total_bytes": 8589934592,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2405421056,
+              "measured_process_peak_rss_bytes": 11180404736,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 8572239872,
+              "planned_task_working_bytes": 8102477824
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.2358160940057132
+            "output_bytes": 16818176,
+            "wall_time_seconds": 34.90428180199524
           },
           "workers": 2
         },
         {
-          "measured_process_peak_rss_bytes": 2405494784,
+          "measured_process_peak_rss_bytes": 11115278336,
           "memory_limit": "8 GiB",
           "projection": {
             "granted_workers": 2,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 2,
-            "task_count": 1,
-            "wall_time_seconds": 4.99216466199141
+            "task_count": 8,
+            "wall_time_seconds": 19.73445517499931
           },
           "status": "measured",
           "trace_plan": {
@@ -843,16 +855,16 @@
               "total_bytes": 8589934592,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 8572239872,
+            "planned_task_working_bytes": 8102477824,
+            "task_count": 3,
+            "time_window": 441
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 3,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -871,13 +883,13 @@
                 "total_bytes": 8589934592,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2405494784,
+              "measured_process_peak_rss_bytes": 11115278336,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 8572239872,
+              "planned_task_working_bytes": 8102477824
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.2554774740128778
+            "output_bytes": 16818176,
+            "wall_time_seconds": 34.27990670700092
           },
           "workers": 2
         }
@@ -885,14 +897,14 @@
       "status": "measured",
       "summary": {
         "measured_process_peak_rss_bytes": {
-          "max": 2405494784.0,
-          "median": 2405421056.0,
-          "min": 2405044224.0
+          "max": 11180404736.0,
+          "median": 11115278336.0,
+          "min": 11114967040.0
         },
         "wall_time_seconds": {
-          "max": 6.247642136004288,
-          "median": 6.1890096080023795,
-          "min": 6.180027122958563
+          "max": 54.69230112498917,
+          "median": 54.01436188200023,
+          "min": 53.96665160499833
         }
       },
       "workers": 2
@@ -902,14 +914,15 @@
       "repetition_count": 3,
       "repetitions": [
         {
-          "measured_process_peak_rss_bytes": 2404913152,
+          "measured_process_peak_rss_bytes": 12082520064,
           "memory_limit": "8 GiB",
           "projection": {
             "granted_workers": 4,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 4,
-            "task_count": 1,
-            "wall_time_seconds": 5.004931192001095
+            "task_count": 8,
+            "wall_time_seconds": 10.506815166001616
           },
           "status": "measured",
           "trace_plan": {
@@ -931,16 +944,16 @@
               "total_bytes": 8589934592,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 8572239872,
+            "planned_task_working_bytes": 8102477824,
+            "task_count": 3,
+            "time_window": 441
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 3,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -959,25 +972,26 @@
                 "total_bytes": 8589934592,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2404913152,
+              "measured_process_peak_rss_bytes": 12082520064,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 8572239872,
+              "planned_task_working_bytes": 8102477824
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.226650929020252
+            "output_bytes": 16818176,
+            "wall_time_seconds": 34.49813602300128
           },
           "workers": 4
         },
         {
-          "measured_process_peak_rss_bytes": 2404962304,
+          "measured_process_peak_rss_bytes": 11299278848,
           "memory_limit": "8 GiB",
           "projection": {
             "granted_workers": 4,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 4,
-            "task_count": 1,
-            "wall_time_seconds": 4.955796896014363
+            "task_count": 8,
+            "wall_time_seconds": 10.54427651700098
           },
           "status": "measured",
           "trace_plan": {
@@ -999,16 +1013,16 @@
               "total_bytes": 8589934592,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 8572239872,
+            "planned_task_working_bytes": 8102477824,
+            "task_count": 3,
+            "time_window": 441
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 3,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -1027,25 +1041,26 @@
                 "total_bytes": 8589934592,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2404962304,
+              "measured_process_peak_rss_bytes": 11299278848,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 8572239872,
+              "planned_task_working_bytes": 8102477824
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.1996642209996935
+            "output_bytes": 16818176,
+            "wall_time_seconds": 34.4098116210007
           },
           "workers": 4
         },
         {
-          "measured_process_peak_rss_bytes": 2405089280,
+          "measured_process_peak_rss_bytes": 10735874048,
           "memory_limit": "8 GiB",
           "projection": {
             "granted_workers": 4,
             "planned_memory_per_task": 1425801216,
+            "reduced_frames": 192,
             "requested_workers": 4,
-            "task_count": 1,
-            "wall_time_seconds": 4.955158230004599
+            "task_count": 8,
+            "wall_time_seconds": 10.558525780004857
           },
           "status": "measured",
           "trace_plan": {
@@ -1067,16 +1082,16 @@
               "total_bytes": 8589934592,
               "total_target_attainable": true
             },
-            "cell_count": 512,
-            "estimated_total_bytes_read": 698351616,
-            "planned_process_peak_bytes": 4022796288,
-            "planned_task_working_bytes": 3553034240,
-            "task_count": 1,
-            "time_window": 192
+            "cell_count": 4096,
+            "estimated_total_bytes_read": 29796335616,
+            "planned_process_peak_bytes": 8572239872,
+            "planned_task_working_bytes": 8102477824,
+            "task_count": 3,
+            "time_window": 441
           },
           "traces": {
             "bytes_read": null,
-            "computed_task_count": 1,
+            "computed_task_count": 3,
             "memory": {
               "budget": {
                 "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -1095,13 +1110,13 @@
                 "total_bytes": 8589934592,
                 "total_target_attainable": true
               },
-              "measured_process_peak_rss_bytes": 2405089280,
+              "measured_process_peak_rss_bytes": 10735874048,
               "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
-              "planned_process_peak_bytes": 4022796288,
-              "planned_task_working_bytes": 3553034240
+              "planned_process_peak_bytes": 8572239872,
+              "planned_task_working_bytes": 8102477824
             },
-            "output_bytes": 398848,
-            "wall_time_seconds": 1.2330591510108206
+            "output_bytes": 16818176,
+            "wall_time_seconds": 34.73552579399984
           },
           "workers": 4
         }
@@ -1109,14 +1124,14 @@
       "status": "measured",
       "summary": {
         "measured_process_peak_rss_bytes": {
-          "max": 2405089280.0,
-          "median": 2404962304.0,
-          "min": 2404913152.0
+          "max": 12082520064.0,
+          "median": 11299278848.0,
+          "min": 10735874048.0
         },
         "wall_time_seconds": {
-          "max": 6.231582121021347,
-          "median": 6.18821738101542,
-          "min": 6.155461117014056
+          "max": 45.2940515740047,
+          "median": 45.004951189002895,
+          "min": 44.95408813800168
         }
       },
       "workers": 4
@@ -1139,45 +1154,46 @@
       "numpy": "2.2.6",
       "pandas": "2.3.3",
       "pyarrow": "25.0.0",
-      "pynapple": null,
+      "pynapple": "0.11.3",
       "pynwb": "4.1.0",
       "remfile": "0.1.14",
       "s3fs": "2026.7.0",
       "scipy": "1.15.3",
-      "xarray": "2025.6.1",
       "zarr": "2.18.3"
     },
     "git": {
-      "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+      "commit": "441c27ac5b4d4f21bb98b500728e81dbc06fb88b",
       "dirty": false,
       "source": "git"
     },
     "neuroflow_version": "0.1.0",
     "platform": {
-      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "description": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
       "machine": "x86_64",
-      "release": "7.0.0-29-generic",
+      "release": "7.0.0-30-generic",
       "system": "Linux"
     },
     "python": {
-      "executable": "python",
+      "executable": "python3",
       "implementation": "CPython",
       "version": "3.10.19"
     },
     "schema_version": "1",
-    "total_ram_bytes": 132559962112
+    "total_ram_bytes": 132559958016
   },
   "fixture": {
     "dtype": "int16",
     "kind": "local synthetic",
     "movie_shape": [
-      192,
+      1024,
       888,
       2048,
-      1
+      8
     ],
+    "projection_frames": 192,
     "reason": "isolates memory behaviour from network variance and avoids re-reading a 323 GB archive per scaling point",
     "requested_cells": 512,
+    "saturation_check": "the movie must be longer than the widest planned trace window, and planes must exceed one, or the memory and worker axes respectively stop varying",
     "source_chunk_shape": [
       1,
       888,
@@ -1194,5 +1210,5 @@
   "repetitions_per_configuration": 3,
   "suite_name": "resource-scaling",
   "suite_schema_version": "1",
-  "timestamp": "2026-08-21T21:50:35.515512+00:00"
+  "timestamp": "2026-09-08T22:28:55.253708+00:00"
 }
