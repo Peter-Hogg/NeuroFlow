@@ -58,8 +58,9 @@ def _open_remote_file(uri: str, options: dict[str, object]) -> tuple[Any, str]:
             lindi = importlib.import_module("lindi")
         except ImportError as exc:
             raise UnsupportedBackendError(
-                "the LINDI backend requires the optional dependency: "
-                "uv sync --locked --dev --extra lindi"
+                "the LINDI backend requires the optional dependency: install "
+                "the 'lindi' extra (pip install 'neuroflow[lindi]', or "
+                "uv sync --locked --dev --extra lindi from a checkout)"
             ) from exc
         file_class = getattr(lindi, "LindiH5pyFile", None)
         opener = getattr(file_class, "from_hdf5_file", None)
@@ -126,6 +127,7 @@ class NWBHDF5Source:
         self._metrics_lock = threading.Lock()
         self._http_responses = 0
         self._response_content_bytes = 0
+        self._response_hook_installed = False
         self.transport = "local"
         self.transport_block_size: int | None = None
         try:
@@ -152,6 +154,7 @@ class NWBHDF5Source:
                 hooks = getattr(session, "hooks", None)
                 if isinstance(hooks, dict):
                     hooks.setdefault("response", []).append(self._record_response)
+                    self._response_hook_installed = True
                 h5_file = (
                     self._remote_file
                     if self.transport == "lindi"
@@ -171,10 +174,12 @@ class NWBHDF5Source:
             raise
         except Exception as exc:
             self.close()
+            if "://" in self.uri:
+                detail = "remote servers must support byte-range requests"
+            else:
+                detail = "the local file is not readable NWB-HDF5"
             raise SourceResolutionError(
-                f"could not open NWB-HDF5 source {_redacted_uri(self.uri)}; "
-                "remote servers must "
-                "support byte-range requests"
+                f"could not open NWB-HDF5 source {_redacted_uri(self.uri)}; {detail}"
             ) from exc
         public_uri = _redacted_uri(self.uri)
         identity_value = public_uri
@@ -274,6 +279,23 @@ class NWBHDF5Source:
                 "http_responses": None,
                 "response_content_bytes": None,
                 "note": "LINDI does not expose transport counters through this API",
+            }
+        if self.transport == "local":
+            return {
+                "transport": "local",
+                "http_responses": 0,
+                "response_content_bytes": 0,
+                "note": "local file access issues no HTTP requests",
+            }
+        if not self._response_hook_installed:
+            # A remote transport without a response hook (e.g. fsspec) does
+            # issue requests; reporting zero here would record wrong data as
+            # measured, so the counters are declared unavailable instead.
+            return {
+                "transport": self.transport,
+                "http_responses": None,
+                "response_content_bytes": None,
+                "note": "transport exposes no response hooks; transfer not measured",
             }
         with self._metrics_lock:
             return {

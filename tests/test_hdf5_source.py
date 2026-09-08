@@ -179,6 +179,7 @@ def test_remote_response_metrics_count_headers_without_reading_bodies() -> None:
     source._metrics_lock = threading.Lock()
     source._http_responses = 0
     source._response_content_bytes = 0
+    source._response_hook_installed = True
 
     source._record_response(SimpleNamespace(headers={"Content-Length": "4096"}))
 
@@ -187,6 +188,21 @@ def test_remote_response_metrics_count_headers_without_reading_bodies() -> None:
         "http_responses": 1,
         "response_content_bytes": 4096,
     }
+
+
+def test_remote_transport_without_response_hook_reports_unmeasured_transfer() -> None:
+    """A hookless remote transport must not record zero transfer as measured."""
+    source = NWBHDF5Source.__new__(NWBHDF5Source)
+    source.transport = "fsspec"
+    source._metrics_lock = threading.Lock()
+    source._http_responses = 0
+    source._response_content_bytes = 0
+    source._response_hook_installed = False
+
+    stats = source.io_stats()
+
+    assert stats["http_responses"] is None
+    assert stats["response_content_bytes"] is None
 
 
 def test_axis_inference_is_a_documented_convention_not_nwb_semantics() -> None:

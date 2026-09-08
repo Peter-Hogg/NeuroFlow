@@ -10,7 +10,7 @@ from typing import cast
 import numpy as np
 
 from neuroflow.diagnostics.estimates import slice_shape
-from neuroflow.execution.resources import parse_bytes
+from neuroflow.execution.resources import resolve_memory_budget
 from neuroflow.expression import (
     CastExpr,
     Expression,
@@ -65,10 +65,13 @@ def build_reduction_stage_plans(
     memory_limit: int | str | None,
 ) -> tuple[ReductionStagePlan, ...]:
     """Plan bounded source tiles for each supported scalar dependency."""
+    # A user memory_limit is a total process-memory target everywhere else in
+    # the planner, so stage tiles budget against what remains after the process
+    # floor rather than against the headline total.
     budget = (
         DEFAULT_STAGE_MEMORY_LIMIT
         if memory_limit is None
-        else parse_bytes(memory_limit)
+        else resolve_memory_budget(memory_limit).task_bytes
     )
     plans: list[ReductionStagePlan] = []
     for reduction in staged_reductions(expression):

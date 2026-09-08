@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import math
-import resource
-import sys
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -24,7 +22,7 @@ from neuroflow.execution.resources import (
     resolve_memory_budget,
 )
 from neuroflow.partition.base import Partition
-from neuroflow.provenance.environment import capture_environment
+from neuroflow.provenance.environment import capture_environment, peak_rss_bytes
 from neuroflow.provenance.hashing import stable_hash
 from neuroflow.selection.query import absolute_selection_bounds
 from neuroflow.storage.base import (
@@ -912,7 +910,7 @@ def _finalize_trace_output(
         "output_bytes": provenance["preflight_plan"]["output"][  # type: ignore[index]
             "estimated_size_bytes"
         ]["value"],  # type: ignore[index]
-        "peak_rss_bytes": _peak_rss_bytes(),
+        "peak_rss_bytes": peak_rss_bytes(),
         # Planned versus measured, side by side, so the gap is always visible
         # rather than something a reader has to reconstruct.
         "memory": {
@@ -921,7 +919,7 @@ def _finalize_trace_output(
             "planned_process_peak_bytes": (
                 memory_budget.reserved_bytes + estimated_memory_per_task
             ),
-            "measured_process_peak_rss_bytes": _peak_rss_bytes(),
+            "measured_process_peak_rss_bytes": peak_rss_bytes(),
             "measurement_scope": (
                 "whole process high-water mark for this interpreter, including "
                 "any work done before or after trace extraction"
@@ -985,6 +983,3 @@ def _bytes_delta(before: int | None, after: int | None) -> int | None:
     return max(0, after - before)
 
 
-def _peak_rss_bytes() -> int:
-    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-    return value if sys.platform == "darwin" else value * 1024

@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import importlib.metadata
-import resource
-import sys
 from collections.abc import Mapping
 from contextlib import nullcontext
 from dataclasses import asdict
@@ -31,7 +29,7 @@ from neuroflow.exceptions import (
     ProvenanceMismatchError,
 )
 from neuroflow.partition.base import Partition
-from neuroflow.provenance.environment import capture_environment
+from neuroflow.provenance.environment import capture_environment, peak_rss_bytes
 from neuroflow.provenance.hashing import stable_hash
 from neuroflow.selection.query import Selection, absolute_selection_bounds
 from neuroflow.source.base import NWBSource
@@ -767,7 +765,7 @@ def finalize_output(
                 "measured" if isinstance(response_bytes, int) else "unknown"
             ),
             "output_bytes": output_bytes,
-            "peak_rss_bytes": _peak_rss_bytes(),
+            "peak_rss_bytes": peak_rss_bytes(),
             "stages": stage_execution if isinstance(stage_execution, list) else [],
             "integrity_verification": {
                 "status": "measured",
@@ -787,11 +785,6 @@ def finalize_output(
             "provenance": provenance_uri,
         },
     )
-
-
-def _peak_rss_bytes() -> int:
-    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-    return value if sys.platform == "darwin" else value * 1024
 
 
 def fail_output(output: ExecutionOutput, workflow_id: str, error: Exception) -> None:

@@ -20,6 +20,10 @@ from neuroflow.exceptions import AdapterCompatibilityError
 from neuroflow.execution.resources import ResourceSpec
 
 _THREAD_STATE = threading.local()
+# Every thread-local model cache ever created, so ``clear_model_cache`` can
+# release networks loaded by dask worker threads, not just the caller's.
+_MODEL_CACHE_REGISTRY: list[dict[object, object]] = []
+_MODEL_CACHE_LOCK = threading.Lock()
 
 # Host resident-set cost of one loaded network, keyed by pretrained model and
 # then by whether it runs on GPU. Measured with
@@ -227,6 +231,8 @@ class CellposeAdapter:
         if cache is None:
             cache = {}
             _THREAD_STATE.models = cache
+            with _MODEL_CACHE_LOCK:
+                _MODEL_CACHE_REGISTRY.append(cache)
         key = (
             self.pretrained_model,
             self.gpu,
@@ -252,6 +258,26 @@ class CellposeAdapter:
                 use_bfloat16=self.use_bfloat16,
             )
         return cast(_CellposeModel, cache[key])
+
+
+def clear_model_cache() -> None:
+    """Release every cached Cellpose network across worker threads.
+
+    Loaded models stay resident after a segmentation finishes (about 2 GiB of
+    host memory for ``cpsam`` on CPU, plus GPU allocations under CUDA) so that
+    later partitions skip reloading. Call this between pipeline phases — never
+    while a run is executing — to return that memory before planning
+    memory-sensitive work in the same process.
+    """
+    with _MODEL_CACHE_LOCK:
+        for cache in _MODEL_CACHE_REGISTRY:
+            cache.clear()
+    try:
+        torch = importlib.import_module("torch")
+    except ImportError:
+        return
+    if getattr(torch, "cuda", None) is not None and torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
 
 def _object_table(labels: np.ndarray) -> pd.DataFrame:

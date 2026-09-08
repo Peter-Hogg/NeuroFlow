@@ -67,8 +67,12 @@ def open_source(
         storage_options = options
         source = source.uri
     value = str(source)
-    match = re.fullmatch(r"DANDI:(\d{6})(?:@([^/]+))?", value, re.IGNORECASE)
-    if match:
+    if value.lower().startswith("dandi:"):
+        # Same grammar as open_dandi: never let a malformed DANDI identifier
+        # fall through to a filesystem lookup and a misleading path error.
+        match = re.fullmatch(r"DANDI:(\d{1,6})(?:@([^/]+))?", value, re.IGNORECASE)
+        if match is None:
+            raise ValueError("dandiset must be DANDI:<numeric ID>[@<version>]")
         embedded_version = match.group(2)
         if version and embedded_version and version != embedded_version:
             raise ValueError("version conflicts with the DANDI identifier")

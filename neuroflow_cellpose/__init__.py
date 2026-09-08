@@ -3,6 +3,7 @@
 from neuroflow_cellpose.adapter import (
     MEASURED_MODEL_HOST_RESERVE_BYTES,
     CellposeAdapter,
+    clear_model_cache,
 )
 from neuroflow_cellpose.device import (
     DEVICE_CHOICES,
@@ -17,5 +18,6 @@ __all__ = [
     "CellposeAdapter",
     "CellposeDevice",
     "cellpose_version",
+    "clear_model_cache",
     "resolve_cellpose_device",
 ]

@@ -105,7 +105,7 @@ def resolve_cellpose_device(requested: DeviceChoice | str = "auto") -> CellposeD
         selected=selected,
         cuda_available=cuda_available,
         torch_version=torch_version,
-        cuda_version=cuda_version if selected == "cuda" else cuda_version,
+        cuda_version=cuda_version if selected == "cuda" else None,
         gpu_name=gpu_name,
         gpu_total_memory_bytes=gpu_total_memory_bytes,
     )

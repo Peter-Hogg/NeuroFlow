@@ -111,3 +111,26 @@ def test_open_dandi_exposes_backend_without_low_level_cache_knobs(
         "backend": "lindi",
         "storage_options": None,
     }
+
+
+def test_open_source_short_dandi_id_routes_to_dandi_not_filesystem(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """DANDI:350 must mean dandiset 000350, never a local path lookup."""
+    import neuroflow
+
+    captured: dict[str, object] = {}
+
+    class FakeDandiSource:
+        def __init__(self, dandiset_id: str, **kwargs: object) -> None:
+            captured.update(dandiset_id=dandiset_id, **kwargs)
+
+    monkeypatch.setattr("neuroflow.api.DandiNWBSource", FakeDandiSource)
+
+    source = neuroflow.open_source("DANDI:350")
+
+    assert source is not None
+    assert captured["dandiset_id"] == "350"
+
+    with pytest.raises(ValueError, match="DANDI"):
+        neuroflow.open_source("DANDI:not-a-number")

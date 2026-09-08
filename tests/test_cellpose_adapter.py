@@ -1,6 +1,7 @@
 import importlib
 import importlib.metadata
 import sys
+import threading
 from pathlib import Path
 from types import ModuleType
 
@@ -231,3 +232,25 @@ def test_cellpose_convenience_returns_composable_labels(
     labels.close()
     projection.close()
     movie.close()
+
+
+def test_clear_model_cache_releases_models_loaded_by_other_threads(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Cached networks from worker threads must be released, not just ours."""
+    fake_model = _install_fake_cellpose(monkeypatch)
+    adapter = CellposeAdapter(pretrained_model="fake")
+
+    worker = threading.Thread(target=adapter._model)
+    worker.start()
+    worker.join()
+    assert fake_model.instances
+
+    from neuroflow_cellpose import clear_model_cache
+
+    clear_model_cache()
+
+    with cellpose_adapter_module._MODEL_CACHE_LOCK:
+        assert all(
+            not cache for cache in cellpose_adapter_module._MODEL_CACHE_REGISTRY
+        )

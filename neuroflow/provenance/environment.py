@@ -9,6 +9,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import resource
+except ImportError:  # Windows has no resource module
+    resource = None  # type: ignore[assignment]
+
 from neuroflow._version import __version__
 
 ENVIRONMENT_SCHEMA_VERSION = "1"
@@ -26,7 +31,6 @@ DEPENDENCIES = (
     "remfile",
     "s3fs",
     "scipy",
-    "xarray",
     "zarr",
 )
 OPTIONAL_BACKENDS = ("cellpose", "pynapple", "lindi")
@@ -117,6 +121,18 @@ def _cpu_model() -> str | None:
         pass
     value = platform.processor().strip()
     return value or None
+
+
+def peak_rss_bytes() -> int | None:
+    """Return the process high-water RSS in bytes, or None where unmeasurable.
+
+    Measured via ``resource.getrusage`` on Linux and macOS; Windows lacks the
+    ``resource`` module, so the value is recorded as null rather than guessed.
+    """
+    if resource is None:
+        return None
+    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    return value if sys.platform == "darwin" else value * 1024
 
 
 def _total_ram_bytes() -> int | None:
