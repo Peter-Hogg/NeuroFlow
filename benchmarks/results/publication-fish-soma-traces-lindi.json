@@ -34,36 +34,35 @@
       "numpy": "2.2.6",
       "pandas": "2.3.3",
       "pyarrow": "25.0.0",
-      "pynapple": null,
+      "pynapple": "0.11.3",
       "pynwb": "4.1.0",
       "remfile": "0.1.14",
       "s3fs": "2026.7.0",
       "scipy": "1.15.3",
-      "xarray": "2025.6.1",
       "zarr": "2.18.3"
     },
     "git": {
-      "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+      "commit": "c1b3d13f667d8ce28841f4d7d45c22e3a543ffa3",
       "dirty": false,
       "source": "git"
     },
     "neuroflow_version": "0.1.0",
     "platform": {
-      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "description": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
       "machine": "x86_64",
-      "release": "7.0.0-29-generic",
+      "release": "7.0.0-30-generic",
       "system": "Linux"
     },
     "python": {
-      "executable": "python",
+      "executable": "python3",
       "implementation": "CPython",
       "version": "3.10.19"
     },
     "schema_version": "1",
-    "total_ram_bytes": 132559962112
+    "total_ram_bytes": 132559958016
   },
   "execution": {
-    "bytes_read": null,
+    "bytes_read": 519394535453,
     "cache_state": "backend-managed; LINDI counters unavailable through the current bridge",
     "memory_budget": "2 GiB",
     "network_context": "public DANDI HTTPS; runner location is external",
@@ -171,12 +170,12 @@
         }
       }
     },
-    "peak_rss_bytes": 5511471104,
+    "peak_rss_bytes": 5543485440,
     "task_count": 93,
     "transport_configuration": {
       "managed_by": "lindi"
     },
-    "wall_time_seconds": 15670.866997247998
+    "wall_time_seconds": 22051.061710306996
   },
   "notes": [
     "No complete source download is performed by this workflow.",
@@ -210,11 +209,11 @@
       ],
       "shape_agreement": true,
       "valid": true,
-      "wall_time_seconds": 3.0986839800025336
+      "wall_time_seconds": 3.7934929199982435
     },
-    "output_bytes": 56528335,
+    "output_bytes": 56527700,
     "resume": {
-      "bytes_read": null,
+      "bytes_read": 0,
       "computed_task_count": 0,
       "corruption_repair": "covered by benchmarks.benchmark_resume_integrity on deterministic local data; archive output was not deliberately corrupted",
       "exercised": true,
@@ -288,9 +287,9 @@
           "z_axis": null
         },
         "valid": true,
-        "wall_time_seconds": 50.190636896993965
+        "wall_time_seconds": 52.80357678300061
       },
-      "input_projection_identity": "fe82a8ada0f1d2329eaeade76cae98668160e321a57ecf34a14da9153ee9b5a9",
+      "input_projection_identity": "fe08f2ca3980f46db023a3a62fa2fd421efe81fbd59a9727d88a608ac0ad52db",
       "model": "cpsam",
       "object_count": 5552,
       "output_checksum": null,
@@ -320,35 +319,35 @@
           "version": "1"
         },
         "completed_partitions": [
-          "dab013eaf32cfd2ca0debf72ffa76c33c2d6d842a947f53e33d73705f16e8dfa",
-          "baa4e72664b8034006069868a0df7bbe9dc0f9a0dfe23c4dee724b04c7e32611",
-          "b97c570395577a8902b87691d9f399a560790aed5aaa0642a750a7e3b6566352",
-          "86793cdacb51cb43f172ff3aee69ea4ae721118a54be05f5ad994a4560f4524f",
-          "969428e832c429d23fb6a0cb926769d50b22e4b48b2c6c77c435e04d47a7a222",
-          "aa66bbb420b6f25dca26f9eb6398bfee5ca0522ed5a95ae718e8a1cf5ef572b1",
-          "15e0e36cb872f84f12f5dbaaacb295d5b4b8486ab3823aa8f25da5015363bf05",
-          "3d4bc890f75efdaa803bbc1bedd4472b7ac03b0b2e6db573d1162301a760992c",
-          "7e99218ba5f2f14f295687780d87ee6653034934e164e440fcffdc4b65be30fd",
-          "253540de41c3c2672f6a30c47f45a53702f6cbf8b028e8bd66c9d0d353824e6b",
-          "2f3e2fcc0de447738f9d131cac9da939c9c52fd6d46737ad3e54f14e0a0ab999",
-          "0c161de32ba1bb33604a2949c7debb7ffe24f055c0292a3f06cf050b0bf54d09",
-          "21134f461c17875a4427a558a900376fec3a424c178190fd79c13175a37667b3",
-          "13c265d0a20901fa9069e111b4ded23d025a7eb01c9ddf2e6fe2ffe73643ddb6",
-          "5fc5667aa92093b796816eef3ee3c8c1768a8b55e2bcd53502be1d3a3584a20a",
-          "68adb7d5c07158f589ca962265716d8bcc44d17c6d31229a0deeb03324e5b15d",
-          "19b49be6c42c00d67754bf43dfdf3bcb64fa2025bbbbe5b192322d537f14eb0a",
-          "20b78592bf96dc6cdbcd640069420917c419fab2f73bf38a07efb5f4e317ba14",
-          "63906e17a4acf5dbd86460a96487ce47216411f5a7881daf842ace136f22f9ec",
-          "44591550e2f7d29bb273eb5000ef253c274f1693488c6de2d26f04a7a13c2b9b",
-          "57c15b355f3c2efbcff6d3d95fe7661154179c92135269a543d004254c8d713e",
-          "6088570696c5925bbd322c914f31f23600d45506874160a36f6ebf4e8ad39927",
-          "f5322a4b132fa6623e888a32a4cf986209e09404c67504d92f7082ce2adfe1a4",
-          "f47de641f4b5d0fb57c3e448cbc3b736ab9ffa26c4b7b4b907fed61db521d60a",
-          "32d588720af8aa90119e3babb72a7d3f7066260047c8a8e758769b405868a836",
-          "4d0796a51f4afbc544c667ecc0ffc6fa5cee9efe3a93c69a8771a62b5e590f64",
-          "74c2c308cfcba92cdc4e14056f85a3a27947a81d2f277e8c3e27dc0e86aeabef",
-          "516a74c3524d57e72025484cc810bcca9593ad443426eb49e051a5f6e5af8ea1",
-          "a7c69c22a0aca80c0e303c02117cac4791f73d2d7219b9ef9e79ba734bac7fde"
+          "bc0f82fa2b6ba3075e3f320364ea0813866bc4b5c62c23cdf58d4c2eef389118",
+          "3fc071b65c86df9a38da183edd66f1c298f38d25bd3a4b603c2a48a06939ffbc",
+          "436312c4a93a1c20afa26071c2d502dca43a7be876a04a0f3ef9d3dd841bb940",
+          "9faaea813cfdf5d8fdd5b83ff53708b79baa26920590263d1b9335a09ce6fa0e",
+          "984e4223c123748d76f0418de4117e401c0742470ef4ea96e51577f36b3f1008",
+          "de88bd2e4d2dc97108698ee5891eaa7d53c6db6df295ae278961c27b90423787",
+          "d6ba3958db318a43ed34e684aef841768ef8ce1f7b915b4ac85c4ce940224d45",
+          "2b3a8075bd38d307e48e3f6e961e9ad3f1cd8de2d75cf19574a6297de2a1b12a",
+          "b1dabff23ee1fb4c1e03ec97446ef98d8905e9144bc18c2ce6a3ecc2cb4e0d23",
+          "f6ab52ac8df2f73504e24f261bff338eb4af275f45a31f1116f1bcd321438d66",
+          "0da181eadd4bed498e470c29df29c3f76365477cc928fcde3b565ec805a2b4c2",
+          "3fe9bee6be8398689e7ae16b8c4d83019cf877a517f8639e453d85f6d1790d8d",
+          "b1f644f8e642eebcdf8e5f16de90ed63adc9d8864937266513cb6c9c7ba5f2cd",
+          "5ac0910ecb5a4ad78cd2bd8d66d066ab2bfc52c4f28061021a3266545a0a6538",
+          "0834969d6f5766266520e10340bf615d55ed0fc45d913e4260815a56d09b07ea",
+          "dd281de113ecc18946108abd525a5607dc27c3a720b5b490926de4b2ef3dc8f3",
+          "f1b5712eac677292fdb0c4e4633f857d555745ab3bc43407e72e37fcf9f01147",
+          "403dd041ab0e7ecc78185e438609c3bd9a32f34dca523a83bf3f9d2ed9cd0d8c",
+          "336d00473dd6b4da596cada004ba6f50b0bd56934f28638027d637284f03de8e",
+          "e39dd18fd11fbcbbbec300780be6b9b46d8fb752ed8b61ba0295b868ad3f11d3",
+          "c536d63adc67889d4fc97e9f5d1519f7e550b3c6241b276a97cc04d3b5778b97",
+          "de71cac59aaae17992f35024ee15d0cad0ce5b66cc9ceff7fd29799c9eb71cf0",
+          "3a12b94e75cb42d88e432575d0fddb5dde1dfdd3fc5786efa7d8a98b09c4c26b",
+          "170fe7e5e0002344a7b7e78a60ff05206baa12064dce56094f2b63dcb7c88eff",
+          "c5cec139f298c6268b9b4433c8b53fadd88a3d6ce9c1ebc6bd30c5b7931edd15",
+          "4a8b1b674b748e2d0faba5ad886f47221b8059b724afc4200ec0c8f84c14f777",
+          "7bbcf302b7f27fca342a3ee58dd4715534760bb8e58dc7c0014cdb299df92ad6",
+          "f8ebe13731dc1d819cda0df05819ac4651a1ce99dc500c18a791643a034c8338",
+          "4b8ac6aeedb4c1d48e6d72fdb30d518b83385cc364f9cfda82466a7678f6aef5"
         ],
         "environment": {
           "cpu": {
@@ -367,33 +366,32 @@
             "numpy": "2.2.6",
             "pandas": "2.3.3",
             "pyarrow": "25.0.0",
-            "pynapple": null,
+            "pynapple": "0.11.3",
             "pynwb": "4.1.0",
             "remfile": "0.1.14",
             "s3fs": "2026.7.0",
             "scipy": "1.15.3",
-            "xarray": "2025.6.1",
             "zarr": "2.18.3"
           },
           "git": {
-            "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+            "commit": "c1b3d13f667d8ce28841f4d7d45c22e3a543ffa3",
             "dirty": false,
             "source": "git"
           },
           "neuroflow_version": "0.1.0",
           "platform": {
-            "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+            "description": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
             "machine": "x86_64",
-            "release": "7.0.0-29-generic",
+            "release": "7.0.0-30-generic",
             "system": "Linux"
           },
           "python": {
-            "executable": "python",
+            "executable": "python3",
             "implementation": "CPython",
             "version": "3.10.19"
           },
           "schema_version": "1",
-          "total_ram_bytes": 132559962112
+          "total_ram_bytes": 132559958016
         },
         "execution_attempts": [
           {
@@ -414,71 +412,70 @@
                 "numpy": "2.2.6",
                 "pandas": "2.3.3",
                 "pyarrow": "25.0.0",
-                "pynapple": null,
+                "pynapple": "0.11.3",
                 "pynwb": "4.1.0",
                 "remfile": "0.1.14",
                 "s3fs": "2026.7.0",
                 "scipy": "1.15.3",
-                "xarray": "2025.6.1",
                 "zarr": "2.18.3"
               },
               "git": {
-                "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+                "commit": "c1b3d13f667d8ce28841f4d7d45c22e3a543ffa3",
                 "dirty": false,
                 "source": "git"
               },
               "neuroflow_version": "0.1.0",
               "platform": {
-                "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+                "description": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
                 "machine": "x86_64",
-                "release": "7.0.0-29-generic",
+                "release": "7.0.0-30-generic",
                 "system": "Linux"
               },
               "python": {
-                "executable": "python",
+                "executable": "python3",
                 "implementation": "CPython",
                 "version": "3.10.19"
               },
               "schema_version": "1",
-              "total_ram_bytes": 132559962112
+              "total_ram_bytes": 132559958016
             },
-            "execution_finished": "2026-08-22T02:22:34.556989+00:00",
+            "execution_finished": "2026-09-09T13:49:22.672202+00:00",
             "execution_policy": {
               "max_workers": 1,
               "memory_limit": "2 GiB"
             },
-            "execution_started": "2026-08-22T02:21:29.391633+00:00",
+            "execution_started": "2026-09-09T13:48:12.684156+00:00",
             "scheduler": "threads",
             "source_backend": "local-or-fsspec",
             "status": "complete"
           }
         ],
-        "execution_finished": "2026-08-22T02:22:34.556989+00:00",
+        "execution_finished": "2026-09-09T13:49:22.672202+00:00",
         "execution_metrics": {
           "bytes_read": null,
           "bytes_read_status": "unknown",
           "completed_task_count": 29,
           "computed_task_count": 29,
-          "execution_finished": "2026-08-22T02:22:34.556989+00:00",
-          "execution_started": "2026-08-22T02:21:29.391633+00:00",
+          "execution_finished": "2026-09-09T13:49:22.672202+00:00",
+          "execution_started": "2026-09-09T13:48:12.684156+00:00",
           "integrity_verification": {
             "checksums": "not-run-during-finalization",
             "manifests": "valid",
             "status": "measured"
           },
-          "output_bytes": 422447890,
+          "output_bytes": 422447892,
           "partitions_completed": 29,
-          "peak_rss_bytes": 3327692800,
+          "peak_rss_bytes": 3452575744,
           "resumed_task_count": 0,
           "schema_version": "1",
           "stages": [],
-          "wall_time_seconds": 65.165356
+          "wall_time_seconds": 69.988046
         },
         "execution_policy": {
           "max_workers": 1,
           "memory_limit": "2 GiB"
         },
-        "execution_started": "2026-08-22T02:21:29.391633+00:00",
+        "execution_started": "2026-09-09T13:48:12.684156+00:00",
         "external_libraries": {
           "cellpose": "4.2.1.1"
         },
@@ -530,7 +527,7 @@
               "name": "objects"
             }
           },
-          "uri": "publication/runs-publication-lindi/fish-cellpose.zarr"
+          "uri": "/tmp/nf-fish-lindi/fish-cellpose.zarr"
         },
         "parameters": {
           "anisotropy": null,
@@ -559,35 +556,35 @@
             0
           ],
           "partition_ids": [
-            "dab013eaf32cfd2ca0debf72ffa76c33c2d6d842a947f53e33d73705f16e8dfa",
-            "baa4e72664b8034006069868a0df7bbe9dc0f9a0dfe23c4dee724b04c7e32611",
-            "b97c570395577a8902b87691d9f399a560790aed5aaa0642a750a7e3b6566352",
-            "86793cdacb51cb43f172ff3aee69ea4ae721118a54be05f5ad994a4560f4524f",
-            "969428e832c429d23fb6a0cb926769d50b22e4b48b2c6c77c435e04d47a7a222",
-            "aa66bbb420b6f25dca26f9eb6398bfee5ca0522ed5a95ae718e8a1cf5ef572b1",
-            "15e0e36cb872f84f12f5dbaaacb295d5b4b8486ab3823aa8f25da5015363bf05",
-            "3d4bc890f75efdaa803bbc1bedd4472b7ac03b0b2e6db573d1162301a760992c",
-            "7e99218ba5f2f14f295687780d87ee6653034934e164e440fcffdc4b65be30fd",
-            "253540de41c3c2672f6a30c47f45a53702f6cbf8b028e8bd66c9d0d353824e6b",
-            "2f3e2fcc0de447738f9d131cac9da939c9c52fd6d46737ad3e54f14e0a0ab999",
-            "0c161de32ba1bb33604a2949c7debb7ffe24f055c0292a3f06cf050b0bf54d09",
-            "21134f461c17875a4427a558a900376fec3a424c178190fd79c13175a37667b3",
-            "13c265d0a20901fa9069e111b4ded23d025a7eb01c9ddf2e6fe2ffe73643ddb6",
-            "5fc5667aa92093b796816eef3ee3c8c1768a8b55e2bcd53502be1d3a3584a20a",
-            "68adb7d5c07158f589ca962265716d8bcc44d17c6d31229a0deeb03324e5b15d",
-            "19b49be6c42c00d67754bf43dfdf3bcb64fa2025bbbbe5b192322d537f14eb0a",
-            "20b78592bf96dc6cdbcd640069420917c419fab2f73bf38a07efb5f4e317ba14",
-            "63906e17a4acf5dbd86460a96487ce47216411f5a7881daf842ace136f22f9ec",
-            "44591550e2f7d29bb273eb5000ef253c274f1693488c6de2d26f04a7a13c2b9b",
-            "57c15b355f3c2efbcff6d3d95fe7661154179c92135269a543d004254c8d713e",
-            "6088570696c5925bbd322c914f31f23600d45506874160a36f6ebf4e8ad39927",
-            "f5322a4b132fa6623e888a32a4cf986209e09404c67504d92f7082ce2adfe1a4",
-            "f47de641f4b5d0fb57c3e448cbc3b736ab9ffa26c4b7b4b907fed61db521d60a",
-            "32d588720af8aa90119e3babb72a7d3f7066260047c8a8e758769b405868a836",
-            "4d0796a51f4afbc544c667ecc0ffc6fa5cee9efe3a93c69a8771a62b5e590f64",
-            "74c2c308cfcba92cdc4e14056f85a3a27947a81d2f277e8c3e27dc0e86aeabef",
-            "516a74c3524d57e72025484cc810bcca9593ad443426eb49e051a5f6e5af8ea1",
-            "a7c69c22a0aca80c0e303c02117cac4791f73d2d7219b9ef9e79ba734bac7fde"
+            "bc0f82fa2b6ba3075e3f320364ea0813866bc4b5c62c23cdf58d4c2eef389118",
+            "3fc071b65c86df9a38da183edd66f1c298f38d25bd3a4b603c2a48a06939ffbc",
+            "436312c4a93a1c20afa26071c2d502dca43a7be876a04a0f3ef9d3dd841bb940",
+            "9faaea813cfdf5d8fdd5b83ff53708b79baa26920590263d1b9335a09ce6fa0e",
+            "984e4223c123748d76f0418de4117e401c0742470ef4ea96e51577f36b3f1008",
+            "de88bd2e4d2dc97108698ee5891eaa7d53c6db6df295ae278961c27b90423787",
+            "d6ba3958db318a43ed34e684aef841768ef8ce1f7b915b4ac85c4ce940224d45",
+            "2b3a8075bd38d307e48e3f6e961e9ad3f1cd8de2d75cf19574a6297de2a1b12a",
+            "b1dabff23ee1fb4c1e03ec97446ef98d8905e9144bc18c2ce6a3ecc2cb4e0d23",
+            "f6ab52ac8df2f73504e24f261bff338eb4af275f45a31f1116f1bcd321438d66",
+            "0da181eadd4bed498e470c29df29c3f76365477cc928fcde3b565ec805a2b4c2",
+            "3fe9bee6be8398689e7ae16b8c4d83019cf877a517f8639e453d85f6d1790d8d",
+            "b1f644f8e642eebcdf8e5f16de90ed63adc9d8864937266513cb6c9c7ba5f2cd",
+            "5ac0910ecb5a4ad78cd2bd8d66d066ab2bfc52c4f28061021a3266545a0a6538",
+            "0834969d6f5766266520e10340bf615d55ed0fc45d913e4260815a56d09b07ea",
+            "dd281de113ecc18946108abd525a5607dc27c3a720b5b490926de4b2ef3dc8f3",
+            "f1b5712eac677292fdb0c4e4633f857d555745ab3bc43407e72e37fcf9f01147",
+            "403dd041ab0e7ecc78185e438609c3bd9a32f34dca523a83bf3f9d2ed9cd0d8c",
+            "336d00473dd6b4da596cada004ba6f50b0bd56934f28638027d637284f03de8e",
+            "e39dd18fd11fbcbbbec300780be6b9b46d8fb752ed8b61ba0295b868ad3f11d3",
+            "c536d63adc67889d4fc97e9f5d1519f7e550b3c6241b276a97cc04d3b5778b97",
+            "de71cac59aaae17992f35024ee15d0cad0ce5b66cc9ceff7fd29799c9eb71cf0",
+            "3a12b94e75cb42d88e432575d0fddb5dde1dfdd3fc5786efa7d8a98b09c4c26b",
+            "170fe7e5e0002344a7b7e78a60ff05206baa12064dce56094f2b63dcb7c88eff",
+            "c5cec139f298c6268b9b4433c8b53fadd88a3d6ce9c1ebc6bd30c5b7931edd15",
+            "4a8b1b674b748e2d0faba5ad886f47221b8059b724afc4200ec0c8f84c14f777",
+            "7bbcf302b7f27fca342a3ee58dd4715534760bb8e58dc7c0014cdb299df92ad6",
+            "f8ebe13731dc1d819cda0df05819ac4651a1ce99dc500c18a791643a034c8338",
+            "4b8ac6aeedb4c1d48e6d72fdb30d518b83385cc364f9cfda82466a7678f6aef5"
           ],
           "partitions": [
             {
@@ -612,7 +609,7 @@
                   null
                 ]
               ],
-              "partition_id": "dab013eaf32cfd2ca0debf72ffa76c33c2d6d842a947f53e33d73705f16e8dfa",
+              "partition_id": "bc0f82fa2b6ba3075e3f320364ea0813866bc4b5c62c23cdf58d4c2eef389118",
               "read_slices": [
                 [
                   0,
@@ -670,7 +667,7 @@
                   null
                 ]
               ],
-              "partition_id": "baa4e72664b8034006069868a0df7bbe9dc0f9a0dfe23c4dee724b04c7e32611",
+              "partition_id": "3fc071b65c86df9a38da183edd66f1c298f38d25bd3a4b603c2a48a06939ffbc",
               "read_slices": [
                 [
                   0,
@@ -728,7 +725,7 @@
                   null
                 ]
               ],
-              "partition_id": "b97c570395577a8902b87691d9f399a560790aed5aaa0642a750a7e3b6566352",
+              "partition_id": "436312c4a93a1c20afa26071c2d502dca43a7be876a04a0f3ef9d3dd841bb940",
               "read_slices": [
                 [
                   0,
@@ -786,7 +783,7 @@
                   null
                 ]
               ],
-              "partition_id": "86793cdacb51cb43f172ff3aee69ea4ae721118a54be05f5ad994a4560f4524f",
+              "partition_id": "9faaea813cfdf5d8fdd5b83ff53708b79baa26920590263d1b9335a09ce6fa0e",
               "read_slices": [
                 [
                   0,
@@ -844,7 +841,7 @@
                   null
                 ]
               ],
-              "partition_id": "969428e832c429d23fb6a0cb926769d50b22e4b48b2c6c77c435e04d47a7a222",
+              "partition_id": "984e4223c123748d76f0418de4117e401c0742470ef4ea96e51577f36b3f1008",
               "read_slices": [
                 [
                   0,
@@ -902,7 +899,7 @@
                   null
                 ]
               ],
-              "partition_id": "aa66bbb420b6f25dca26f9eb6398bfee5ca0522ed5a95ae718e8a1cf5ef572b1",
+              "partition_id": "de88bd2e4d2dc97108698ee5891eaa7d53c6db6df295ae278961c27b90423787",
               "read_slices": [
                 [
                   0,
@@ -960,7 +957,7 @@
                   null
                 ]
               ],
-              "partition_id": "15e0e36cb872f84f12f5dbaaacb295d5b4b8486ab3823aa8f25da5015363bf05",
+              "partition_id": "d6ba3958db318a43ed34e684aef841768ef8ce1f7b915b4ac85c4ce940224d45",
               "read_slices": [
                 [
                   0,
@@ -1018,7 +1015,7 @@
                   null
                 ]
               ],
-              "partition_id": "3d4bc890f75efdaa803bbc1bedd4472b7ac03b0b2e6db573d1162301a760992c",
+              "partition_id": "2b3a8075bd38d307e48e3f6e961e9ad3f1cd8de2d75cf19574a6297de2a1b12a",
               "read_slices": [
                 [
                   0,
@@ -1076,7 +1073,7 @@
                   null
                 ]
               ],
-              "partition_id": "7e99218ba5f2f14f295687780d87ee6653034934e164e440fcffdc4b65be30fd",
+              "partition_id": "b1dabff23ee1fb4c1e03ec97446ef98d8905e9144bc18c2ce6a3ecc2cb4e0d23",
               "read_slices": [
                 [
                   0,
@@ -1134,7 +1131,7 @@
                   null
                 ]
               ],
-              "partition_id": "253540de41c3c2672f6a30c47f45a53702f6cbf8b028e8bd66c9d0d353824e6b",
+              "partition_id": "f6ab52ac8df2f73504e24f261bff338eb4af275f45a31f1116f1bcd321438d66",
               "read_slices": [
                 [
                   0,
@@ -1192,7 +1189,7 @@
                   null
                 ]
               ],
-              "partition_id": "2f3e2fcc0de447738f9d131cac9da939c9c52fd6d46737ad3e54f14e0a0ab999",
+              "partition_id": "0da181eadd4bed498e470c29df29c3f76365477cc928fcde3b565ec805a2b4c2",
               "read_slices": [
                 [
                   0,
@@ -1250,7 +1247,7 @@
                   null
                 ]
               ],
-              "partition_id": "0c161de32ba1bb33604a2949c7debb7ffe24f055c0292a3f06cf050b0bf54d09",
+              "partition_id": "3fe9bee6be8398689e7ae16b8c4d83019cf877a517f8639e453d85f6d1790d8d",
               "read_slices": [
                 [
                   0,
@@ -1308,7 +1305,7 @@
                   null
                 ]
               ],
-              "partition_id": "21134f461c17875a4427a558a900376fec3a424c178190fd79c13175a37667b3",
+              "partition_id": "b1f644f8e642eebcdf8e5f16de90ed63adc9d8864937266513cb6c9c7ba5f2cd",
               "read_slices": [
                 [
                   0,
@@ -1366,7 +1363,7 @@
                   null
                 ]
               ],
-              "partition_id": "13c265d0a20901fa9069e111b4ded23d025a7eb01c9ddf2e6fe2ffe73643ddb6",
+              "partition_id": "5ac0910ecb5a4ad78cd2bd8d66d066ab2bfc52c4f28061021a3266545a0a6538",
               "read_slices": [
                 [
                   0,
@@ -1424,7 +1421,7 @@
                   null
                 ]
               ],
-              "partition_id": "5fc5667aa92093b796816eef3ee3c8c1768a8b55e2bcd53502be1d3a3584a20a",
+              "partition_id": "0834969d6f5766266520e10340bf615d55ed0fc45d913e4260815a56d09b07ea",
               "read_slices": [
                 [
                   0,
@@ -1482,7 +1479,7 @@
                   null
                 ]
               ],
-              "partition_id": "68adb7d5c07158f589ca962265716d8bcc44d17c6d31229a0deeb03324e5b15d",
+              "partition_id": "dd281de113ecc18946108abd525a5607dc27c3a720b5b490926de4b2ef3dc8f3",
               "read_slices": [
                 [
                   0,
@@ -1540,7 +1537,7 @@
                   null
                 ]
               ],
-              "partition_id": "19b49be6c42c00d67754bf43dfdf3bcb64fa2025bbbbe5b192322d537f14eb0a",
+              "partition_id": "f1b5712eac677292fdb0c4e4633f857d555745ab3bc43407e72e37fcf9f01147",
               "read_slices": [
                 [
                   0,
@@ -1598,7 +1595,7 @@
                   null
                 ]
               ],
-              "partition_id": "20b78592bf96dc6cdbcd640069420917c419fab2f73bf38a07efb5f4e317ba14",
+              "partition_id": "403dd041ab0e7ecc78185e438609c3bd9a32f34dca523a83bf3f9d2ed9cd0d8c",
               "read_slices": [
                 [
                   0,
@@ -1656,7 +1653,7 @@
                   null
                 ]
               ],
-              "partition_id": "63906e17a4acf5dbd86460a96487ce47216411f5a7881daf842ace136f22f9ec",
+              "partition_id": "336d00473dd6b4da596cada004ba6f50b0bd56934f28638027d637284f03de8e",
               "read_slices": [
                 [
                   0,
@@ -1714,7 +1711,7 @@
                   null
                 ]
               ],
-              "partition_id": "44591550e2f7d29bb273eb5000ef253c274f1693488c6de2d26f04a7a13c2b9b",
+              "partition_id": "e39dd18fd11fbcbbbec300780be6b9b46d8fb752ed8b61ba0295b868ad3f11d3",
               "read_slices": [
                 [
                   0,
@@ -1772,7 +1769,7 @@
                   null
                 ]
               ],
-              "partition_id": "57c15b355f3c2efbcff6d3d95fe7661154179c92135269a543d004254c8d713e",
+              "partition_id": "c536d63adc67889d4fc97e9f5d1519f7e550b3c6241b276a97cc04d3b5778b97",
               "read_slices": [
                 [
                   0,
@@ -1830,7 +1827,7 @@
                   null
                 ]
               ],
-              "partition_id": "6088570696c5925bbd322c914f31f23600d45506874160a36f6ebf4e8ad39927",
+              "partition_id": "de71cac59aaae17992f35024ee15d0cad0ce5b66cc9ceff7fd29799c9eb71cf0",
               "read_slices": [
                 [
                   0,
@@ -1888,7 +1885,7 @@
                   null
                 ]
               ],
-              "partition_id": "f5322a4b132fa6623e888a32a4cf986209e09404c67504d92f7082ce2adfe1a4",
+              "partition_id": "3a12b94e75cb42d88e432575d0fddb5dde1dfdd3fc5786efa7d8a98b09c4c26b",
               "read_slices": [
                 [
                   0,
@@ -1946,7 +1943,7 @@
                   null
                 ]
               ],
-              "partition_id": "f47de641f4b5d0fb57c3e448cbc3b736ab9ffa26c4b7b4b907fed61db521d60a",
+              "partition_id": "170fe7e5e0002344a7b7e78a60ff05206baa12064dce56094f2b63dcb7c88eff",
               "read_slices": [
                 [
                   0,
@@ -2004,7 +2001,7 @@
                   null
                 ]
               ],
-              "partition_id": "32d588720af8aa90119e3babb72a7d3f7066260047c8a8e758769b405868a836",
+              "partition_id": "c5cec139f298c6268b9b4433c8b53fadd88a3d6ce9c1ebc6bd30c5b7931edd15",
               "read_slices": [
                 [
                   0,
@@ -2062,7 +2059,7 @@
                   null
                 ]
               ],
-              "partition_id": "4d0796a51f4afbc544c667ecc0ffc6fa5cee9efe3a93c69a8771a62b5e590f64",
+              "partition_id": "4a8b1b674b748e2d0faba5ad886f47221b8059b724afc4200ec0c8f84c14f777",
               "read_slices": [
                 [
                   0,
@@ -2120,7 +2117,7 @@
                   null
                 ]
               ],
-              "partition_id": "74c2c308cfcba92cdc4e14056f85a3a27947a81d2f277e8c3e27dc0e86aeabef",
+              "partition_id": "7bbcf302b7f27fca342a3ee58dd4715534760bb8e58dc7c0014cdb299df92ad6",
               "read_slices": [
                 [
                   0,
@@ -2178,7 +2175,7 @@
                   null
                 ]
               ],
-              "partition_id": "516a74c3524d57e72025484cc810bcca9593ad443426eb49e051a5f6e5af8ea1",
+              "partition_id": "f8ebe13731dc1d819cda0df05819ac4651a1ce99dc500c18a791643a034c8338",
               "read_slices": [
                 [
                   0,
@@ -2236,7 +2233,7 @@
                   null
                 ]
               ],
-              "partition_id": "a7c69c22a0aca80c0e303c02117cac4791f73d2d7219b9ef9e79ba734bac7fde",
+              "partition_id": "4b8ac6aeedb4c1d48e6d72fdb30d518b83385cc364f9cfda82466a7678f6aef5",
               "read_slices": [
                 [
                   0,
@@ -2318,25 +2315,25 @@
         },
         "source": {
           "asset_id": "result",
-          "checksum": "fe82a8ada0f1d2329eaeade76cae98668160e321a57ecf34a14da9153ee9b5a9",
-          "uri": "publication/runs-publication-lindi/fish-projection.zarr",
+          "checksum": "fe08f2ca3980f46db023a3a62fa2fd421efe81fbd59a9727d88a608ac0ad52db",
+          "uri": "/tmp/nf-fish-lindi/fish-projection.zarr",
           "version": null
         },
         "source_backend": "local-or-fsspec",
         "stages": [],
         "status": "complete",
-        "workflow_id": "b2f296a07f8d8764676629eba00a512bd8a675f37c30001505cf80f3c1726523"
+        "workflow_id": "64fa15f6a3116141d83530a1f623b90f8a214d765399fd4c5a56aaa94f7e3ec2"
       },
-      "wall_time_seconds": 65.3750908189977
+      "wall_time_seconds": 70.20021670300048
     },
     "projection": {
       "execution_metrics": {
-        "bytes_read": null,
-        "bytes_read_status": "unknown",
+        "bytes_read": 4445022237,
+        "bytes_read_status": "measured",
         "completed_task_count": 29,
         "computed_task_count": 29,
-        "execution_finished": "2026-08-22T02:21:28.989433+00:00",
-        "execution_started": "2026-08-22T02:16:30.610645+00:00",
+        "execution_finished": "2026-09-09T13:48:12.269717+00:00",
+        "execution_started": "2026-09-09T13:33:09.006507+00:00",
         "integrity_verification": {
           "checksums": "not-run-during-finalization",
           "manifests": "valid",
@@ -2344,13 +2341,13 @@
         },
         "output_bytes": 210960384,
         "partitions_completed": 29,
-        "peak_rss_bytes": 2926096384,
+        "peak_rss_bytes": 2917875712,
         "resumed_task_count": 0,
         "schema_version": "1",
         "stages": [],
-        "wall_time_seconds": 298.378788
+        "wall_time_seconds": 903.26321
       },
-      "identity": "fe82a8ada0f1d2329eaeade76cae98668160e321a57ecf34a14da9153ee9b5a9",
+      "identity": "fe08f2ca3980f46db023a3a62fa2fd421efe81fbd59a9727d88a608ac0ad52db",
       "provenance": {
         "adapter": {
           "name": "numpy-expression",
@@ -2404,33 +2401,32 @@
             "numpy": "2.2.6",
             "pandas": "2.3.3",
             "pyarrow": "25.0.0",
-            "pynapple": null,
+            "pynapple": "0.11.3",
             "pynwb": "4.1.0",
             "remfile": "0.1.14",
             "s3fs": "2026.7.0",
             "scipy": "1.15.3",
-            "xarray": "2025.6.1",
             "zarr": "2.18.3"
           },
           "git": {
-            "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+            "commit": "416d894fced62734bb317d9e73fc496773586d67",
             "dirty": false,
             "source": "git"
           },
           "neuroflow_version": "0.1.0",
           "platform": {
-            "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+            "description": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
             "machine": "x86_64",
-            "release": "7.0.0-29-generic",
+            "release": "7.0.0-30-generic",
             "system": "Linux"
           },
           "python": {
-            "executable": "python",
+            "executable": "python3",
             "implementation": "CPython",
             "version": "3.10.19"
           },
           "schema_version": "1",
-          "total_ram_bytes": 132559962112
+          "total_ram_bytes": 132559958016
         },
         "execution_attempts": [
           {
@@ -2451,53 +2447,52 @@
                 "numpy": "2.2.6",
                 "pandas": "2.3.3",
                 "pyarrow": "25.0.0",
-                "pynapple": null,
+                "pynapple": "0.11.3",
                 "pynwb": "4.1.0",
                 "remfile": "0.1.14",
                 "s3fs": "2026.7.0",
                 "scipy": "1.15.3",
-                "xarray": "2025.6.1",
                 "zarr": "2.18.3"
               },
               "git": {
-                "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+                "commit": "416d894fced62734bb317d9e73fc496773586d67",
                 "dirty": false,
                 "source": "git"
               },
               "neuroflow_version": "0.1.0",
               "platform": {
-                "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+                "description": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
                 "machine": "x86_64",
-                "release": "7.0.0-29-generic",
+                "release": "7.0.0-30-generic",
                 "system": "Linux"
               },
               "python": {
-                "executable": "python",
+                "executable": "python3",
                 "implementation": "CPython",
                 "version": "3.10.19"
               },
               "schema_version": "1",
-              "total_ram_bytes": 132559962112
+              "total_ram_bytes": 132559958016
             },
-            "execution_finished": "2026-08-22T02:21:28.989433+00:00",
+            "execution_finished": "2026-09-09T13:48:12.269717+00:00",
             "execution_policy": {
               "max_workers": 1,
               "memory_limit": "2 GiB"
             },
-            "execution_started": "2026-08-22T02:16:30.610645+00:00",
+            "execution_started": "2026-09-09T13:33:09.006507+00:00",
             "scheduler": "threads",
             "source_backend": "lindi",
             "status": "complete"
           }
         ],
-        "execution_finished": "2026-08-22T02:21:28.989433+00:00",
+        "execution_finished": "2026-09-09T13:48:12.269717+00:00",
         "execution_metrics": {
-          "bytes_read": null,
-          "bytes_read_status": "unknown",
+          "bytes_read": 4445022237,
+          "bytes_read_status": "measured",
           "completed_task_count": 29,
           "computed_task_count": 29,
-          "execution_finished": "2026-08-22T02:21:28.989433+00:00",
-          "execution_started": "2026-08-22T02:16:30.610645+00:00",
+          "execution_finished": "2026-09-09T13:48:12.269717+00:00",
+          "execution_started": "2026-09-09T13:33:09.006507+00:00",
           "integrity_verification": {
             "checksums": "not-run-during-finalization",
             "manifests": "valid",
@@ -2505,17 +2500,17 @@
           },
           "output_bytes": 210960384,
           "partitions_completed": 29,
-          "peak_rss_bytes": 2926096384,
+          "peak_rss_bytes": 2917875712,
           "resumed_task_count": 0,
           "schema_version": "1",
           "stages": [],
-          "wall_time_seconds": 298.378788
+          "wall_time_seconds": 903.26321
         },
         "execution_policy": {
           "max_workers": 1,
           "memory_limit": "2 GiB"
         },
-        "execution_started": "2026-08-22T02:16:30.610645+00:00",
+        "execution_started": "2026-09-09T13:33:09.006507+00:00",
         "external_libraries": {
           "numpy": "2.2.6"
         },
@@ -2543,7 +2538,7 @@
             2048,
             29
           ],
-          "uri": "publication/runs-publication-lindi/fish-projection.zarr"
+          "uri": "/tmp/nf-fish-lindi/fish-projection.zarr"
         },
         "parameters": {
           "expression": {
@@ -4714,12 +4709,12 @@
           2048,
           29
         ],
-        "output_uri": "publication/runs-publication-lindi/fish-projection.zarr",
-        "preview_uri": "publication/runs-publication-lindi/fish-projection-z14.png",
+        "output_uri": "/tmp/nf-fish-lindi/fish-projection.zarr",
+        "preview_uri": "/tmp/nf-fish-lindi/fish-projection-z14.png",
         "remote_io": {
           "backend": "lindi",
-          "http_responses": null,
-          "response_content_bytes": null
+          "http_responses": 2054,
+          "response_content_bytes": 4445022237
         },
         "source": "DANDI:000350@0.240822.1759",
         "source_doi": "https://doi.org/10.48324/dandi.000350/0.240822.1759",
@@ -4736,10 +4731,10 @@
       "checksum": "269f126b4a228ecc04493192d965fd5c5de53e284e6c07178e981ab07e1fb001",
       "dtype": "<f4",
       "first_execution_metrics": {
-        "bytes_read": null,
+        "bytes_read": 514877816832,
         "completed_task_count": 35,
         "computed_task_count": 35,
-        "finished_at": "2026-08-22T06:37:23.455521+00:00",
+        "finished_at": "2026-09-09T19:40:20.093139+00:00",
         "memory": {
           "budget": {
             "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -4758,17 +4753,17 @@
             "total_bytes": 2147483648,
             "total_target_attainable": true
           },
-          "measured_process_peak_rss_bytes": 5511471104,
+          "measured_process_peak_rss_bytes": 5543485440,
           "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
           "planned_process_peak_bytes": 2136916992,
           "planned_task_working_bytes": 1667154944
         },
         "output_bytes": 68136456,
         "partitions_completed": 35,
-        "peak_rss_bytes": 5511471104,
+        "peak_rss_bytes": 5543485440,
         "resumed_task_count": 0,
-        "started_at": "2026-08-22T02:23:40.261264+00:00",
-        "wall_time_seconds": 15223.194002183998
+        "started_at": "2026-09-09T13:50:31.800160+00:00",
+        "wall_time_seconds": 20988.292613098994
       },
       "integrity_verified": true,
       "preflight": {
@@ -4930,42 +4925,41 @@
             "numpy": "2.2.6",
             "pandas": "2.3.3",
             "pyarrow": "25.0.0",
-            "pynapple": null,
+            "pynapple": "0.11.3",
             "pynwb": "4.1.0",
             "remfile": "0.1.14",
             "s3fs": "2026.7.0",
             "scipy": "1.15.3",
-            "xarray": "2025.6.1",
             "zarr": "2.18.3"
           },
           "git": {
-            "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+            "commit": "c1b3d13f667d8ce28841f4d7d45c22e3a543ffa3",
             "dirty": false,
             "source": "git"
           },
           "neuroflow_version": "0.1.0",
           "platform": {
-            "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+            "description": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
             "machine": "x86_64",
-            "release": "7.0.0-29-generic",
+            "release": "7.0.0-30-generic",
             "system": "Linux"
           },
           "python": {
-            "executable": "python",
+            "executable": "python3",
             "implementation": "CPython",
             "version": "3.10.19"
           },
           "schema_version": "1",
-          "total_ram_bytes": 132559962112
+          "total_ram_bytes": 132559958016
         },
         "execution_attempts": [
           {
-            "execution_finished": "2026-08-22T06:37:23.455521+00:00",
+            "execution_finished": "2026-09-09T19:40:20.093139+00:00",
             "execution_metrics": {
-              "bytes_read": null,
+              "bytes_read": 514877816832,
               "completed_task_count": 35,
               "computed_task_count": 35,
-              "finished_at": "2026-08-22T06:37:23.455521+00:00",
+              "finished_at": "2026-09-09T19:40:20.093139+00:00",
               "memory": {
                 "budget": {
                   "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -4984,29 +4978,29 @@
                   "total_bytes": 2147483648,
                   "total_target_attainable": true
                 },
-                "measured_process_peak_rss_bytes": 5511471104,
+                "measured_process_peak_rss_bytes": 5543485440,
                 "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
                 "planned_process_peak_bytes": 2136916992,
                 "planned_task_working_bytes": 1667154944
               },
               "output_bytes": 68136456,
               "partitions_completed": 35,
-              "peak_rss_bytes": 5511471104,
+              "peak_rss_bytes": 5543485440,
               "resumed_task_count": 0,
-              "started_at": "2026-08-22T02:23:40.261264+00:00",
-              "wall_time_seconds": 15223.194002183998
+              "started_at": "2026-09-09T13:50:31.800160+00:00",
+              "wall_time_seconds": 20988.292613098994
             },
-            "execution_started": "2026-08-22T02:23:40.440461+00:00",
+            "execution_started": "2026-09-09T13:50:31.975231+00:00",
             "memory_limit": "2 GiB",
             "status": "complete"
           }
         ],
-        "execution_finished": "2026-08-22T06:37:23.455521+00:00",
+        "execution_finished": "2026-09-09T19:40:20.093139+00:00",
         "execution_metrics": {
-          "bytes_read": null,
+          "bytes_read": 514877816832,
           "completed_task_count": 35,
           "computed_task_count": 35,
-          "finished_at": "2026-08-22T06:37:23.455521+00:00",
+          "finished_at": "2026-09-09T19:40:20.093139+00:00",
           "memory": {
             "budget": {
               "enforcement": "planning-only; no OS-level memory cap is installed",
@@ -5025,19 +5019,19 @@
               "total_bytes": 2147483648,
               "total_target_attainable": true
             },
-            "measured_process_peak_rss_bytes": 5511471104,
+            "measured_process_peak_rss_bytes": 5543485440,
             "measurement_scope": "whole process high-water mark for this interpreter, including any work done before or after trace extraction",
             "planned_process_peak_bytes": 2136916992,
             "planned_task_working_bytes": 1667154944
           },
           "output_bytes": 68136456,
           "partitions_completed": 35,
-          "peak_rss_bytes": 5511471104,
+          "peak_rss_bytes": 5543485440,
           "resumed_task_count": 0,
-          "started_at": "2026-08-22T02:23:40.261264+00:00",
-          "wall_time_seconds": 15223.194002183998
+          "started_at": "2026-09-09T13:50:31.800160+00:00",
+          "wall_time_seconds": 20988.292613098994
         },
-        "execution_started": "2026-08-22T02:23:40.440461+00:00",
+        "execution_started": "2026-09-09T13:50:31.975231+00:00",
         "failed_partitions": [],
         "integrity_verified": true,
         "labels": {
@@ -5076,7 +5070,7 @@
               "z_axis": null
             },
             "result_checksum": null,
-            "workflow_id": "b2f296a07f8d8764676629eba00a512bd8a675f37c30001505cf80f3c1726523"
+            "workflow_id": "64fa15f6a3116141d83530a1f623b90f8a214d765399fd4c5a56aaa94f7e3ec2"
           },
           "shape": [
             888,
@@ -5085,8 +5079,8 @@
           ],
           "source": {
             "asset_id": "labels",
-            "checksum": "06513409957db9beeed18d73d07bc4aea462786b05e7d7b0fa159be367091597",
-            "uri": "publication/runs-publication-lindi/fish-cellpose.zarr",
+            "checksum": "40276ad6974b64c3c7ea988b6489240abad09af2d23361fb4d11809969d46f7b",
+            "uri": "/tmp/nf-fish-lindi/fish-cellpose.zarr",
             "version": null
           }
         },
@@ -5113,7 +5107,7 @@
             3065,
             5552
           ],
-          "uri": "publication/runs-publication-lindi/fish-traces.zarr"
+          "uri": "/tmp/nf-fish-lindi/fish-traces.zarr"
         },
         "parameters": {
           "automatic_time_chunk": true,
@@ -6775,10 +6769,10 @@
         },
         "source_backend": "lindi",
         "status": "complete",
-        "workflow_id": "f1d433926fba1b648271173b22201950f695ea0c2f6807b8d26ff936466e61a0"
+        "workflow_id": "af4c793295f84fe267571c6bceb0ea984ef3f76f9bef58faf29bb3313d5b7dc6"
       },
       "resume": {
-        "bytes_read": null,
+        "bytes_read": 0,
         "computed_task_count": 0,
         "corruption_repair": "covered by benchmarks.benchmark_resume_integrity on deterministic local data; archive output was not deliberately corrupted",
         "exercised": true,
@@ -6794,7 +6788,7 @@
       "timepoints_processed": 3065
     }
   },
-  "timestamp": "2026-08-22T06:37:26.935614+00:00",
+  "timestamp": "2026-09-09T19:40:24.468659+00:00",
   "validation": {
     "biological_accuracy": null,
     "cellpose_direct_equivalence": {
@@ -6828,7 +6822,7 @@
         "z_axis": null
       },
       "valid": true,
-      "wall_time_seconds": 50.190636896993965
+      "wall_time_seconds": 52.80357678300061
     },
     "trace_direct_numpy": {
       "atol": 1e-05,
@@ -6844,8 +6838,8 @@
       ],
       "shape_agreement": true,
       "valid": true,
-      "wall_time_seconds": 3.0986839800025336
+      "wall_time_seconds": 3.7934929199982435
     },
-    "trace_validation_remote_bytes": null
+    "trace_validation_remote_bytes": 71696384
   }
 }
