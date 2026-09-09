@@ -94,6 +94,71 @@ def _open_remote_file(uri: str, options: dict[str, object]) -> tuple[Any, str]:
     return open_file.open(), "fsspec"
 
 
+# LINDI performs its HTTP reads through module-level ``requests`` calls, so
+# there is no per-source session to hook the way the remfile transport allows.
+# The meter wraps ``requests.Session.send`` process-wide while at least one
+# LINDI source is open (reference-counted) and sums Content-Length headers —
+# the same semantics as the remfile response hook. Counters are process-global;
+# each source reports the delta observed while it was open.
+_TRANSFER_METER_LOCK = threading.Lock()
+_transfer_meter_depth = 0
+_transfer_meter_original_send: Any | None = None
+_transfer_meter_responses = 0
+_transfer_meter_content_bytes = 0
+
+
+def _record_transfer_response(response: object) -> None:
+    global _transfer_meter_responses, _transfer_meter_content_bytes
+    headers = getattr(response, "headers", {})
+    raw_length = headers.get("Content-Length", 0)
+    try:
+        length = int(raw_length)
+    except (TypeError, ValueError):
+        length = 0
+    with _TRANSFER_METER_LOCK:
+        _transfer_meter_responses += 1
+        _transfer_meter_content_bytes += max(0, length)
+
+
+def _transfer_meter_snapshot() -> tuple[int, int]:
+    with _TRANSFER_METER_LOCK:
+        return _transfer_meter_responses, _transfer_meter_content_bytes
+
+
+def _install_transfer_meter() -> bool:
+    """Begin metering requests-layer responses; True when the meter is active."""
+    global _transfer_meter_depth, _transfer_meter_original_send
+    try:
+        requests = importlib.import_module("requests")
+    except ImportError:
+        return False
+    with _TRANSFER_METER_LOCK:
+        if _transfer_meter_depth == 0:
+            original = requests.Session.send
+
+            def metered_send(self: Any, request: Any, **kwargs: Any) -> Any:
+                response = original(self, request, **kwargs)
+                _record_transfer_response(response)
+                return response
+
+            _transfer_meter_original_send = original
+            requests.Session.send = metered_send
+        _transfer_meter_depth += 1
+    return True
+
+
+def _uninstall_transfer_meter() -> None:
+    global _transfer_meter_depth, _transfer_meter_original_send
+    with _TRANSFER_METER_LOCK:
+        if _transfer_meter_depth == 0:
+            return
+        _transfer_meter_depth -= 1
+        if _transfer_meter_depth == 0 and _transfer_meter_original_send is not None:
+            requests = importlib.import_module("requests")
+            requests.Session.send = _transfer_meter_original_send
+            _transfer_meter_original_send = None
+
+
 def _redacted_uri(uri: str) -> str:
     """Remove user information and query credentials from persisted URLs."""
     parsed = urlsplit(uri)
@@ -128,6 +193,8 @@ class NWBHDF5Source:
         self._http_responses = 0
         self._response_content_bytes = 0
         self._response_hook_installed = False
+        self._transfer_meter_active = False
+        self._transfer_meter_start = (0, 0)
         self.transport = "local"
         self.transport_block_size: int | None = None
         try:
@@ -140,6 +207,11 @@ class NWBHDF5Source:
                     if not path.exists() or not path.is_file():
                         raise SourceResolutionError(f"source is not a file: {path}")
                     self.uri = str(path)
+                if requested_transport == "lindi":
+                    # Metering must start before the open: LINDI's remote
+                    # metadata parse is a real part of its transfer cost.
+                    self._transfer_meter_active = _install_transfer_meter()
+                    self._transfer_meter_start = _transfer_meter_snapshot()
                 self._remote_file, self.transport = _open_remote_file(self.uri, options)
                 # Retained so planning can model transport-block reads: every
                 # chunk fetched through remfile/fsspec moves whole blocks of
@@ -274,6 +346,19 @@ class NWBHDF5Source:
     def io_stats(self) -> dict[str, object]:
         """Return observed HTTP response counts without consuming response bodies."""
         if self.transport == "lindi":
+            if getattr(self, "_transfer_meter_active", False):
+                responses, content_bytes = _transfer_meter_snapshot()
+                start_responses, start_bytes = self._transfer_meter_start
+                return {
+                    "transport": "lindi",
+                    "http_responses": responses - start_responses,
+                    "response_content_bytes": content_bytes - start_bytes,
+                    "note": (
+                        "requests-layer Content-Length sum observed "
+                        "process-wide while this source was open; LINDI "
+                        "exposes no native counters"
+                    ),
+                }
             return {
                 "transport": "lindi",
                 "http_responses": None,
@@ -350,6 +435,9 @@ class NWBHDF5Source:
         if remote is not None:
             remote.close()
             self._remote_file = None
+        if getattr(self, "_transfer_meter_active", False):
+            _uninstall_transfer_meter()
+            self._transfer_meter_active = False
 
     def __enter__(self) -> NWBHDF5Source:
         return self

@@ -234,3 +234,55 @@ def test_axis_inference_is_a_documented_convention_not_nwb_semantics() -> None:
     assert _infer_axes(image_series, 4) == ("time", "y", "x", "z")
     # 4-D non-image data falls back to (z, y, x) rather than guessing planes.
     assert _infer_axes(_Series(), 4) == ("time", "z", "y", "x")
+
+
+def test_transfer_meter_counts_content_length_headers() -> None:
+    from neuroflow.source import hdf5 as hdf5_module
+
+    before = hdf5_module._transfer_meter_snapshot()
+    hdf5_module._record_transfer_response(
+        SimpleNamespace(headers={"Content-Length": "2048"})
+    )
+    hdf5_module._record_transfer_response(SimpleNamespace(headers={}))
+    after = hdf5_module._transfer_meter_snapshot()
+
+    assert after[0] - before[0] == 2
+    assert after[1] - before[1] == 2048
+
+
+def test_transfer_meter_is_reference_counted_and_restores_requests() -> None:
+    requests = pytest.importorskip("requests")
+    from neuroflow.source import hdf5 as hdf5_module
+
+    original_send = requests.Session.send
+    assert hdf5_module._install_transfer_meter()
+    try:
+        assert requests.Session.send is not original_send
+        assert hdf5_module._install_transfer_meter()
+        hdf5_module._uninstall_transfer_meter()
+        # One source still open: the meter must stay installed.
+        assert requests.Session.send is not original_send
+    finally:
+        hdf5_module._uninstall_transfer_meter()
+    assert requests.Session.send is original_send
+    # Uninstalling with no meter installed must be a no-op, not an error.
+    hdf5_module._uninstall_transfer_meter()
+    assert requests.Session.send is original_send
+
+
+def test_lindi_io_stats_report_measured_transfer_delta() -> None:
+    from neuroflow.source import hdf5 as hdf5_module
+
+    source = NWBHDF5Source.__new__(NWBHDF5Source)
+    source.transport = "lindi"
+    source._transfer_meter_active = True
+    source._transfer_meter_start = hdf5_module._transfer_meter_snapshot()
+
+    hdf5_module._record_transfer_response(
+        SimpleNamespace(headers={"Content-Length": "4096"})
+    )
+
+    stats = source.io_stats()
+    assert stats["transport"] == "lindi"
+    assert stats["http_responses"] == 1
+    assert stats["response_content_bytes"] == 4096
