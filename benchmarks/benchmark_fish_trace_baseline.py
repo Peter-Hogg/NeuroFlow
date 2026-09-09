@@ -7,8 +7,6 @@ import hashlib
 import importlib
 import inspect
 import json
-import resource
-import sys
 import time
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -28,7 +26,7 @@ from examples.dandi_fish_projection import (
     OBJECT_NAME,
 )
 from neuroflow.benchmarking import benchmark_record, write_benchmark_record
-from neuroflow.provenance import capture_environment
+from neuroflow.provenance import capture_environment, peak_rss_bytes
 from neuroflow.source.hdf5 import (
     _install_transfer_meter,
     _transfer_meter_snapshot,
@@ -54,9 +52,6 @@ class _ResponseCounter:
         self.bytes += max(0, size)
 
 
-def _peak_rss_bytes() -> int:
-    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-    return value if sys.platform == "darwin" else value * 1024
 
 
 def _code_lines(path: Path) -> int:
@@ -251,7 +246,7 @@ def main() -> None:
             "http_responses": (
                 counter.responses if args.backend == "remfile" else lindi_responses
             ),
-            "peak_rss_bytes": _peak_rss_bytes(),
+            "peak_rss_bytes": peak_rss_bytes(),
             "wall_time_seconds": wall_time,
             "cache_state": (
                 f"manual remfile: block {args.block_size} B, cache "

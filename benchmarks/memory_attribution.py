@@ -18,7 +18,6 @@ import argparse
 import json
 import math
 import os
-import resource
 import subprocess
 import sys
 from collections.abc import Callable
@@ -26,6 +25,8 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+
+from neuroflow.provenance import peak_rss_bytes
 
 # Fish geometry: one source spatial chunk is a full (y, x) plane of one z index.
 PLANE_SHAPE = (888, 2048)
@@ -55,9 +56,6 @@ def current_rss_bytes() -> int:
     return peak_rss_bytes()
 
 
-def peak_rss_bytes() -> int:
-    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-    return value if sys.platform == "darwin" else value * 1024
 
 
 def _probe_baseline() -> dict[str, object]:

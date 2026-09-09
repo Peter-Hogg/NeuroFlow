@@ -7,8 +7,6 @@ import hashlib
 import importlib
 import importlib.metadata
 import json
-import resource
-import sys
 import time
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -28,7 +26,7 @@ from examples.dandi_fish_projection import (
     run_example,
 )
 from neuroflow.benchmarking import benchmark_record, write_benchmark_record
-from neuroflow.provenance import capture_environment
+from neuroflow.provenance import capture_environment, peak_rss_bytes
 from neuroflow.selection import NWBQuery
 from neuroflow_cellpose import (
     DEVICE_CHOICES,
@@ -52,9 +50,6 @@ CELLPOSE_EVAL_SETTINGS: dict[str, object] = {
 }
 
 
-def _peak_rss_bytes() -> int:
-    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-    return value if sys.platform == "darwin" else value * 1024
 
 
 def _integer_metric(value: object) -> int | None:
@@ -439,7 +434,7 @@ def main() -> None:
                 "memory_budget": args.memory_limit,
                 "task_count": task_count,
                 "bytes_read": total_remote_bytes,
-                "peak_rss_bytes": _peak_rss_bytes(),
+                "peak_rss_bytes": peak_rss_bytes(),
                 "wall_time_seconds": time.perf_counter() - pipeline_started,
                 "cache_state": (
                     "backend-managed; LINDI counters unavailable through the "

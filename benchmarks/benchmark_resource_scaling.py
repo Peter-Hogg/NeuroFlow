@@ -22,7 +22,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import resource
 import statistics
 import subprocess
 import sys
@@ -35,7 +34,7 @@ import numpy as np
 import zarr
 
 import neuroflow
-from neuroflow.provenance import capture_environment
+from neuroflow.provenance import capture_environment, peak_rss_bytes
 from neuroflow.source.array import ArraySource
 
 # One (y, x) plane per source chunk, as in DANDI:000350.
@@ -55,9 +54,6 @@ DEFAULT_CONFIGURATIONS: tuple[tuple[str, int], ...] = (
 )
 
 
-def _peak_rss_bytes() -> int:
-    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-    return value if sys.platform == "darwin" else value * 1024
 
 
 def build_fixture(
@@ -210,7 +206,7 @@ def run_configuration(
             "memory": metrics.get("memory"),
         }
         traces.close()
-        record["measured_process_peak_rss_bytes"] = _peak_rss_bytes()
+        record["measured_process_peak_rss_bytes"] = peak_rss_bytes()
         record["status"] = "measured"
     finally:
         labels.close()
