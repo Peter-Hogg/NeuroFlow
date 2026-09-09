@@ -286,3 +286,35 @@ def test_lindi_io_stats_report_measured_transfer_delta() -> None:
     assert stats["transport"] == "lindi"
     assert stats["http_responses"] == 1
     assert stats["response_content_bytes"] == 4096
+
+
+def test_transfer_meter_counts_streamed_responses_by_consumption() -> None:
+    """An aborted streamed response must count ~0 bytes, not its declaration.
+
+    LINDI probes file length with a whole-file streamed GET closed after the
+    headers; counting its Content-Length would overcount by the file size.
+    """
+    from neuroflow.source import hdf5 as hdf5_module
+
+    class FakeRaw:
+        def __init__(self) -> None:
+            self.payload = b"x" * 100
+
+        def read(self, amt: int | None = None) -> bytes:
+            data, self.payload = self.payload, b""
+            return data
+
+    aborted = SimpleNamespace(
+        headers={"Content-Length": "4178403253"}, raw=FakeRaw()
+    )
+    before = hdf5_module._transfer_meter_snapshot()
+    hdf5_module._wrap_streamed_response(aborted)
+    after_headers = hdf5_module._transfer_meter_snapshot()
+    # Response counted, but no bytes until something reads the stream.
+    assert after_headers[0] - before[0] == 1
+    assert after_headers[1] - before[1] == 0
+
+    consumed = aborted.raw.read()
+    assert consumed
+    after_read = hdf5_module._transfer_meter_snapshot()
+    assert after_read[1] - before[1] == len(consumed)

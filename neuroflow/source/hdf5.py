@@ -120,6 +120,41 @@ def _record_transfer_response(response: object) -> None:
         _transfer_meter_content_bytes += max(0, length)
 
 
+def _record_transfer_bytes(count: int) -> None:
+    global _transfer_meter_content_bytes
+    with _TRANSFER_METER_LOCK:
+        _transfer_meter_content_bytes += max(0, count)
+
+
+def _record_transfer_response_started() -> None:
+    global _transfer_meter_responses
+    with _TRANSFER_METER_LOCK:
+        _transfer_meter_responses += 1
+
+
+def _wrap_streamed_response(response: object) -> None:
+    """Count a streamed response by bytes actually consumed, not declared.
+
+    A streamed response may be aborted right after the headers — LINDI's
+    file-length probe requests the whole file with ``stream=True`` and closes
+    unread, so its Content-Length (the full file size) is a declaration, not a
+    transfer. Wrapping ``raw.read`` counts what the client really pulled.
+    """
+    _record_transfer_response_started()
+    raw = getattr(response, "raw", None)
+    read = getattr(raw, "read", None)
+    if raw is None or not callable(read):
+        return
+
+    def counting_read(*args: Any, **kwargs: Any) -> Any:
+        data = read(*args, **kwargs)
+        if isinstance(data, (bytes, bytearray)):
+            _record_transfer_bytes(len(data))
+        return data
+
+    raw.read = counting_read
+
+
 def _transfer_meter_snapshot() -> tuple[int, int]:
     with _TRANSFER_METER_LOCK:
         return _transfer_meter_responses, _transfer_meter_content_bytes
@@ -138,7 +173,10 @@ def _install_transfer_meter() -> bool:
 
             def metered_send(self: Any, request: Any, **kwargs: Any) -> Any:
                 response = original(self, request, **kwargs)
-                _record_transfer_response(response)
+                if kwargs.get("stream"):
+                    _wrap_streamed_response(response)
+                else:
+                    _record_transfer_response(response)
                 return response
 
             _transfer_meter_original_send = original
@@ -354,9 +392,10 @@ class NWBHDF5Source:
                     "http_responses": responses - start_responses,
                     "response_content_bytes": content_bytes - start_bytes,
                     "note": (
-                        "requests-layer Content-Length sum observed "
-                        "process-wide while this source was open; LINDI "
-                        "exposes no native counters"
+                        "requests-layer transfer observed process-wide while "
+                        "this source was open (Content-Length for consumed "
+                        "responses, bytes actually read for streamed ones); "
+                        "LINDI exposes no native counters"
                     ),
                 }
             return {

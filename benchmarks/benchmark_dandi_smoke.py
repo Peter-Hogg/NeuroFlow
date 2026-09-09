@@ -399,7 +399,8 @@ def main() -> None:
             "estimated_total_bytes_read": plan.estimated_total_bytes_read,
             "bytes_read": stats.get("response_content_bytes"),
             "bytes_read_status": (
-                "counted from HTTP Content-Length headers"
+                "measured at the requests layer (Content-Length for consumed "
+                "responses, bytes read for streamed ones)"
                 if isinstance(stats.get("response_content_bytes"), int)
                 else "unknown: this transport exposes no byte counter"
             ),

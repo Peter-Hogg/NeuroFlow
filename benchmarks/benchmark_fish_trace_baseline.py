@@ -29,6 +29,11 @@ from examples.dandi_fish_projection import (
 )
 from neuroflow.benchmarking import benchmark_record, write_benchmark_record
 from neuroflow.provenance import capture_environment
+from neuroflow.source.hdf5 import (
+    _install_transfer_meter,
+    _transfer_meter_snapshot,
+    _uninstall_transfer_meter,
+)
 
 DEFAULT_SOURCE_URL = f"https://api.dandiarchive.org/api/assets/{ASSET_ID}/download/"
 
@@ -134,6 +139,14 @@ def main() -> None:
     labels = np.asarray(label_group["labels"], dtype=np.uint64)
     labels_checksum = hashlib.sha256(labels.tobytes()).hexdigest()
     counter = _ResponseCounter()
+    # LINDI reads through module-level requests calls, so the manual baseline
+    # meters them the same way NeuroFlow's lindi transport does: process-wide,
+    # Content-Length for consumed responses, actual bytes for streamed ones.
+    lindi_meter_active = False
+    lindi_meter_start = (0, 0)
+    if args.backend == "lindi":
+        lindi_meter_active = _install_transfer_meter()
+        lindi_meter_start = _transfer_meter_snapshot()
     remote: Any | None = None
     io: NWBHDF5IO | None = None
     started = time.perf_counter()
@@ -162,6 +175,13 @@ def main() -> None:
                 setattr(io, "_HDF5IO__file", None)
         if remote is not None and getattr(remote, "_is_open", True):
             remote.close()
+        lindi_transfer_bytes: int | None = None
+        lindi_responses: int | None = None
+        if lindi_meter_active:
+            end_responses, end_bytes = _transfer_meter_snapshot()
+            lindi_responses = end_responses - lindi_meter_start[0]
+            lindi_transfer_bytes = end_bytes - lindi_meter_start[1]
+            _uninstall_transfer_meter()
 
     output_group = zarr.open_group(str(args.output), mode="w")
     output_group.create_dataset(
@@ -225,14 +245,23 @@ def main() -> None:
             "partition_configuration": plan.to_dict(),
             "memory_budget": None,
             "task_count": plan.dask_compute_calls,
-            "bytes_read": counter.bytes if args.backend == "remfile" else None,
+            "bytes_read": (
+                counter.bytes if args.backend == "remfile" else lindi_transfer_bytes
+            ),
+            "http_responses": (
+                counter.responses if args.backend == "remfile" else lindi_responses
+            ),
             "peak_rss_bytes": _peak_rss_bytes(),
             "wall_time_seconds": wall_time,
             "cache_state": (
                 f"manual remfile: block {args.block_size} B, cache "
                 f"{args.cache_size_mib} MiB"
                 if args.backend == "remfile"
-                else "LINDI-managed; counters unavailable through this bridge"
+                else (
+                    "LINDI-managed; transfer measured at the requests layer "
+                    "(Content-Length for consumed responses, bytes read for "
+                    "streamed ones)"
+                )
             ),
             # A comparison is only as fair as its shared configuration; these
             # are the knobs that must match the NeuroFlow record for transfer
