@@ -1,4 +1,4 @@
-# NeuroFlow enables bounded whole-dataset analysis of archive-scale NWB data
+# NeuroFlow enables memory-aware whole-dataset analysis of archive-scale NWB data
 
 > GigaScience Technical Note working draft. Bracketed evidence gates must be
 > replaced only from clean retained benchmark records before submission.
@@ -18,18 +18,25 @@ projection from a versioned DANDI zebrafish movie, applies actual Cellpose to
 complete projection planes, and extracts mean fluorescence traces from the
 original movie into a compact `(time, cell)` result. In the retained
 publication runs, the pipeline reduced the 323 GB logical movie to traces for
-5,552 detected somata — a 57 MB `(time, cell)` array — in 4.3 hours end to end
-on a single workstation, transferring a measured 234 GB over remfile or 519 GB
-over LINDI (whose span-coalescing reads trade bandwidth for latency), with a
-measured peak resident set of 4.0 GiB (remfile) or 5.2 GiB (LINDI). The two
-transports produced byte-identical trace checksums across every run;
-mediated Cellpose agreed exactly with direct Cellpose (zero mismatched voxels
-across 5,552 objects), and the traces matched a direct NumPy reduction of the
-leading frames with zero maximum absolute error. At configuration parity over
-identical masks, trace extraction took 18.1% less wall time than a manual
-PyNWB + remfile + Dask baseline; on the LINDI transport the difference fell
-within session-to-session network variance (from 6.2% faster to 18.9% slower
-across two parity measurements with byte-identical outputs). Direct
+5,552 detected somata — a 57 MB `(time, cell)` array — in 4.32 hours end to
+end on a single workstation (projection, segmentation, and trace extraction;
+the trace-extraction stage alone took 4.20 hours), transferring a measured
+234 GB over remfile or 519 GB over LINDI (whose span-coalescing reads trade
+bandwidth for latency), with a measured peak resident set of 4.0 GiB (remfile)
+or 5.2 GiB (LINDI). Three independent NeuroFlow runs — two transports, two
+dates, three commits — produced byte-identical trace checksums. Mediated
+Cellpose agreed exactly with direct Cellpose (zero mismatched voxels across
+5,552 objects); the traces matched a direct plane-wise NumPy reduction of one
+full leading frame across all 5,552 cells to zero maximum absolute error; and
+the complete 3,065 × 5,552 array agreed exactly (maximum absolute error 0.0,
+identical cell identities) with an independent hand-written PyNWB + Dask
+implementation over identical masks. At configuration parity over identical
+masks and matched workload boundaries — the baseline performs only trace
+extraction, so it is compared against NeuroFlow's trace-extraction stage —
+NeuroFlow was 18.1% faster on remfile (15,110 s versus 18,445 s); on the LINDI
+transport the difference fell within session-to-session network variance (from
+6.2% faster to 18.9% slower across two parity measurements with byte-identical
+outputs). Direct
 Cellpose and NumPy comparisons assess software-path and numerical equivalence;
 partition manifests, checksums, and repeated execution assess integrity and
 recovery. NeuroFlow is intended to make useful whole-dataset analysis possible
@@ -93,9 +100,15 @@ The source remains remote and no cell-by-voxel matrix is constructed.
 Software equivalence is separated from biological accuracy. The same Cellpose
 model and evaluation settings are invoked directly and through NeuroFlow on the
 exact persisted projection; labels must agree exactly after removing the
-partition namespace. Leading fish frames are reduced independently with
-plane-wise NumPy and compared with the persisted traces using recorded absolute
-and relative tolerances. Synthetic tests additionally cover labels spanning
+partition namespace. Direct NumPy validation deliberately covers a bounded
+subset — one full leading frame, reduced independently with plane-wise NumPy
+and compared against the corresponding row of the persisted traces (1 × 5,552
+values, recorded absolute and relative tolerances, measured error 0.0) — while
+whole-array validation comes from two independent mechanisms: the manual
+PyNWB + Dask baselines reproduce the complete 3,065 × 5,552 array to a
+maximum absolute error of 0.0 with identical cell identities, and three
+independent NeuroFlow runs across two transports and three commits produced
+byte-identical result checksums. Synthetic tests additionally cover labels spanning
 source chunks, empty-chunk skipping, interruption, resume, deliberate
 corruption, detection, and selective repair.
 
@@ -104,11 +117,18 @@ NeuroFlow + remfile, and NeuroFlow + LINDI over the same masks. Results report
 correctness, time, RSS, available transfer counters, code/configuration burden,
 manual scheduler/chunk settings, persistence, resume, integrity, and provenance.
 The analysis does not assume NeuroFlow will be fastest; bounded recovery and
-auditability may justify modest overhead. In the retained runs, at identical
-block size (1 MiB), cache (64 MiB), and time window (88 frames), all four
-configurations agreed to a maximum absolute error of 0.0 with identical cell
-identities; NeuroFlow's trace extraction was 18.1% faster than the manual
-remfile baseline (15,110 s versus 18,445 s), while additionally providing
+auditability may justify modest overhead. Timing boundaries are stated
+explicitly because the two tools do different amounts of work: the manual
+baselines perform only trace extraction over pre-existing masks, so they are
+compared against NeuroFlow's trace-extraction stage
+(`stages.traces.execution_metrics.wall_time_seconds` in the retained records),
+not its end-to-end pipeline, which additionally computes the projection and
+segmentation. In the retained runs, at identical block size (1 MiB), cache
+(64 MiB), and time window (88 frames), all four configurations agreed to a
+maximum absolute error of 0.0 with identical cell identities; NeuroFlow's
+trace extraction was 18.1% faster than the manual remfile baseline (15,110 s
+versus 18,445 s; records `publication-fish-soma-traces-remfile.json` and
+`publication-fish-remfile-dask-traces.json`), while additionally providing
 per-partition resume, checksums, and machine-readable provenance that the
 manual baselines lack. On the LINDI transport the wall-time comparison is
 dominated by session-to-session network variance: NeuroFlow measured 6.2%
