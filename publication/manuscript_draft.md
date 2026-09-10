@@ -19,14 +19,17 @@ complete projection planes, and extracts mean fluorescence traces from the
 original movie into a compact `(time, cell)` result. In the retained
 publication runs, the pipeline reduced the 323 GB logical movie to traces for
 5,552 detected somata — a 57 MB `(time, cell)` array — in 4.3 hours end to end
-on a single workstation, transferring 234 GB over remfile (LINDI exposes no
-transfer counters) with a measured peak resident set of 4.0 GiB (remfile) or
-5.1 GiB (LINDI). The two transports produced byte-identical trace checksums;
+on a single workstation, transferring a measured 234 GB over remfile or 519 GB
+over LINDI (whose span-coalescing reads trade bandwidth for latency), with a
+measured peak resident set of 4.0 GiB (remfile) or 5.2 GiB (LINDI). The two
+transports produced byte-identical trace checksums across every run;
 mediated Cellpose agreed exactly with direct Cellpose (zero mismatched voxels
 across 5,552 objects), and the traces matched a direct NumPy reduction of the
 leading frames with zero maximum absolute error. At configuration parity over
 identical masks, trace extraction took 18.1% less wall time than a manual
-PyNWB + remfile + Dask baseline (6.2% on the LINDI transport). Direct
+PyNWB + remfile + Dask baseline; on the LINDI transport the difference fell
+within session-to-session network variance (from 6.2% faster to 18.9% slower
+across two parity measurements with byte-identical outputs). Direct
 Cellpose and NumPy comparisons assess software-path and numerical equivalence;
 partition manifests, checksums, and repeated execution assess integrity and
 recovery. NeuroFlow is intended to make useful whole-dataset analysis possible
@@ -62,8 +65,11 @@ DANDI-hosted NWB-HDF5 assets can be opened through remfile or an optional LINDI
 bridge without changing the analysis expression. Array discovery relies on the
 capabilities `shape`, `dtype`, `ndim`, `chunks`, and bounded indexing rather than
 requiring a concrete h5py dataset. LINDI manages its own caching; NeuroFlow does
-not reimplement or expose remfile-specific cache knobs on that backend. Transfer
-counters not exposed by LINDI are recorded as unknown.
+not reimplement or expose remfile-specific cache knobs on that backend. LINDI
+exposes no native transfer counters, so NeuroFlow meters its traffic at the
+requests layer while a LINDI source is open (Content-Length for consumed
+responses, bytes actually read for streamed ones); quantities that cannot be
+measured are recorded as unknown rather than estimated.
 
 ### Soma trace workflow
 
@@ -102,10 +108,17 @@ auditability may justify modest overhead. In the retained runs, at identical
 block size (1 MiB), cache (64 MiB), and time window (88 frames), all four
 configurations agreed to a maximum absolute error of 0.0 with identical cell
 identities; NeuroFlow's trace extraction was 18.1% faster than the manual
-remfile baseline (15,110 s versus 18,445 s) and 6.2% faster than the manual
-LINDI baseline (15,223 s versus 16,235 s), while additionally providing
+remfile baseline (15,110 s versus 18,445 s), while additionally providing
 per-partition resume, checksums, and machine-readable provenance that the
-manual baselines lack.
+manual baselines lack. On the LINDI transport the wall-time comparison is
+dominated by session-to-session network variance: NeuroFlow measured 6.2%
+faster than the manual baseline in the archival pair and 18.9% slower in a
+later re-measurement with transfer instrumentation, with equivalent transfer
+volumes (519 versus 509 GB) and byte-identical outputs in both pairs. The
+measured transfer characterizes the transports themselves: block-tuned remfile
+moved 234 GB (NeuroFlow) and 230 GB (baseline) for the 323 GB movie, while
+LINDI's span-coalescing reads moved 1.6× the logical size through either tool
+— the trade that buys LINDI its lower per-request latency.
 
 ## Methods
 
