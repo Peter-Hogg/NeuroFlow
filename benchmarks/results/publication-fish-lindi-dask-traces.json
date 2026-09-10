@@ -21,43 +21,43 @@
       "numpy": "2.2.6",
       "pandas": "2.3.3",
       "pyarrow": "25.0.0",
-      "pynapple": null,
+      "pynapple": "0.11.3",
       "pynwb": "4.1.0",
       "remfile": "0.1.14",
       "s3fs": "2026.7.0",
       "scipy": "1.15.3",
-      "xarray": "2025.6.1",
       "zarr": "2.18.3"
     },
     "git": {
-      "commit": "5afa77b0eac63e49f3811b5380cf7c21278198eb",
+      "commit": "b584d6b2089f6309dbd5eb40dec81e0a602d07a1",
       "dirty": false,
       "source": "git"
     },
     "neuroflow_version": "0.1.0",
     "platform": {
-      "description": "Linux-7.0.0-29-generic-x86_64-with-glibc2.39",
+      "description": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
       "machine": "x86_64",
-      "release": "7.0.0-29-generic",
+      "release": "7.0.0-30-generic",
       "system": "Linux"
     },
     "python": {
-      "executable": "python",
+      "executable": "python3",
       "implementation": "CPython",
       "version": "3.10.19"
     },
     "schema_version": "1",
-    "total_ram_bytes": 132559962112
+    "total_ram_bytes": 132559958016
   },
   "execution": {
-    "bytes_read": null,
-    "cache_state": "LINDI-managed; counters unavailable through this bridge",
+    "bytes_read": 509291505693,
+    "cache_state": "LINDI-managed; transfer measured at the requests layer (Content-Length for consumed responses, bytes read for streamed ones)",
     "configuration_parity": {
       "block_size": null,
       "cache_size_bytes": null,
       "note": "set --time-chunk to the NeuroFlow record's trace_plan.time_window and keep block/cache at the shared defaults; the baseline reads the identical retained masks via --labels",
       "time_chunk_frames": 88
     },
+    "http_responses": 75552,
     "memory_budget": null,
     "network_context": "public DANDI HTTPS; runner location is external",
     "partition_configuration": {
@@ -81,9 +81,9 @@
       ],
       "time_chunk": 88
     },
-    "peak_rss_bytes": 4041764864,
+    "peak_rss_bytes": 4031496192,
     "task_count": 1015,
-    "wall_time_seconds": 16235.174540011998
+    "wall_time_seconds": 17645.663369311005
   },
   "notes": [
     "This baseline uses the exact persisted Cellpose masks from NeuroFlow.",
@@ -130,9 +130,9 @@
     ],
     "total_logical_bytes": 323296788480
   },
-  "timestamp": "2026-08-22T16:16:33.794533+00:00",
+  "timestamp": "2026-09-10T00:35:53.038141+00:00",
   "workflow_features": {
-    "complete_benchmark_runner_code_lines": 263,
+    "complete_benchmark_runner_code_lines": 284,
     "http_responses": null,
     "integrity_verification": false,
     "label_checksum": "58b3a2038895f2f7c6d906f418c0af9e3a9f12f8e331d3bc2c1878c9e71b86d1",
