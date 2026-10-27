@@ -1,4 +1,5 @@
 import hashlib
+import sys
 from pathlib import Path
 
 import fsspec
@@ -52,6 +53,16 @@ def test_output_separation_rejects_local_and_remote_containment(
     validate_output_separation(
         "s3://other-bucket/results", {"movie": "s3://archive/results"}
     )
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="backslash paths are Windows-only")
+def test_windows_drive_paths_are_local_not_a_one_letter_scheme() -> None:
+    # urlsplit("C:\\x") reports scheme "c"; that once bypassed the overlap check
+    # on Windows, letting an overwrite delete a directory holding its source.
+    with pytest.raises(OutputConflictError, match="overlaps"):
+        validate_output_separation(
+            "C:\\data\\container", {"movie": "C:\\data\\container\\movie.zarr"}
+        )
 
 
 def test_workflow_overwrite_cannot_remove_a_directory_containing_its_source(

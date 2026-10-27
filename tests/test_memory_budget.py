@@ -7,6 +7,7 @@ physically unattainable, it accounts for third-party model residency, and the
 resulting plan reports planned and measured numbers side by side.
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -224,9 +225,13 @@ def test_extraction_records_planned_against_measured_process_peak(
         memory["planned_process_peak_bytes"] > memory["planned_task_working_bytes"]
     )
     # The measured figure is a real observation, so it must be a positive count
-    # and be labelled as a whole-process high-water mark.
-    assert isinstance(memory["measured_process_peak_rss_bytes"], int)
-    assert memory["measured_process_peak_rss_bytes"] > 0
+    # and be labelled as a whole-process high-water mark. Windows has no
+    # getrusage, so it is recorded as null rather than guessed.
+    if sys.platform == "win32":
+        assert memory["measured_process_peak_rss_bytes"] is None
+    else:
+        assert isinstance(memory["measured_process_peak_rss_bytes"], int)
+        assert memory["measured_process_peak_rss_bytes"] > 0
     assert "whole process" in str(memory["measurement_scope"])
     assert memory["budget"]["interpretation"] == "approximate-total-process-target"
     traces.close()

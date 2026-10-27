@@ -1,6 +1,7 @@
 """Backend-neutral durable output contracts and metadata I/O."""
 
 import json
+import os
 import posixpath
 import re
 import uuid
@@ -15,6 +16,7 @@ import fsspec
 from neuroflow.exceptions import OutputConflictError
 
 _COMPONENT_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+_WINDOWS_DRIVE = re.compile(r"^[A-Za-z]:")
 
 
 @dataclass(frozen=True)
@@ -45,10 +47,16 @@ def validate_component_name(name: str) -> str:
 def _storage_location(uri: str) -> _StorageLocation:
     """Normalize a local path or hierarchical URI for containment checks."""
     parsed = urlsplit(uri)
-    if parsed.scheme.lower() in {"", "file"}:
-        raw_path = unquote(parsed.path) if parsed.scheme else uri
+    # urlsplit reads a Windows drive letter ("C:\\data") as a one-letter
+    # scheme; treating that as remote silently disabled the overlap check.
+    is_drive_path = len(parsed.scheme) == 1 and _WINDOWS_DRIVE.match(uri) is not None
+    if is_drive_path or parsed.scheme.lower() in {"", "file"}:
+        raw_path = unquote(parsed.path) if parsed.scheme == "file" else uri
         resolved = Path(raw_path).expanduser().resolve()
-        return _StorageLocation(("file",), tuple(str(part) for part in resolved.parts))
+        # Windows paths are case-insensitive; normcase is a no-op on POSIX.
+        return _StorageLocation(
+            ("file",), tuple(os.path.normcase(part) for part in resolved.parts)
+        )
 
     scheme = parsed.scheme.lower()
     host = (parsed.hostname or "").lower()
