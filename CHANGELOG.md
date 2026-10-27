@@ -93,6 +93,10 @@ First public release, accompanying the NeuroFlow publication.
 
 - `import neuroflow` no longer fails on Windows: the Unix-only `resource`
   module is optional and peak RSS is recorded as null where unmeasurable.
+- On Windows, the output-overlap guard now treats drive-letter paths as local
+  (they were parsed as a one-letter URI scheme, so an overwrite could remove a
+  directory containing its own source), and total RAM is recorded as null
+  instead of crashing on the missing `os.sysconf`.
 - CPU-selected Cellpose device provenance no longer reports a CUDA toolkit
   version.
 
