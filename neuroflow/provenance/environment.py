@@ -136,11 +136,16 @@ def peak_rss_bytes() -> int | None:
 
 
 def _total_ram_bytes() -> int | None:
+    """Return physical RAM in bytes, or None where unmeasurable.
+
+    ``os.sysconf`` does not exist on Windows, so the value is recorded as null
+    there, matching :func:`peak_rss_bytes`.
+    """
     try:
         pages = os.sysconf("SC_PHYS_PAGES")
         page_size = os.sysconf("SC_PAGE_SIZE")
         if isinstance(pages, int) and isinstance(page_size, int):
             return pages * page_size
-    except (OSError, ValueError):
+    except (AttributeError, OSError, ValueError):
         pass
     return None
